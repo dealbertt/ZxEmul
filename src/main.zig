@@ -5,8 +5,8 @@ const config = @import("config.zig");
 const print = @import("std").debug.print;
 
 //Todo on main:
-//- Initialize raylib
 //- Load the config
+//- Initialize raylib
 //- Get the path to the rom or program through a command line argument
 //
 //
@@ -21,7 +21,6 @@ pub fn main() !void {
     defer rl.closeWindow();
 
     rl.setTargetFPS(cfg.fps);
-
     
     while(!rl.windowShouldClose()){
 
