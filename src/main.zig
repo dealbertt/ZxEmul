@@ -1,8 +1,10 @@
 const std = @import("std");
 const rl = @import("raylib");
-const utils = @import("z80.zig");
+
+const cpu = @import("z80.zig");
 const config = @import("config.zig");
-const print = @import("std").debug.print;
+
+const print = std.debug.print;
 
 //Todo on main:
 //- Load the config
@@ -22,13 +24,15 @@ pub fn main() !void {
 
     rl.setTargetFPS(cfg.fps);
     
+
+    _ = try cpu.loadProgram();
     while(!rl.windowShouldClose()){
 
         rl.beginDrawing();
         defer rl.endDrawing();
 
         rl.clearBackground(.white);
-        rl.drawText("Welcome to the ZXSpectrum emulator", cfg.width / 2, cfg.height / 2, 20, .red);
+        rl.drawText("Welcome to the ZXSpectrum emulator", cfg.width / 2, cfg.height / 2, 40, .red);
     }
 }
 

@@ -1,5 +1,5 @@
 const std = @import("std");
-const print = @import("std").debug.print;
+const print = std.debug.print;
 const cwd = std.fs.cwd();
 
 const c = @cImport(@cInclude("stdio.h"));

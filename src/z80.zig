@@ -32,17 +32,23 @@ var sp: []u16 = [_]u16{0x0000} ** 16; //last-in first-out (LIFO)
 var pc: u16 = 0x0000;
 var opcode: u16 = 0x0000;
 
-//This would be similar to C's typedef
-const OpcodeHandler = *const fn() void;
-var mainOpcodes: [256]OpcodeHandler = undefined;
+
 fn op_nop() void{}
 fn op_ld_a_n() void{ A = 1;}
-fn op_ld_b_c() void{B = C;}
+fn op_ld_b_c() void{ B = C;}
 fn op_unknown() void{print("Unknown opcode\n", .{});}
 
-pub fn initTables() void{
+const OpcodeHandler = *const fn() void;
+var mainOpcodes: [256]OpcodeHandler = [_]*const fn() void{op_unknown} ** 256;
 
+
+pub fn initTables() void{
+    for(0..256) |index| {
+        mainOpcodes[index] = op_unknown;
+    }
 }
+
+//This would be similar to C's typedef
 pub fn fetch() !u8 {
     opcode = memory[pc];
     std.debug.print("Current opcode: {} \n", .{opcode});
@@ -63,7 +69,8 @@ pub fn fetch() !u8 {
 
 //function to load the specified program, idk if its going to be throught a command line- argument
 pub fn loadProgram() !u8 {
-    
+    initTables();
+    return 0;
 }
 
 //this only loads an 8 bit value onto an 8bit register?
