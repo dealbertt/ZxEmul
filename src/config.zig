@@ -79,7 +79,6 @@ pub fn loadConfig() !emulConfig{
 
     }
 
-
     cfg.reportConfig();
     return cfg;
 }

@@ -11,9 +11,6 @@ const print = std.debug.print;
 //- Initialize raylib
 //- Get the path to the rom or program through a command line argument
 //
-//
-//
-//
 
 pub fn main() !void {
     //const emulConfig = config.emulConfig { .width= 1280, .height= 720, .debug = false, .fps = 60 };
