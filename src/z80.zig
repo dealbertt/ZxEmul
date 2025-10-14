@@ -1,37 +1,51 @@
 const std = @import("std");
 const print = @import("std").debug.print;
 
+//KEEP IN MIND THAT THE Z80 IS LITTLE ENDIAN
 //We declare and initialize the registers to 0
 //One set is called BC, DE, and HL while the complementary set is called BC', DE', and HL'
 
+
 const memorySize: u16 = 16368;
 
-//this 8 bit registers are: 
-//A, B, C, D, E, H, or L
-var A: u8 = 0;
-var B: u8 = 0;
-var C: u8 = 0;
-var D: u8 = 0;
-var E: u8 = 0;
-var F: u8 = 0;
-var L: u8 = 0;
-var H: u8 = 0;
+const regPair = extern union{
+    pair: u16,
+    bytes: extern struct{
+        lo: u8,
+        hi: u8,
+    }
+};
 
-var BC: *u16 = (B << 8) + C;
+const registers = struct{
+    af: regPair,
+    bc: regPair,
+    de: regPair,
+    hl: regPair,
+    ix: u16,
+    iy: u16,
+    sp: u16,
+    pc: u16,
+};
+
 //idk really know what to do with the "ghost" registers
 
 //and then we have the "shadow" registers
 
-//INDEX REGISTERS 
-var ix: u16 = 0x0000;
-var iy: u16 = 0x0000;
+var cpu = registers{.af = .{ .pair = 0 },
+    .bc = .{ .pair = 0 },
+    .de = .{ .pair = 0 },
+    .hl = .{ .pair = 0 },
+    .ix = 0,
+    .iy = 0,
+    .sp = 0,
+    .pc = 0
+};
+
 
 var memory: [memorySize]u8 = [_]u8{0x00} ** memorySize;
 //STACK POINTER
-var sp: []u16 = [_]u16{0x0000} ** 16; //last-in first-out (LIFO)
                                 //
 //PROGRAM COUNTER
-var pc: u16 = 0x0000;
 var opcode: u16 = 0x0000;
 
 
@@ -47,14 +61,14 @@ pub fn initTables() void{
         mainOpcodes[index] = op_unknown;
     }
     mainOpcodes[0x00] = op_nop;
-    mainOpcodes[0x01] = op_ld_a_n;
-    mainOpcodes[0x02] = op_ld_b_c;
+    mainOpcodes[0x01] = op_ld_bc_nn;
+    mainOpcodes[0x02] = op_ld_a_bc_addr;
 }
 
 //This would be similar to C's typedef
 pub fn fetch() !u8 {
-    opcode = memory[pc];
-    pc += 1;
+    opcode = memory[cpu.pc];
+    cpu.pc += 1;
     std.debug.print("Current opcode: {} \n", .{opcode});
 
     //if its a normal, 1 byte opcode, the instruction is already known
@@ -77,67 +91,141 @@ pub fn loadProgram() !u8 {
     return 0;
 }
 
-fn create16bitReg(firstReg: u8, secondReg: u8) u16{
-    return (firstReg << 8) + secondReg;
+fn read_nn(addr: u16) u16{
+    const lo = memory[addr];
+    const hi = memory[addr + 1];
+    return @as(u16, hi) << 8 | lo;
 }
-
-fn assignValueFrom16Reg(firstReg: *u8, secondReg: *u8, reg16bit: u16) void{
-   firstReg.* = reg16bit & 0xF0;  
-   secondReg.* = reg16bit & 0x0F;  
-}
+//Opcode 00
 fn op_nop() void{
     return;
 }
 
+//Opcode 01
 fn op_ld_bc_nn() void{
-
-    B = memory[pc];
-    //We increment again to get the second byte of NN
-    //
-    pc += 1;
-    C = memory[pc];
+    const nn = read_nn(cpu.pc);
+    cpu.pc += 2;
+    cpu.bc.pair = nn;
 }
 
+//Opcode 02
 fn op_ld_bc_addr_a() void{
-   memory[(B << 8) + C] = A; 
+   memory[cpu.bc.pair] = cpu.af.bytes.hi; 
 }
 
+//Opcode 03
 fn op_inc_bc() void{
-    var bc = create16bitReg(B, C);
-    bc += 1;
-
-    assignValueFrom16Reg(&B, &C, bc);
+    cpu.bc.pair += 1;
 }
 
+//Opcode 04
 fn op_inc_b() void {
-    B += 1;
+    cpu.bc.bytes.hi += 1;
 }
 
+//Opcode 05
 fn op_dec_b() void {
-    B -= 1;
+    cpu.bc.bytes.hi -= 1;
 }
 
+//Opcode 06
 fn op_ld_b_n() void {
-    B = memory[pc];
-    pc += 1;
+    cpu.bc.bytes.hi = memory[cpu.pc];
+    cpu.pc += 1;
 }
 
+//Opcode 07
 fn op_rlca() void {
     return;
 }
 
+//Opcode 08
 fn op_ex_af_af_shadow() void {
     return;
 }
 
+//Opcode 09
 fn op_add_hl_bc() void {
-    var hl = create16bitReg(H, L);
-    const bc = create16bitReg(B, C);
+    cpu.hl.pair += cpu.bc.pair;
+}
 
-    hl += bc;
+//Opcode 0A
+fn op_ld_a_bc_addr() void {
+    cpu.af.bytes.hi = memory[cpu.hl.pair];
+}
+
+//Opcode 0B
+fn op_dec_bc() void {
+    cpu.bc.pair += 1;
+}
+
+//Opcode 0C
+fn op_inc_c() void {
+    cpu.bc.bytes.lo += 1;
+}
+
+//Opcode 0D
+fn op_dec_c() void {
+    cpu.bc.bytes.lo -= 1;
+}
+
+//Opcode 0E
+fn op_ld_c_n() void {
+    cpu.bc.bytes.lo = memory[cpu.pc];
+    cpu.pc += 1;
+}
+
+//Opcoe 0F
+fn op_rrca() void {
+    return;
+}
+
+//Opcode 10
+fn op_djnz_d() void {
+    //this when
+    const offset = @as(i8, memory[cpu.pc]);
+    cpu.bc.bytes.hi -= 1;
+    if(cpu.bc.bytes.hi != 0){
+        //We want to take the 16bit pc(u16), add a signed 8bit offset,
+        //and store it back as a u16
+        cpu.pc = @as(u16, @intCast(@as(i16, cpu.pc) + @as(i16, offset))); 
+    }
+}
+
+//Opcode 11
+fn op_ld_de_nn() void {
+    //the pc has been incremented, meaning that i am going to get the high bytes of nn 
+    const nn: u16 = read_nn(cpu.pc);
+    cpu.pc += 2;
+    cpu.de.pair = nn;
+}
+
+//Opcode 12
+fn op_ld_a_de_addr() void {
+    memory[cpu.de.pair] = cpu.af.bytes.hi;
+}
+
+//Opcode 13
+fn op_inc_de() void {
+    cpu.de.pair += 1;
+}
+
+//Opcode 14
+fn op_inc_d() void {
+    cpu.de.bytes.hi += 1;
+}
+
+//Opcode 15
+fn op_dec_d() void {
+    cpu.de.bytes.hi -= 1;
+}
+
+//Opcode 16
+fn op_ld_d_n() void {
+    cpu.de.bytes.hi = memory[cpu.pc];
+    cpu.pc += 1;
 }
 
 
-fn op_ld_a_n() void{ A = 1;}
-fn op_ld_b_c() void{ B = C;}
+//Opcode unknown
 fn op_unknown() void{print("Unknown opcode\n", .{});}
