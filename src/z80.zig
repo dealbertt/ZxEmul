@@ -15,6 +15,22 @@ const regPair = extern union{
         hi: u8,
     }
 };
+//The F register is used for flags :
+//Bit 7: Sign Flag
+//Bit 6: Zero Flag
+//Bit 5: Not used
+//Bit 4: Half carry flag
+//Bit 3: Not used
+//Bit 2: Parity/Overflow flag
+//Bit 1: Add/Substract Flag
+//Bit 0: Carry Flag
+
+const FLAG_C: u8 = 0b0000_0001;
+const FLAG_N: u8 = 0b0000_0010;
+const FLAG_P: u8 = 0b0000_0100;
+const FLAG_H: u8 = 0b0001_0000;
+const FLAG_Z: u8 = 0b0100_0000;
+const FLAG_S: u8 = 0b1000_0000;
 
 const registers = struct{
     af: regPair,
@@ -26,6 +42,7 @@ const registers = struct{
     sp: u16,
     pc: u16,
 };
+
 
 //idk really know what to do with the "ghost" registers
 
@@ -63,6 +80,29 @@ pub fn initTables() void{
     mainOpcodes[0x00] = op_nop;
     mainOpcodes[0x01] = op_ld_bc_nn;
     mainOpcodes[0x02] = op_ld_a_bc_addr;
+    mainOpcodes[0x03] = op_inc_bc;
+    mainOpcodes[0x04] = op_inc_b;
+    mainOpcodes[0x05] = op_dec_b;
+    mainOpcodes[0x06] = op_ld_b_n;
+    mainOpcodes[0x07] = op_rlca;
+    mainOpcodes[0x08] = op_ex_af_af_shadow;
+    mainOpcodes[0x09] = op_add_hl_bc;
+    mainOpcodes[0x0A] = op_ld_a_bc_addr;
+    mainOpcodes[0x0B] = op_dec_bc;
+    mainOpcodes[0x0C] = op_inc_c;
+    mainOpcodes[0x0D] = op_dec_c;
+    mainOpcodes[0x0E] = op_ld_c_n;
+    mainOpcodes[0x0F] = op_rrca;
+
+    mainOpcodes[0x10] = op_djnz_d;
+    mainOpcodes[0x11] = op_ld_de_nn;
+    mainOpcodes[0x12] = op_ld_a_de_addr;
+    mainOpcodes[0x13] = op_inc_de;
+    mainOpcodes[0x14] = op_inc_d;
+    mainOpcodes[0x15] = op_dec_d;
+    mainOpcodes[0x16] = op_ld_d_n;
+
+
 }
 
 //This would be similar to C's typedef
@@ -136,7 +176,33 @@ fn op_ld_b_n() void {
 
 //Opcode 07
 fn op_rlca() void {
-    return;
+    //1111 1110
+    //Extract the bit 7, and set it in the LSB, given that its going to be
+    //copied into the LSB of A and F.
+    const bit7: u8 = (cpu.af.bytes.hi >> 7) & 1;
+    //0000 0001
+
+    //Once we have that, we set A, to the contents of A
+    //shifted 1 bit to the left or bit7 -> a circular rotation
+    //because bit0 now has the contents of bit 7
+    //
+    //Reset the N and H flag
+    cpu.af.bytes.hi = ((cpu.af.bytes.hi << 1) | bit7) & 0xFF;
+    //because we shift to the left, zig might promote to a bigger value, but we only
+    //want to keep the lowest 8 bits
+    //thi is basically a NOT of FLAG_C or FLAG_N or FLAG_H
+    //0000 0001]
+    //or       ] -> 0000 0011]
+    //0000 0010]    or       ] -> 0001 0011
+    //                              not
+    //or       ] -> 0001 0000]    1110 1100
+    //0001 0000]   
+    //
+    //this basically means that no matter the value, it will reset those flags to 0
+    cpu.af.bytes.lo &= ~(FLAG_C | FLAG_N | FLAG_H);
+    //even tho its not necessary, we also reset flag C, because it will be set 
+    //to the value of bit7 of A
+    cpu.af.bytes.lo |= bit7;
 }
 
 //Opcode 08
@@ -177,7 +243,6 @@ fn op_ld_c_n() void {
 
 //Opcoe 0F
 fn op_rrca() void {
-    return;
 }
 
 //Opcode 10
