@@ -137,11 +137,24 @@ fn read_nn(addr: u16) u16{
     return @as(u16, hi) << 8 | lo;
 }
 //Opcode 00
+//No operation is performed.
 fn op_nop() void{
     return;
 }
 
 //Opcode 01
+//Loads nn into BC.
+//01 nn
+//Bytes
+//3
+//Cycles
+//10
+//C unaffected
+//N unaffected
+//P/V unaffected
+//H unaffected
+//Z unaffected
+//S unaffected
 fn op_ld_bc_nn() void{
     const nn = read_nn(cpu.pc);
     cpu.pc += 2;
@@ -244,6 +257,12 @@ fn op_ld_c_n() void {
 
 //Opcoe 0F
 fn op_rrca() void {
+    const bit7: u8 = (cpu.af.bytes.hi >> 7) & 1;
+
+    cpu.af.bytes.hi = ((cpu.af.bytes.hi >> 1) | bit7) & 0xFF;
+    cpu.af.bytes.lo &= ~(FLAG_C | FLAG_N | FLAG_H);
+
+    cpu.af.bytes.lo |= bit7;
 }
 
 //Opcode 10
@@ -298,6 +317,22 @@ fn op_ld_d_n() void {
     cpu.pc += 1;
 }
 
+//Opcode 17
+//The contents of A are rotated left one bit position. The contents of bit 7 are copied to the carry flag and the previous contents of the carry flag are copied to bit 0.
+fn rla() void {
+    const bit7: u8 = (cpu.af.bytes.hi >> 7) & 1;
+    const prevCarry: u8 = cpu.af.bytes.lo & 0x01; //get the last bit -> carry flag
 
+    cpu.af.bytes.hi = ((cpu.af.bytes.hi << 1) | bit7) & 0xFF;
+    cpu.af.bytes.lo &= ~(FLAG_C | FLAG_N | FLAG_H);
+    cpu.af.bytes.lo |= bit7;
+
+    //The previous contents of the Carry flag are copied to bit 0
+    cpu.af.bytes.hi |= prevCarry;
+}
+
+fn jr_d() void {
+
+}
 //Opcode unknown
 fn op_unknown() void{ print("Unknown opcode\n", .{}); }
