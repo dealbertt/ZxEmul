@@ -136,6 +136,11 @@ fn read_nn(addr: u16) u16{
     const hi = memory[addr + 1];
     return @as(u16, hi) << 8 | lo;
 }
+
+fn add_16bitRegs(reg1: u16, reg2: u16) u16 {
+    
+    return reg1 + reg2; 
+}
 //Opcode 00
 //No operation is performed.
 fn op_nop() void{
@@ -332,6 +337,13 @@ fn rla() void {
 }
 
 fn jr_d() void {
+    const jump: i8 = @bitCast(memory[cpu.pc]);   
+    const new_pc: i16 = @as(i16, @bitCast(cpu.pc)) + @as(i16, jump);
+
+    cpu.pc = @bitCast(@as(i16, new_pc));
+}
+
+fn op_add_hl_de() void {
 
 }
 //Opcode unknown
