@@ -177,6 +177,7 @@ fn op_ld_b_n() void {
 //Opcode 07
 fn op_rlca() void {
     //1111 1110
+    //LSB: Least significant bit
     //Extract the bit 7, and set it in the LSB, given that its going to be
     //copied into the LSB of A and F.
     const bit7: u8 = (cpu.af.bytes.hi >> 7) & 1;
@@ -190,12 +191,12 @@ fn op_rlca() void {
     cpu.af.bytes.hi = ((cpu.af.bytes.hi << 1) | bit7) & 0xFF;
     //because we shift to the left, zig might promote to a bigger value, but we only
     //want to keep the lowest 8 bits
-    //thi is basically a NOT of FLAG_C or FLAG_N or FLAG_H
+    //this is basically a NOT of FLAG_C or FLAG_N or FLAG_H
     //0000 0001]
-    //or       ] -> 0000 0011]
-    //0000 0010]    or       ] -> 0001 0011
-    //                              not
-    //or       ] -> 0001 0000]    1110 1100
+    //OR       ] -> 0000 0011]
+    //0000 0010]    OR       ] -> 0001 0011
+    //                              NOT
+    //OR       ] -> 0001 0000]    1110 1100
     //0001 0000]   
     //
     //this basically means that no matter the value, it will reset those flags to 0
@@ -246,14 +247,20 @@ fn op_rrca() void {
 }
 
 //Opcode 10
+//THIS FUNCTIONS NEEDS A LOT OF TESTING
 fn op_djnz_d() void {
+
     //this when
-    const offset = @as(i8, memory[cpu.pc]);
-    cpu.bc.bytes.hi -= 1;
+    //
+    cpu.bc.bytes.hi -%= 1;
     if(cpu.bc.bytes.hi != 0){
         //We want to take the 16bit pc(u16), add a signed 8bit offset,
         //and store it back as a u16
-        cpu.pc = @as(u16, @intCast(@as(i16, cpu.pc) + @as(i16, offset))); 
+        const offset: i8 = @bitCast(memory[cpu.pc]);
+        //cpu.pc = @intCast(u16, @as(i16, cpu.pc) + @as(i16, offset));
+        const new_pc = @as(i16, @bitCast(cpu.pc)) + @as(i16, offset);
+        //cpu.pc = @as(u16, @intCast(@as(i16, cpu.pc) + @as(i16, offset))); 
+        cpu.pc = @bitCast(@as(i16, new_pc));
     }
 }
 
@@ -293,4 +300,4 @@ fn op_ld_d_n() void {
 
 
 //Opcode unknown
-fn op_unknown() void{print("Unknown opcode\n", .{});}
+fn op_unknown() void{ print("Unknown opcode\n", .{}); }
