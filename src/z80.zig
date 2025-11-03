@@ -138,9 +138,17 @@ fn read_nn(addr: u16) u16{
 }
 
 fn add_16bitRegs(reg1: u16, reg2: u16) u16 {
-    
-    return reg1 + reg2; 
+    const sum = reg1 + reg2; 
+    if(sum < 0){
+        cpu.af.bytes.lo = 0;
+    }
+    return sum; 
 }
+
+//fn add_offset(reg: u16, offset: i8) u16{
+    //return 0;
+//}
+
 //Opcode 00
 //No operation is performed.
 fn op_nop() void{
@@ -212,7 +220,7 @@ fn op_rlca() void {
     //this is basically a NOT of FLAG_C or FLAG_N or FLAG_H
     //0000 0001]
     //OR       ] -> 0000 0011]
-    //0000 0010]    OR       ] -> 0001 0011
+    //0000 0010]        OR   ] -> 0001 0011
     //                              NOT
     //OR       ] -> 0001 0000]    1110 1100
     //0001 0000]   
@@ -344,7 +352,58 @@ fn jr_d() void {
 }
 
 fn op_add_hl_de() void {
+    cpu.hl.pair = add_16bitRegs(cpu.hl.pair, cpu.de.pair);
+}
+
+fn op_ld_de_addr_a() void {
+    cpu.af.bytes.hi = memory[cpu.de.pair];
+}
+
+
+fn op_dec_de() void {
+    cpu.de.pair -= 1;
+}
+
+fn op_inc_e() void {
+    cpu.de.pair.lo += 1;
+}
+
+fn op_ld_e_n() void {
+    cpu.de.bytes.lo = memory[cpu.pc];
+    cpu.pc += 1;
+}
+
+fn op_rra() void {
 
 }
+
+fn op_jr_nz() void {
+}
+
+fn op_ld_hl_nn() void {
+    const nn = read_nn(memory[cpu.pc]);
+    cpu.hl.pair = nn;
+
+    cpu.pc += 2;
+}
+
+fn op_ld_nn_addr_hl() void {
+    const nn = read_nn(memory[cpu.pc]);
+    memory[nn] = cpu.hl.pair;
+}
+
+fn op_inc_hl() void {
+    cpu.hl.pair += 1;
+}
+
+fn op_inc_h() void {
+    cpu.hl.bytes.hi += 1;
+}
+
+fn oop_dec_h() void {
+    cpu.hl.bytes.hi -= 1;
+}
+
+
 //Opcode unknown
 fn op_unknown() void{ print("Unknown opcode\n", .{}); }
