@@ -101,6 +101,49 @@ pub fn initTables() void{
     mainOpcodes[0x14] = op_inc_d;
     mainOpcodes[0x15] = op_dec_d;
     mainOpcodes[0x16] = op_ld_d_n;
+    mainOpcodes[0x17] = rla;
+    mainOpcodes[0x18] = jr_d;
+    mainOpcodes[0x19] = op_add_hl_de;
+    mainOpcodes[0x1A] = op_ld_de_addr_a;
+    mainOpcodes[0x1B] = op_dec_de;
+    mainOpcodes[0x1C] = op_inc_e;
+    mainOpcodes[0x1D] = op_dec_e;
+    mainOpcodes[0x1E] = op_ld_e_n;
+    mainOpcodes[0x1F] = op_rra;
+
+    mainOpcodes[0x20] = op_jr_nz;
+    mainOpcodes[0x21] = op_ld_hl_nn;
+    mainOpcodes[0x22] = op_ld_nn_addr_hl;
+    mainOpcodes[0x23] = op_inc_hl;
+    mainOpcodes[0x24] = op_inc_h;
+    mainOpcodes[0x25] = op_dec_h;
+    mainOpcodes[0x26] = op_ld_h_n;
+    mainOpcodes[0x27] = op_daa;
+    mainOpcodes[0x28] = op_jr_z;
+    mainOpcodes[0x29] = op_add_hl_hl;
+    mainOpcodes[0x2A] = op_ld_hl_nn_addr;
+    mainOpcodes[0x2B] = op_dec_hl;
+    mainOpcodes[0x2C] = op_inc_l;
+    mainOpcodes[0x2D] = op_dec_l;
+    mainOpcodes[0x2E] = op_ld_l_n;
+    mainOpcodes[0x2F] = op_cpl;
+
+    mainOpcodes[0x30] = op_jr_nc;
+    mainOpcodes[0x31] = op_ld_sp_nn;
+    mainOpcodes[0x32] = op_ld_nn_addr_a;
+    mainOpcodes[0x33] = op_inc_sp;
+    mainOpcodes[0x34] = op_inc_hl_addr;
+    mainOpcodes[0x35] = op_dec_hl_addr;
+    mainOpcodes[0x36] = op_ld_hl_addr_n;
+    mainOpcodes[0x38] = op_scf;
+    mainOpcodes[0x38] = op_jr_c;
+    mainOpcodes[0x39] = op_add_hl_sp;
+    mainOpcodes[0x3A] = op_ld_a_nn_addr;
+    mainOpcodes[0x3B] = op_dec_sp;
+    mainOpcodes[0x3C] = op_inc_a;
+    mainOpcodes[0x3D] = op_dec_a;
+    mainOpcodes[0x3E] = op_ld_a_n;
+    mainOpcodes[0x3F] = op_ccf;
 
 
 }
@@ -368,6 +411,9 @@ fn op_inc_e() void {
     cpu.de.pair.lo += 1;
 }
 
+fn op_dec_e() void {
+    cpu.de.pair.lo -= 1;
+}
 fn op_ld_e_n() void {
     cpu.de.bytes.lo = memory[cpu.pc];
     cpu.pc += 1;
