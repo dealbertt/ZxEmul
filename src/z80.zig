@@ -374,22 +374,40 @@ fn op_ld_e_n() void {
 }
 
 fn op_rra() void {
+    const bit7: u8 = (cpu.af.bytes.hi >> 7) & 1;
+    const prevCarry: u8 = cpu.af.bytes.lo & 0x01; //get the last bit -> carry flag
 
+    cpu.af.bytes.hi = ((cpu.af.bytes.hi >> 1) | bit7) & 0xFF;
+    cpu.af.bytes.lo &= ~(FLAG_C | FLAG_N | FLAG_H);
+    cpu.af.bytes.lo |= bit7;
+
+    //The previous contents of the Carry flag are copied to bit 0
+    cpu.af.bytes.hi |= prevCarry;
 }
 
 fn op_jr_nz() void {
+    if(!cpu.af.bytes.lo & FLAG_Z){
+        //zero flag is not set
+        const jump: i8 = @bitCast(memory[cpu.pc]);   
+        const new_pc: i16 = @as(i16, @bitCast(cpu.pc)) + @as(i16, jump);
+
+        cpu.pc = @bitCast(@as(i16, new_pc));
+    }
 }
 
 fn op_ld_hl_nn() void {
-    const nn = read_nn(memory[cpu.pc]);
+    const nn = read_nn(cpu.pc);
     cpu.hl.pair = nn;
 
     cpu.pc += 2;
 }
 
 fn op_ld_nn_addr_hl() void {
-    const nn = read_nn(memory[cpu.pc]);
-    memory[nn] = cpu.hl.pair;
+    const nn = read_nn(cpu.pc);
+    memory[nn] = cpu.hl.bytes.lo;
+    memory[nn + 1] = cpu.hl.bytes.hi;
+
+    cpu.pc += 2;
 }
 
 fn op_inc_hl() void {
@@ -400,10 +418,156 @@ fn op_inc_h() void {
     cpu.hl.bytes.hi += 1;
 }
 
-fn oop_dec_h() void {
+fn op_dec_h() void {
     cpu.hl.bytes.hi -= 1;
 }
 
+fn op_ld_h_n() void {
+    cpu.hl.bytes.hi = memory[cpu.pc];
+    cpu.pc += 1;
+}
 
+fn op_daa() void{
+
+}
+
+fn op_jr_z() void {
+    if(cpu.af.bytes.lo & FLAG_Z){
+        //zero flag is not set
+        const jump: i8 = @bitCast(memory[cpu.pc]);   
+        const new_pc: i16 = @as(i16, @bitCast(cpu.pc)) + @as(i16, jump);
+
+        cpu.pc = @bitCast(@as(i16, new_pc));
+        cpu.pc += 1;
+    }
+}
+
+fn op_add_hl_hl() void {
+    cpu.hl.pair += cpu.hl.pair;
+}
+
+//1 byte for the opcode?
+//1 byte for 
+fn op_ld_hl_nn_addr() void {
+    const nn = read_nn(cpu.pc);
+    cpu.hl.bytes.lo = memory[nn];
+    cpu.hl.bytes.hi = memory[nn + 1];
+
+    cpu.pc += 2;
+}
+
+fn op_dec_hl() void {
+    cpu.hl.pair -= 1;
+}
+
+fn op_inc_l() void {
+    cpu.hl.bytes.lo += 1;
+}
+
+fn op_dec_l() void {
+    cpu.hl.bytes.lo -= 1;
+}
+
+fn op_ld_l_n() void {
+    cpu.hl.bytes.lo = memory[cpu.pc];
+}
+
+fn op_cpl() void {
+    cpu.af.bytes.hi = ~cpu.af.bytes.hi;
+
+    //Set the H and N flags
+    cpu.af.bytes.lo |= (FLAG_H | FLAG_C);
+}
+
+fn op_jr_nc() void {
+    if(!cpu.af.bytes.lo & FLAG_C){
+        //Carry flag is not set
+        const jump: i8 = @bitCast(memory[cpu.pc]);   
+        const new_pc: i16 = @as(i16, @bitCast(cpu.pc)) + @as(i16, jump);
+
+        cpu.pc = @bitCast(@as(i16, new_pc));
+        cpu.pc += 1;
+    }
+}
+
+fn op_ld_sp_nn() void {
+    const nn = read_nn(cpu.pc); 
+    cpu.sp = nn;
+
+    cpu.pc += 2;
+}
+
+fn op_ld_nn_addr_a() void {
+    const nn = read_nn(cpu.pc);
+
+    memory[nn] = cpu.af.bytes.hi;
+
+    cpu.pc += 2;
+}
+
+
+fn op_inc_sp() void {
+    cpu.sp += 1;
+}
+
+fn op_inc_hl_addr() void {
+    memory[cpu.hl.pair] += 1;
+}
+
+fn op_dec_hl_addr() void {
+    memory[cpu.hl.pair] -= 1;
+}
+
+fn op_ld_hl_addr_n() void {
+   memory[cpu.hl.pair] = memory[cpu.pc]; 
+}
+
+fn op_scf() void {
+    cpu.af.bytes.lo &= ~(FLAG_C | FLAG_N | FLAG_H);
+    cpu.af.bytes.lo |= FLAG_C;
+}
+
+fn op_jr_c() void {
+    if(cpu.af.bytes.lo & FLAG_C){
+        //Carry flag is set
+        const jump: i8 = @bitCast(memory[cpu.pc]);   
+        const new_pc: i16 = @as(i16, @bitCast(cpu.pc)) + @as(i16, jump);
+
+        cpu.pc = @bitCast(@as(i16, new_pc));
+        cpu.pc += 1;
+    }
+}
+
+fn op_add_hl_sp() void {
+    cpu.hl.pair += cpu.sp;
+}
+
+fn op_ld_a_nn_addr() void {
+    const nn = read_nn(cpu.pc);
+    cpu.af.bytes.hi = memory[nn];
+    
+    cpu.pc += 2;
+}
+
+fn op_dec_sp() void {
+    cpu.sp -= 1;
+}
+
+fn op_inc_a() void {
+    cpu.af.bytes.hi += 1;
+}
+
+fn op_dec_a() void {
+    cpu.af.bytes.hi -= 1;
+}
+
+fn op_ld_a_n() void {
+    cpu.af.bytes.hi = memory[cpu.pc];
+    cpu.pc += 1;
+}
+
+fn op_ccf() void {
+    cpu.af.bytes.lo ^= FLAG_C;
+}
 //Opcode unknown
 fn op_unknown() void{ print("Unknown opcode\n", .{}); }
