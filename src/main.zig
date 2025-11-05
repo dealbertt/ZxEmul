@@ -16,15 +16,13 @@ pub fn main() !void {
     //const emulConfig = config.emulConfig { .width= 1280, .height= 720, .debug = false, .fps = 60 };
     const cfg = try config.loadConfig();
 
-    rl.initWindow(cfg.width, cfg.height, "ZxSpectrum emulator"); 
+    rl.initWindow(cfg.width, cfg.height, "ZxSpectrum emulator");
     defer rl.closeWindow();
 
     rl.setTargetFPS(cfg.fps);
-    
 
     _ = try cpu.loadProgram();
-    while(!rl.windowShouldClose()){
-
+    while (!rl.windowShouldClose()) {
         rl.beginDrawing();
         defer rl.endDrawing();
 
@@ -32,4 +30,3 @@ pub fn main() !void {
         rl.drawText("Welcome to the ZXSpectrum emulator", cfg.width / 2, cfg.height / 2, 40, .red);
     }
 }
-

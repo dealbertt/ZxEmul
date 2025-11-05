@@ -5,16 +5,12 @@ const print = @import("std").debug.print;
 //We declare and initialize the registers to 0
 //One set is called BC, DE, and HL while the complementary set is called BC', DE', and HL'
 
-
 const memorySize: u16 = 16368;
 
-const regPair = extern union{
-    pair: u16,
-    bytes: extern struct{
-        lo: u8,
-        hi: u8,
-    }
-};
+const regPair = extern union { pair: u16, bytes: extern struct {
+    lo: u8,
+    hi: u8,
+} };
 //The F register is used for flags :
 //Bit 7: Sign Flag
 //Bit 6: Zero Flag
@@ -32,7 +28,7 @@ const FLAG_H: u8 = 0b0001_0000;
 const FLAG_Z: u8 = 0b0100_0000;
 const FLAG_S: u8 = 0b1000_0000;
 
-const registers = struct{
+const registers = struct {
     af: regPair,
     bc: regPair,
     de: regPair,
@@ -43,38 +39,24 @@ const registers = struct{
     pc: u16,
 };
 
-
 //idk really know what to do with the "ghost" registers
 
 //and then we have the "shadow" registers
 
-var cpu = registers{.af = .{ .pair = 0 },
-    .bc = .{ .pair = 0 },
-    .de = .{ .pair = 0 },
-    .hl = .{ .pair = 0 },
-    .ix = 0,
-    .iy = 0,
-    .sp = 0,
-    .pc = 0
-};
-
+var cpu = registers{ .af = .{ .pair = 0 }, .bc = .{ .pair = 0 }, .de = .{ .pair = 0 }, .hl = .{ .pair = 0 }, .ix = 0, .iy = 0, .sp = 0, .pc = 0 };
 
 var memory: [memorySize]u8 = [_]u8{0x00} ** memorySize;
 //STACK POINTER
-                                //
+//
 //PROGRAM COUNTER
 var opcode: u16 = 0x0000;
 
-
-
-const OpcodeHandler = *const fn() void;
-var mainOpcodes: [256]OpcodeHandler = [_]*const fn() void{op_unknown} ** 256;
-
+const OpcodeHandler = *const fn () void;
+var mainOpcodes: [256]OpcodeHandler = [_]*const fn () void{op_unknown} ** 256;
 
 //function created to load all of the opcode functions into the opcode arrays/lookup table
-pub fn initTables() void{
-
-    for(0..256) |index| {
+pub fn initTables() void {
+    for (0..256) |index| {
         mainOpcodes[index] = op_unknown;
     }
     mainOpcodes[0x00] = op_nop;
@@ -144,8 +126,6 @@ pub fn initTables() void{
     mainOpcodes[0x3D] = op_dec_a;
     mainOpcodes[0x3E] = op_ld_a_n;
     mainOpcodes[0x3F] = op_ccf;
-
-
 }
 
 //This would be similar to C's typedef
@@ -161,9 +141,7 @@ pub fn fetch() !u8 {
     switch (opcode) {
         0xCB => print("Prefix CB opcode\n", .{}),
         0xED => print("Prefix CB opcode\n", .{}),
-        else => {
-            
-        }
+        else => {},
     }
     return opcode;
 }
@@ -174,27 +152,27 @@ pub fn loadProgram() !u8 {
     return 0;
 }
 
-fn read_nn(addr: u16) u16{
+fn read_nn(addr: u16) u16 {
     const lo = memory[addr];
     const hi = memory[addr + 1];
     return @as(u16, hi) << 8 | lo;
 }
 
 fn add_16bitRegs(reg1: u16, reg2: u16) u16 {
-    const sum = reg1 + reg2; 
-    if(sum < 0){
+    const sum = reg1 + reg2;
+    if (sum < 0) {
         cpu.af.bytes.lo = 0;
     }
-    return sum; 
+    return sum;
 }
 
 //fn add_offset(reg: u16, offset: i8) u16{
-    //return 0;
+//return 0;
 //}
 
 //Opcode 00
 //No operation is performed.
-fn op_nop() void{
+fn op_nop() void {
     return;
 }
 
@@ -211,19 +189,19 @@ fn op_nop() void{
 //H unaffected
 //Z unaffected
 //S unaffected
-fn op_ld_bc_nn() void{
+fn op_ld_bc_nn() void {
     const nn = read_nn(cpu.pc);
     cpu.pc += 2;
     cpu.bc.pair = nn;
 }
 
 //Opcode 02
-fn op_ld_bc_addr_a() void{
-   memory[cpu.bc.pair] = cpu.af.bytes.hi; 
+fn op_ld_bc_addr_a() void {
+    memory[cpu.bc.pair] = cpu.af.bytes.hi;
 }
 
 //Opcode 03
-fn op_inc_bc() void{
+fn op_inc_bc() void {
     cpu.bc.pair += 1;
 }
 
@@ -266,11 +244,11 @@ fn op_rlca() void {
     //0000 0010]        OR   ] -> 0001 0011
     //                              NOT
     //OR       ] -> 0001 0000]    1110 1100
-    //0001 0000]   
+    //0001 0000]
     //
     //this basically means that no matter the value, it will reset those flags to 0
     cpu.af.bytes.lo &= ~(FLAG_C | FLAG_N | FLAG_H);
-    //even tho its not necessary, we also reset flag C, because it will be set 
+    //even tho its not necessary, we also reset flag C, because it will be set
     //to the value of bit7 of A
     cpu.af.bytes.lo |= bit7;
 }
@@ -328,20 +306,20 @@ fn op_djnz_d() void {
     //this when
     //
     cpu.bc.bytes.hi -%= 1;
-    if(cpu.bc.bytes.hi != 0){
+    if (cpu.bc.bytes.hi != 0) {
         //We want to take the 16bit pc(u16), add a signed 8bit offset,
         //and store it back as a u16
         const offset: i8 = @bitCast(memory[cpu.pc]);
         //cpu.pc = @intCast(u16, @as(i16, cpu.pc) + @as(i16, offset));
         const new_pc = @as(i16, @bitCast(cpu.pc)) + @as(i16, offset);
-        //cpu.pc = @as(u16, @intCast(@as(i16, cpu.pc) + @as(i16, offset))); 
+        //cpu.pc = @as(u16, @intCast(@as(i16, cpu.pc) + @as(i16, offset)));
         cpu.pc = @bitCast(@as(i16, new_pc));
     }
 }
 
 //Opcode 11
 fn op_ld_de_nn() void {
-    //the pc has been incremented, meaning that i am going to get the high bytes of nn 
+    //the pc has been incremented, meaning that i am going to get the high bytes of nn
     const nn: u16 = read_nn(cpu.pc);
     cpu.pc += 2;
     cpu.de.pair = nn;
@@ -388,7 +366,7 @@ fn rla() void {
 }
 
 fn jr_d() void {
-    const jump: i8 = @bitCast(memory[cpu.pc]);   
+    const jump: i8 = @bitCast(memory[cpu.pc]);
     const new_pc: i16 = @as(i16, @bitCast(cpu.pc)) + @as(i16, jump);
 
     cpu.pc = @bitCast(@as(i16, new_pc));
@@ -402,17 +380,16 @@ fn op_ld_de_addr_a() void {
     cpu.af.bytes.hi = memory[cpu.de.pair];
 }
 
-
 fn op_dec_de() void {
     cpu.de.pair -= 1;
 }
 
 fn op_inc_e() void {
-    cpu.de.pair.lo += 1;
+    cpu.de.bytes.lo += 1;
 }
 
 fn op_dec_e() void {
-    cpu.de.pair.lo -= 1;
+    cpu.de.bytes.lo -= 1;
 }
 fn op_ld_e_n() void {
     cpu.de.bytes.lo = memory[cpu.pc];
@@ -432,9 +409,9 @@ fn op_rra() void {
 }
 
 fn op_jr_nz() void {
-    if(!cpu.af.bytes.lo & FLAG_Z){
+    if ((cpu.af.bytes.lo & FLAG_Z) == 0) {
         //zero flag is not set
-        const jump: i8 = @bitCast(memory[cpu.pc]);   
+        const jump: i8 = @bitCast(memory[cpu.pc]);
         const new_pc: i16 = @as(i16, @bitCast(cpu.pc)) + @as(i16, jump);
 
         cpu.pc = @bitCast(@as(i16, new_pc));
@@ -473,14 +450,12 @@ fn op_ld_h_n() void {
     cpu.pc += 1;
 }
 
-fn op_daa() void{
-
-}
+fn op_daa() void {}
 
 fn op_jr_z() void {
-    if(cpu.af.bytes.lo & FLAG_Z){
+    if ((cpu.af.bytes.lo & FLAG_Z) != 0) {
         //zero flag is not set
-        const jump: i8 = @bitCast(memory[cpu.pc]);   
+        const jump: i8 = @bitCast(memory[cpu.pc]);
         const new_pc: i16 = @as(i16, @bitCast(cpu.pc)) + @as(i16, jump);
 
         cpu.pc = @bitCast(@as(i16, new_pc));
@@ -493,7 +468,7 @@ fn op_add_hl_hl() void {
 }
 
 //1 byte for the opcode?
-//1 byte for 
+//1 byte for
 fn op_ld_hl_nn_addr() void {
     const nn = read_nn(cpu.pc);
     cpu.hl.bytes.lo = memory[nn];
@@ -526,9 +501,9 @@ fn op_cpl() void {
 }
 
 fn op_jr_nc() void {
-    if(!cpu.af.bytes.lo & FLAG_C){
+    if ((cpu.af.bytes.lo & FLAG_C) == 0) {
         //Carry flag is not set
-        const jump: i8 = @bitCast(memory[cpu.pc]);   
+        const jump: i8 = @bitCast(memory[cpu.pc]);
         const new_pc: i16 = @as(i16, @bitCast(cpu.pc)) + @as(i16, jump);
 
         cpu.pc = @bitCast(@as(i16, new_pc));
@@ -537,7 +512,7 @@ fn op_jr_nc() void {
 }
 
 fn op_ld_sp_nn() void {
-    const nn = read_nn(cpu.pc); 
+    const nn = read_nn(cpu.pc);
     cpu.sp = nn;
 
     cpu.pc += 2;
@@ -550,7 +525,6 @@ fn op_ld_nn_addr_a() void {
 
     cpu.pc += 2;
 }
-
 
 fn op_inc_sp() void {
     cpu.sp += 1;
@@ -565,7 +539,7 @@ fn op_dec_hl_addr() void {
 }
 
 fn op_ld_hl_addr_n() void {
-   memory[cpu.hl.pair] = memory[cpu.pc]; 
+    memory[cpu.hl.pair] = memory[cpu.pc];
 }
 
 fn op_scf() void {
@@ -574,9 +548,9 @@ fn op_scf() void {
 }
 
 fn op_jr_c() void {
-    if(cpu.af.bytes.lo & FLAG_C){
+    if ((cpu.af.bytes.lo & FLAG_C) != 0) {
         //Carry flag is set
-        const jump: i8 = @bitCast(memory[cpu.pc]);   
+        const jump: i8 = @bitCast(memory[cpu.pc]);
         const new_pc: i16 = @as(i16, @bitCast(cpu.pc)) + @as(i16, jump);
 
         cpu.pc = @bitCast(@as(i16, new_pc));
@@ -591,7 +565,7 @@ fn op_add_hl_sp() void {
 fn op_ld_a_nn_addr() void {
     const nn = read_nn(cpu.pc);
     cpu.af.bytes.hi = memory[nn];
-    
+
     cpu.pc += 2;
 }
 
@@ -616,4 +590,6 @@ fn op_ccf() void {
     cpu.af.bytes.lo ^= FLAG_C;
 }
 //Opcode unknown
-fn op_unknown() void{ print("Unknown opcode\n", .{}); }
+fn op_unknown() void {
+    print("Unknown opcode\n", .{});
+}
