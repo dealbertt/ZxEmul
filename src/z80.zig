@@ -166,6 +166,12 @@ fn add_16bitRegs(reg1: u16, reg2: u16) u16 {
         //set the carry flag if an overflow happened
         cpu.af.bytes.lo |= FLAG_C;
     }
+
+    if(sum[0] == 0){
+        //set the zero flag
+        cpu.af.bytes.lo |= FLAG_Z;
+    }
+
     //reset the N flag
     cpu.af.bytes.lo &= ~(FLAG_N); 
     return sum[0];
@@ -178,10 +184,52 @@ fn add_a_value(value: u8) u8{
         //set the carry flag if an overflow happened
         cpu.af.bytes.lo |= FLAG_C;
     }
+
+    if(sum[0] == 0){
+        //set the zero flag
+        cpu.af.bytes.lo |= FLAG_Z;
+    }
+
     //reset the N flag
     cpu.af.bytes.lo &= ~(FLAG_N);
 
     return sum[0];
+}
+
+fn inc_8bitReg(reg: u8) u8{
+    const inc = @addWithOverflow(reg, 1);
+    if(inc[1] == 1){
+        //set the carry flag if an overflow happened
+        cpu.af.bytes.lo |= FLAG_C;
+    }
+
+    if(inc[0] == 0){
+        //set the zero flag
+        cpu.af.bytes.lo |= FLAG_Z;
+    }
+
+
+    //reset the N flag
+    cpu.af.bytes.lo &= ~(FLAG_N);
+    return inc;
+}
+
+fn inc_16bitReg(reg: u16) u16{
+    const inc = @addWithOverflow(reg, 1);
+    if(inc[1] == 1){
+        //set the carry flag if an overflow happened
+        cpu.af.bytes.lo |= FLAG_C;
+    }
+
+    if(inc[0] == 0){
+        //set the zero flag
+        cpu.af.bytes.lo |= FLAG_Z;
+    }
+
+
+    //reset the N flag
+    cpu.af.bytes.lo &= ~(FLAG_N);
+    return inc;
 }
 
 //fn add_offset(reg: u16, offset: i8) u16{
@@ -226,6 +274,9 @@ fn op_inc_bc() void {
 //Opcode 04
 fn op_inc_b() void {
     cpu.bc.bytes.hi += 1;
+
+    //reset N flag
+    cpu.af.bytes.lo &= ~(FLAG_N);
 }
 
 //Opcode 05
