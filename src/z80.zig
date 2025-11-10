@@ -10,7 +10,9 @@ const memorySize: u16 = 16368;
 const regPair = extern union { pair: u16, bytes: extern struct {
     lo: u8,
     hi: u8,
-} };
+    }
+};
+
 //The F register is used for flags :
 //Bit 7: Sign Flag
 //Bit 6: Zero Flag
@@ -159,11 +161,27 @@ fn read_nn(addr: u16) u16 {
 }
 
 fn add_16bitRegs(reg1: u16, reg2: u16) u16 {
-    const sum = reg1 + reg2;
-    if (sum < 0) {
-        cpu.af.bytes.lo = 0;
+    const sum = @addWithOverflow(reg1, reg2);
+    if (sum[1] == 1) {
+        //set the carry flag if an overflow happened
+        cpu.af.bytes.lo |= FLAG_C;
     }
-    return sum;
+    //reset the N flag
+    cpu.af.bytes.lo &= FLAG_N; 
+    return sum[0];
+}
+
+fn add_a_value(value: u8) u8{
+    const sum = @addWithOverflow(cpu.af.bytes.hi, value);    
+
+    if(sum[1] == 1){
+        //set the carry flag if an overflow happened
+        cpu.af.bytes.lo |= FLAG_C;
+    }
+    //reset the N flag
+    cpu.af.bytes.lo &= FLAG_N;
+
+    return sum[0];
 }
 
 //fn add_offset(reg: u16, offset: i8) u16{
