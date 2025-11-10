@@ -196,8 +196,8 @@ fn add_a_value(value: u8) u8{
     return sum[0];
 }
 
-fn inc_8bitReg(reg: u8) u8{
-    const inc = @addWithOverflow(reg, 1);
+fn inc_8bitReg(reg: *u8) void{
+    const inc = @addWithOverflow(reg.*, 1);
     if(inc[1] == 1){
         //set the carry flag if an overflow happened
         cpu.af.bytes.lo |= FLAG_C;
@@ -211,11 +211,11 @@ fn inc_8bitReg(reg: u8) u8{
 
     //reset the N flag
     cpu.af.bytes.lo &= ~(FLAG_N);
-    return inc;
+    reg.* = inc[0];
 }
 
-fn inc_16bitReg(reg: u16) u16{
-    const inc = @addWithOverflow(reg, 1);
+fn inc_16bitReg(reg: *u16) void{
+    const inc = @addWithOverflow(reg.*, 1);
     if(inc[1] == 1){
         //set the carry flag if an overflow happened
         cpu.af.bytes.lo |= FLAG_C;
@@ -229,7 +229,7 @@ fn inc_16bitReg(reg: u16) u16{
 
     //reset the N flag
     cpu.af.bytes.lo &= ~(FLAG_N);
-    return inc;
+    reg.* = inc[0];
 }
 
 //fn add_offset(reg: u16, offset: i8) u16{
@@ -268,15 +268,12 @@ fn op_ld_bc_addr_a() void {
 
 //Opcode 03
 fn op_inc_bc() void {
-    cpu.bc.pair += 1;
+    inc_16bitReg(&cpu.bc.pair);
 }
 
 //Opcode 04
 fn op_inc_b() void {
-    cpu.bc.bytes.hi += 1;
-
-    //reset N flag
-    cpu.af.bytes.lo &= ~(FLAG_N);
+    inc_8bitReg(&cpu.bc.bytes.hi);
 }
 
 //Opcode 05
@@ -344,7 +341,7 @@ fn op_dec_bc() void {
 
 //Opcode 0C
 fn op_inc_c() void {
-    cpu.bc.bytes.lo += 1;
+    inc_8bitReg(&cpu.bc.bytes.lo);
 }
 
 //Opcode 0D
@@ -401,12 +398,12 @@ fn op_ld_a_de_addr() void {
 
 //Opcode 13
 fn op_inc_de() void {
-    cpu.de.pair += 1;
+    inc_16bitReg(&cpu.de.pair);
 }
 
 //Opcode 14
 fn op_inc_d() void {
-    cpu.de.bytes.hi += 1;
+    inc_8bitReg(&cpu.de.bytes.hi);
 }
 
 //Opcode 15
@@ -454,7 +451,7 @@ fn op_dec_de() void {
 }
 
 fn op_inc_e() void {
-    cpu.de.bytes.lo += 1;
+    inc_8bitReg(&cpu.de.bytes.lo);
 }
 
 fn op_dec_e() void {
@@ -503,11 +500,11 @@ fn op_ld_nn_addr_hl() void {
 }
 
 fn op_inc_hl() void {
-    cpu.hl.pair += 1;
+    inc_16bitReg(&cpu.hl.pair);
 }
 
 fn op_inc_h() void {
-    cpu.hl.bytes.hi += 1;
+    inc_8bitReg(&cpu.hl.bytes.hi);
 }
 
 fn op_dec_h() void {
@@ -551,7 +548,7 @@ fn op_dec_hl() void {
 }
 
 fn op_inc_l() void {
-    cpu.hl.bytes.lo += 1;
+    inc_8bitReg(&cpu.hl.bytes.lo);
 }
 
 fn op_dec_l() void {
@@ -600,7 +597,8 @@ fn op_inc_sp() void {
 }
 
 fn op_inc_hl_addr() void {
-    memory[cpu.hl.pair] += 1;
+    //memory[cpu.hl.pair] += 1;
+    inc_8bitReg(&memory[cpu.hl.pair]);
 }
 
 fn op_dec_hl_addr() void {
