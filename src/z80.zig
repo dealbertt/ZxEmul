@@ -167,7 +167,7 @@ fn add_16bitRegs(reg1: u16, reg2: u16) u16 {
         cpu.af.bytes.lo |= FLAG_C;
     }
     //reset the N flag
-    cpu.af.bytes.lo &= FLAG_N; 
+    cpu.af.bytes.lo &= ~(FLAG_N); 
     return sum[0];
 }
 
@@ -179,7 +179,7 @@ fn add_a_value(value: u8) u8{
         cpu.af.bytes.lo |= FLAG_C;
     }
     //reset the N flag
-    cpu.af.bytes.lo &= FLAG_N;
+    cpu.af.bytes.lo &= ~(FLAG_N);
 
     return sum[0];
 }
