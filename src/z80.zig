@@ -641,7 +641,7 @@ fn op_dec_sp() void {
 }
 
 fn op_inc_a() void {
-    cpu.af.bytes.hi += 1;
+    inc_8bitReg(&cpu.af.bytes.hi);
 }
 
 fn op_dec_a() void {
