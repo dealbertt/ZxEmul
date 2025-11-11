@@ -129,6 +129,12 @@ pub fn initTables() void {
     mainOpcodes[0x3E] = op_ld_a_n;
     mainOpcodes[0x3F] = op_ccf;
 
+
+    //All the ld_reg_reg functions done here
+    for(0x40..0x7F) |op| {
+        mainOpcodes[op] = decode_ld;
+    }
+
 }
 
 //This would be similar to C's typedef
@@ -233,10 +239,45 @@ fn inc_16bitReg(reg: *u16) void{
     reg.* = inc[0];
 }
 
-fn ld_8bitreg_8bitreg(reg1: *u8, reg2: u8) void {
-    reg1.* = reg2; 
+const Register = enum(u3){
+    B, C, D, E, H, L, A
+};
+
+fn getRegisterValue(r: Register) u8{
+    return switch(r){
+        .B => cpu.bc.bytes.hi,
+        .C => cpu.bc.bytes.lo,
+        .D => cpu.de.bytes.hi,
+        .E => cpu.de.bytes.lo,
+        .H => cpu.hl.bytes.hi,
+        .L => cpu.hl.bytes.lo,
+        .A => cpu.af.bytes.hi,
+    };
 }
 
+fn setRegisterValue(r: Register, value: u8) void {
+    switch(r){
+        .B => cpu.bc.bytes.hi = value,
+        .C => cpu.bc.bytes.lo = value,
+        .D => cpu.de.bytes.hi = value,
+        .E => cpu.de.bytes.lo = value,
+        .H => cpu.hl.bytes.hi = value,
+        .L => cpu.hl.bytes.lo = value,
+        .A => cpu.af.bytes.hi = value,
+    }
+}
+
+fn op_ld(src: Register, dst: Register) void {
+    const value = getRegisterValue(src);
+    setRegisterValue(dst, value);
+}
+
+fn decode_ld(op: u8) void {
+    const src: Register = @enumFromInt(op & 0b111);
+    const dst: Register = @enumFromInt((op >> 3) & 0b111);
+
+    op_ld(src, dst);
+}
 //fn add_offset(reg: u16, offset: i8) u16{
 //return 0;
 //}
@@ -660,71 +701,6 @@ fn op_ld_a_n() void {
 
 fn op_ccf() void {
     cpu.af.bytes.lo ^= FLAG_C;
-}
-
-//???????
-fn op_ld_b_b() void {
-    cpu.bc.bytes.hi = cpu.bc.bytes.hi;
-}
-
-fn op_ld_b_c() void {
-    cpu.bc.bytes.hi = cpu.bc.bytes.lo;
-}
-
-fn op_ld_b_d() void {
-    cpu.bc.bytes.hi = cpu.de.bytes.hi;
-}
-
-fn op_ld_b_e() void {
-    cpu.bc.bytes.hi = cpu.de.bytes.lo;
-}
-
-fn op_ld_b_h() void {
-    cpu.bc.bytes.hi = cpu.hl.bytes.hi;
-}
-
-fn op_ld_b_l() void {
-    cpu.bc.bytes.hi = cpu.hl.bytes.lo;
-}
-
-fn op_ld_b_hl_addr() void {
-    cpu.bc.bytes.hi = memory[cpu.hl.pair];
-}
-
-fn op_ld_b_a() void {
-    cpu.bc.bytes.hi = cpu.af.bytes.hi;
-}
-
-fn op_ld_c_b() void {
-    cpu.bc.bytes.lo = cpu.bc.bytes.hi;
-}
-
-fn op_ld_c_c() void {
-    cpu.bc.bytes.lo = cpu.bc.bytes.lo;
-}
-
-fn op_ld_c_d() void {
-    cpu.bc.bytes.lo = cpu.de.bytes.hi;
-}
-
-fn op_ld_c_e() void {
-    cpu.bc.bytes.lo = cpu.de.bytes.lo;
-}
-
-fn op_ld_c_h() void {
-    cpu.bc.bytes.lo = cpu.hl.bytes.hi;
-}
-
-fn op_ld_c_l() void {
-    cpu.bc.bytes.lo = cpu.hl.bytes.lo;
-}
-
-fn op_ld_c_hl_addr() void {
-    cpu.bc.bytes.lo = memory[cpu.hl.pair];
-}
-
-fn op_ld_c_a() void {
-    cpu.bc.bytes.lo = cpu.af.bytes.hi;
 }
 
 //Opcode unknown
