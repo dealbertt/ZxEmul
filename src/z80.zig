@@ -240,7 +240,7 @@ fn inc_16bitReg(reg: *u16) void{
 }
 
 const Register = enum(u3){
-    B, C, D, E, H, L, A
+    B, C, D, E, H, L, HL, A
 };
 
 fn getRegisterValue(r: Register) u8{
@@ -252,6 +252,7 @@ fn getRegisterValue(r: Register) u8{
         .H => cpu.hl.bytes.hi,
         .L => cpu.hl.bytes.lo,
         .A => cpu.af.bytes.hi,
+        .HL=> memory[cpu.hl.pair]
     };
 }
 
@@ -264,6 +265,7 @@ fn setRegisterValue(r: Register, value: u8) void {
         .H => cpu.hl.bytes.hi = value,
         .L => cpu.hl.bytes.lo = value,
         .A => cpu.af.bytes.hi = value,
+        .HL=> memory[cpu.hl.pair] = value,
     }
 }
 
@@ -272,9 +274,9 @@ fn op_ld(src: Register, dst: Register) void {
     setRegisterValue(dst, value);
 }
 
-fn decode_ld(op: u8) void {
-    const src: Register = @enumFromInt(op & 0b111);
-    const dst: Register = @enumFromInt((op >> 3) & 0b111);
+fn decode_ld() void {
+    const src: Register = @enumFromInt(opcode & 0b111);
+    const dst: Register = @enumFromInt((opcode >> 3) & 0b111);
 
     op_ld(src, dst);
 }
