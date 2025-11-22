@@ -135,6 +135,13 @@ pub fn initTables() void {
         mainOpcodes[op] = decode_ld;
     }
 
+    for(0x80..0x87) |op| {
+        mainOpcodes[op] = decode_add_a;
+    }
+
+    for(0x90..0x97) |op| {
+        mainOpcodes[op] = decode_sub_a;
+    }
 }
 
 //This would be similar to C's typedef
