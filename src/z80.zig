@@ -203,6 +203,25 @@ fn add_a_value(value: u8) u8{
     return sum[0];
 }
 
+fn sub_a_value(value: u8) u8{
+    const sub = @subWithOverflow(cpu.af.bytes.hi, value);    
+
+    if(sub[1] == 1){
+        //set the carry flag if an overflow happened
+        cpu.af.bytes.lo |= FLAG_C;
+    }
+
+    if(sub[0] == 0){
+        //set the zero flag
+        cpu.af.bytes.lo |= FLAG_Z;
+    }
+
+    //reset the N flag
+    cpu.af.bytes.lo &= ~(FLAG_N);
+
+    return sub[0];
+}
+
 fn inc_8bitReg(reg: *u8) void{
     const inc = @addWithOverflow(reg.*, 1);
     if(inc[1] == 1){
@@ -240,7 +259,7 @@ fn inc_16bitReg(reg: *u16) void{
 }
 
 const Register = enum(u3){
-    B, C, D, E, H, L, HL, A
+    B, C, D, E, H, L, A, HL,
 };
 
 fn getRegisterValue(r: Register) u8{
@@ -280,6 +299,27 @@ fn decode_ld() void {
 
     op_ld(src, dst);
 }
+
+fn op_add_a(src:Register) void {
+    const value = getRegisterValue(src);
+    cpu.af.bytes.hi = add_a_value(value);
+}
+
+fn op_sub_a(src:Register) void {
+    const value = getRegisterValue(src);
+    cpu.af.bytes.hi = sub_a_value(value);
+}
+
+fn decode_add_a() void {
+    const src: Register = @enumFromInt(opcode & 0b1111);
+    op_add_a(src);
+}
+
+fn decode_sub_a() void {
+    const src: Register = @enumFromInt(opcode & 0b1111);
+    op_sub_a(src);
+}
+
 //fn add_offset(reg: u16, offset: i8) u16{
 //return 0;
 //}
