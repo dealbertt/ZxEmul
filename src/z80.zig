@@ -258,12 +258,18 @@ fn sbc_a_value(value: u8) u8{
 
     const res: u8 = @truncate(sum);
 
+    //write back
     cpu.af.bytes.hi = res;
+
+    //flags
+
+    //carry flag
     if(sum > 0xFF){
         //set the carry flag if an overflow happened
         cpu.af.bytes.lo |= FLAG_C;
     }
     
+    //zero flag
     if(res == 0){
         //set the zero flag if result is 0 
         cpu.af.bytes.lo |= FLAG_Z;
