@@ -232,22 +232,45 @@ fn sub_a_value(value: u8) u8{
 }
 
 fn adc_a_value(value: u8) u8{
-    const add = @addWithOverflow(cpu.af.bytes.hi, value);    
+    const carry = (cpu.af.bytes.lo & FLAG_C);
+    const sum = @as(u16, value) + @as(u16, cpu.af.bytes.hi) + carry;
 
-    if(add[1] == 1){
+    const res: u8 = @truncate(sum);
+
+    cpu.af.bytes.hi = res;
+    if(sum > 0xFF){
         //set the carry flag if an overflow happened
         cpu.af.bytes.lo |= FLAG_C;
     }
-
-    if(add[0] == 0){
-        //set the zero flag
+    
+    if(res == 0){
+        //set the zero flag if result is 0 
         cpu.af.bytes.lo |= FLAG_Z;
     }
 
     //reset the N flag
     cpu.af.bytes.lo &= ~(FLAG_N);
+}
 
-    return add[0];
+fn sbc_a_value(value: u8) u8{
+    const carry = (cpu.af.bytes.lo & FLAG_C);
+    const sum = @as(u16, value) - @as(u16, cpu.af.bytes.hi) - carry;
+
+    const res: u8 = @truncate(sum);
+
+    cpu.af.bytes.hi = res;
+    if(sum > 0xFF){
+        //set the carry flag if an overflow happened
+        cpu.af.bytes.lo |= FLAG_C;
+    }
+    
+    if(res == 0){
+        //set the zero flag if result is 0 
+        cpu.af.bytes.lo |= FLAG_Z;
+    }
+
+    //reset the N flag
+    cpu.af.bytes.lo &= ~(FLAG_N);
 }
 fn inc_8bitReg(reg: *u8) void{
     const inc = @addWithOverflow(reg.*, 1);
@@ -339,13 +362,13 @@ fn op_sub_a(src:Register) void {
 fn op_adc_a(src: Register) void {
     const value = getRegisterValue(src);
     value += (cpu.af.bytes.lo & FLAG_C);
-    cpu.af.bytes.hi = add_a_value(value);
+    cpu.af.bytes.hi = adc_a_value(value);
 }
 
 fn op_sbc_a(src: Register) void {
     const value = getRegisterValue(src);
     value += (cpu.af.bytes.lo & FLAG_C);
-    cpu.af.bytes.hi = sub_a_value(value);
+    cpu.af.bytes.hi = sbc_a_value(value);
     
 }
 fn decode_add_a() void {
