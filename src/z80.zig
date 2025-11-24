@@ -201,118 +201,9 @@ fn add_16bitRegs(reg1: u16, reg2: u16) u16 {
     return sum[0];
 }
 
-fn add_a_value(value: u8) u8{
-    const add:u16 = @as(u16, cpu.af.bytes.hi) + @as(u16, value);    
-
-    const res: u8 = @truncate(add);
 
 
-    if(res < 0){
-        //set the carry flag if an overflow happened
-        cpu.af.bytes.lo |= FLAG_C;
-    }
 
-    if(res == 0){
-        //set the zero flag
-        cpu.af.bytes.lo |= FLAG_Z;
-    }
-
-    //sign flag
-    if((res & 0x80) != 0){
-        //set the sign flag
-        cpu.af.bytes.lo |= FLAG_S;
-    }
-    //reset the N flag
-    cpu.af.bytes.lo &= ~(FLAG_N);
-
-    return res;
-}
-
-fn sub_a_value(value: u8) u8{
-    const sub:u16 = @as(u16, cpu.af.bytes.hi) - @as(u16, value);    
-
-    const res: u8 = @truncate(sub);
-
-
-    if(res < 0){
-        //set the carry flag if an overflow happened
-        cpu.af.bytes.lo |= FLAG_C;
-    }
-
-    if(res == 0){
-        //set the zero flag
-        cpu.af.bytes.lo |= FLAG_Z;
-    }
-
-    //sign flag
-    if((res & 0x80) != 0){
-        //set the sign flag
-        cpu.af.bytes.lo |= FLAG_S;
-    }
-    //reset the N flag
-    cpu.af.bytes.lo &= ~(FLAG_N);
-
-    return res;
-}
-
-fn adc_a_value(value: u8) u8{
-    const carry = (cpu.af.bytes.lo & FLAG_C);
-    const sum = @as(u16, value) + @as(u16, cpu.af.bytes.hi) + carry;
-
-    const res: u8 = @truncate(sum);
-
-    if(sum > 0xFF){
-        //set the carry flag if an overflow happened
-        cpu.af.bytes.lo |= FLAG_C;
-    }
-    
-    if(res == 0){
-        //set the zero flag if result is 0 
-        cpu.af.bytes.lo |= FLAG_Z;
-    }
-
-    //sign flag
-    if((res & 0x80) != 0){
-        //set the sign flag
-        cpu.af.bytes.lo |= FLAG_S;
-    }
-
-    //reset the N flag
-    cpu.af.bytes.lo &= ~(FLAG_N);
-
-    return res;
-}
-
-fn sbc_a_value(value: u8) u8{
-    const carry = (cpu.af.bytes.lo & FLAG_C);
-    const sum = @as(u16, value) - @as(u16, cpu.af.bytes.hi) - carry;
-
-    const res: u8 = @truncate(sum);
-
-    //flags
-    //carry flag
-    if(sum > 0xFF){
-        //set the carry flag if an overflow happened
-        cpu.af.bytes.lo |= FLAG_C;
-    }
-    
-    //zero flag
-    if(res == 0){
-        //set the zero flag if result is 0 
-        cpu.af.bytes.lo |= FLAG_Z;
-    }
-
-    //sign flag
-    if((res & 0x80) != 0){
-        //set the sign flag
-        cpu.af.bytes.lo |= FLAG_S;
-    }
-
-    //reset the N flag
-    cpu.af.bytes.lo &= ~(FLAG_N);
-
-    return res;
-}
 fn inc_8bitReg(reg: *u8) void{
     const inc = @addWithOverflow(reg.*, 1);
     if(inc[1] == 1){
@@ -379,58 +270,7 @@ fn setRegisterValue(r: Register, value: u8) void {
     }
 }
 
-fn op_ld(src: Register, dst: Register) void {
-    const value = getRegisterValue(src);
-    setRegisterValue(dst, value);
-}
 
-fn decode_ld() void {
-    const src: Register = @enumFromInt(opcode & 0b111);
-    const dst: Register = @enumFromInt((opcode >> 3) & 0b111);
-    op_ld(src, dst);
-}
-
-fn op_add_a(src:Register) void {
-    const value = getRegisterValue(src);
-    cpu.af.bytes.hi = add_a_value(value);
-}
-
-fn op_sub_a(src:Register) void {
-    const value = getRegisterValue(src);
-    cpu.af.bytes.hi = sub_a_value(value);
-}
-
-fn op_adc_a(src: Register) void {
-    const value = getRegisterValue(src);
-    value += (cpu.af.bytes.lo & FLAG_C);
-    cpu.af.bytes.hi = adc_a_value(value);
-}
-
-fn op_sbc_a(src: Register) void {
-    const value = getRegisterValue(src);
-    value += (cpu.af.bytes.lo & FLAG_C);
-    cpu.af.bytes.hi = sbc_a_value(value);
-    
-}
-fn decode_add_a() void {
-    const src: Register = @enumFromInt(opcode & 0b1111);
-    op_add_a(src);
-}
-
-fn decode_sub_a() void {
-    const src: Register = @enumFromInt(opcode & 0b1111);
-    op_sub_a(src);
-}
-
-fn decode_adc_a() void {
-    const src: Register = @enumFromInt(opcode & 0b1111);
-    op_adc_a(src);
-}
-
-fn decode_sbc_a() void {
-    const src: Register = @enumFromInt(opcode & 0b1111);
-    op_sbc_a(src);
-}
 //fn add_offset(reg: u16, offset: i8) u16{
 //return 0;
 //}
@@ -454,6 +294,11 @@ fn op_nop() void {
 //H unaffected
 //Z unaffected
 //S unaffected
+
+//Opcode unknown
+fn op_unknown() void {
+    print("Unknown opcode\n", .{});
+}
 fn op_ld_bc_nn() void {
     const nn = read_nn(cpu.pc);
     cpu.pc += 2;
@@ -856,7 +701,170 @@ fn op_ccf() void {
     cpu.af.bytes.lo ^= FLAG_C;
 }
 
-//Opcode unknown
-fn op_unknown() void {
-    print("Unknown opcode\n", .{});
+fn op_ld(src: Register, dst: Register) void {
+    const value = getRegisterValue(src);
+    setRegisterValue(dst, value);
 }
+
+fn decode_ld() void {
+    const src: Register = @enumFromInt(opcode & 0b111);
+    const dst: Register = @enumFromInt((opcode >> 3) & 0b111);
+    op_ld(src, dst);
+}
+
+fn op_add_a(src:Register) void {
+    const value = getRegisterValue(src);
+    cpu.af.bytes.hi = add_a_value(value);
+}
+
+fn decode_add_a() void {
+    const src: Register = @enumFromInt(opcode & 0b1111);
+    op_add_a(src);
+}
+
+fn add_a_value(value: u8) u8{
+    const add:u16 = @as(u16, cpu.af.bytes.hi) + @as(u16, value);    
+
+    const res: u8 = @truncate(add);
+
+
+    if(res < 0){
+        //set the carry flag if an overflow happened
+        cpu.af.bytes.lo |= FLAG_C;
+    }
+
+    if(res == 0){
+        //set the zero flag
+        cpu.af.bytes.lo |= FLAG_Z;
+    }
+
+    //sign flag
+    if((res & 0x80) != 0){
+        //set the sign flag
+        cpu.af.bytes.lo |= FLAG_S;
+    }
+    //reset the N flag
+    cpu.af.bytes.lo &= ~(FLAG_N);
+
+    return res;
+}
+
+fn op_adc_a(src: Register) void {
+    var value: u8 = getRegisterValue(src);
+    value += (cpu.af.bytes.lo & FLAG_C);
+    cpu.af.bytes.hi = adc_a_value(value);
+}
+
+fn decode_adc_a() void {
+    const src: Register = @enumFromInt(opcode & 0b1111);
+    op_adc_a(src);
+}
+
+fn adc_a_value(value: u8) u8{
+    const carry = (cpu.af.bytes.lo & FLAG_C);
+    const sum = @as(u16, value) + @as(u16, cpu.af.bytes.hi) + carry;
+
+    const res: u8 = @truncate(sum);
+
+    if(sum > 0xFF){
+        //set the carry flag if an overflow happened
+        cpu.af.bytes.lo |= FLAG_C;
+    }
+    
+    if(res == 0){
+        //set the zero flag if result is 0 
+        cpu.af.bytes.lo |= FLAG_Z;
+    }
+
+    //sign flag
+    if((res & 0x80) != 0){
+        //set the sign flag
+        cpu.af.bytes.lo |= FLAG_S;
+    }
+
+    //reset the N flag
+    cpu.af.bytes.lo &= ~(FLAG_N);
+
+    return res;
+}
+
+fn op_sub_a(src:Register) void {
+    const value = getRegisterValue(src);
+    cpu.af.bytes.hi = sub_a_value(value);
+}
+
+fn decode_sub_a() void {
+    const src: Register = @enumFromInt(opcode & 0b1111);
+    op_sub_a(src);
+}
+
+fn sub_a_value(value: u8) u8{
+    const sub:u16 = @as(u16, cpu.af.bytes.hi) - @as(u16, value);    
+
+    const res: u8 = @truncate(sub);
+
+
+    if(res < 0){
+        //set the carry flag if an overflow happened
+        cpu.af.bytes.lo |= FLAG_C;
+    }
+
+    if(res == 0){
+        //set the zero flag
+        cpu.af.bytes.lo |= FLAG_Z;
+    }
+
+    //sign flag
+    if((res & 0x80) != 0){
+        //set the sign flag
+        cpu.af.bytes.lo |= FLAG_S;
+    }
+    //reset the N flag
+    cpu.af.bytes.lo &= ~(FLAG_N);
+
+    return res;
+}
+
+fn op_sbc_a(src: Register) void {
+    const value = getRegisterValue(src);
+    value += (cpu.af.bytes.lo & FLAG_C);
+    cpu.af.bytes.hi = sbc_a_value(value);
+    
+}
+
+fn decode_sbc_a() void {
+    const src: Register = @enumFromInt(opcode & 0b1111);
+    op_sbc_a(src);
+}
+
+fn sbc_a_value(value: u8) u8{
+    const carry = (cpu.af.bytes.lo & FLAG_C);
+    const sum = @as(u16, value) - @as(u16, cpu.af.bytes.hi) - carry;
+
+    const res: u8 = @truncate(sum);
+
+    //flags
+    //carry flag
+    if(sum > 0xFF){
+        //set the carry flag if an overflow happened
+        cpu.af.bytes.lo |= FLAG_C;
+    }
+    
+    //zero flag
+    if(res == 0){
+        //set the zero flag if result is 0 
+        cpu.af.bytes.lo |= FLAG_Z;
+    }
+
+    //sign flag
+    if((res & 0x80) != 0){
+        //set the sign flag
+        cpu.af.bytes.lo |= FLAG_S;
+    }
+
+    //reset the N flag
+    cpu.af.bytes.lo &= ~(FLAG_N);
+
+    return res;
+}
+
