@@ -141,7 +141,15 @@ pub fn initTables() void {
         mainOpcodes[op] = decode_add_a;
     }
 
+    for(0x88..0x8F) |op| {
+        mainOpcodes[op] = decode_adc_a;
+    }
+
     for(0x90..0x97) |op| {
+        mainOpcodes[op] = decode_sub_a;
+    }
+
+    for(0x98..0x9F) |op| {
         mainOpcodes[op] = decode_sub_a;
     }
 }
