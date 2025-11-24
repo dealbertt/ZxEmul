@@ -194,22 +194,30 @@ fn add_16bitRegs(reg1: u16, reg2: u16) u16 {
 }
 
 fn add_a_value(value: u8) u8{
-    const sum = @addWithOverflow(cpu.af.bytes.hi, value);    
+    const add:u16 = @as(u16, cpu.af.bytes.hi) + @as(u16, value);    
 
-    if(sum[1] == 1){
+    const res: u8 = @truncate(add);
+
+
+    if(res < 0){
         //set the carry flag if an overflow happened
         cpu.af.bytes.lo |= FLAG_C;
     }
 
-    if(sum[0] == 0){
+    if(res == 0){
         //set the zero flag
         cpu.af.bytes.lo |= FLAG_Z;
     }
 
+    //sign flag
+    if((res & 0x80) != 0){
+        //set the sign flag
+        cpu.af.bytes.lo |= FLAG_S;
+    }
     //reset the N flag
     cpu.af.bytes.lo &= ~(FLAG_N);
 
-    return sum[0];
+    return res;
 }
 
 fn sub_a_value(value: u8) u8{
@@ -217,7 +225,6 @@ fn sub_a_value(value: u8) u8{
 
     const res: u8 = @truncate(sub);
 
-    cpu.af.bytes.hi = res;
 
     if(res < 0){
         //set the carry flag if an overflow happened
@@ -264,6 +271,8 @@ fn adc_a_value(value: u8) u8{
 
     //reset the N flag
     cpu.af.bytes.lo &= ~(FLAG_N);
+
+    return res;
 }
 
 fn sbc_a_value(value: u8) u8{
