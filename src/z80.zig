@@ -213,22 +213,31 @@ fn add_a_value(value: u8) u8{
 }
 
 fn sub_a_value(value: u8) u8{
-    const sub = @subWithOverflow(cpu.af.bytes.hi, value);    
+    const sub:u16 = @as(u16, cpu.af.bytes.hi) - @as(u16, value);    
 
-    if(sub[1] == 1){
+    const res: u8 = @truncate(sub);
+
+    cpu.af.bytes.hi = res;
+
+    if(res < 0){
         //set the carry flag if an overflow happened
         cpu.af.bytes.lo |= FLAG_C;
     }
 
-    if(sub[0] == 0){
+    if(res == 0){
         //set the zero flag
         cpu.af.bytes.lo |= FLAG_Z;
     }
 
+    //sign flag
+    if((res & 0x80) != 0){
+        //set the sign flag
+        cpu.af.bytes.lo |= FLAG_S;
+    }
     //reset the N flag
     cpu.af.bytes.lo &= ~(FLAG_N);
 
-    return sub[0];
+    return res;
 }
 
 fn adc_a_value(value: u8) u8{
@@ -237,7 +246,6 @@ fn adc_a_value(value: u8) u8{
 
     const res: u8 = @truncate(sum);
 
-    cpu.af.bytes.hi = res;
     if(sum > 0xFF){
         //set the carry flag if an overflow happened
         cpu.af.bytes.lo |= FLAG_C;
@@ -246,6 +254,12 @@ fn adc_a_value(value: u8) u8{
     if(res == 0){
         //set the zero flag if result is 0 
         cpu.af.bytes.lo |= FLAG_Z;
+    }
+
+    //sign flag
+    if((res & 0x80) != 0){
+        //set the sign flag
+        cpu.af.bytes.lo |= FLAG_S;
     }
 
     //reset the N flag
@@ -258,11 +272,7 @@ fn sbc_a_value(value: u8) u8{
 
     const res: u8 = @truncate(sum);
 
-    //write back
-    cpu.af.bytes.hi = res;
-
     //flags
-
     //carry flag
     if(sum > 0xFF){
         //set the carry flag if an overflow happened
@@ -275,8 +285,16 @@ fn sbc_a_value(value: u8) u8{
         cpu.af.bytes.lo |= FLAG_Z;
     }
 
+    //sign flag
+    if((res & 0x80) != 0){
+        //set the sign flag
+        cpu.af.bytes.lo |= FLAG_S;
+    }
+
     //reset the N flag
     cpu.af.bytes.lo &= ~(FLAG_N);
+
+    return res;
 }
 fn inc_8bitReg(reg: *u8) void{
     const inc = @addWithOverflow(reg.*, 1);
