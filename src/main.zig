@@ -1,7 +1,7 @@
 const std = @import("std");
 const rl = @import("raylib");
 
-const z80 = @import("z80/instructions/z80_opcodes.zig");
+const z80 = @import("z80/instructions/main_instructions.zig");
 const config = @import("config.zig");
 
 const print = std.debug.print;
