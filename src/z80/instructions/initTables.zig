@@ -96,4 +96,8 @@ pub fn initTables() void {
     for(0x98..0x9F) |op| {
         mainOpcodes[op] = main.decode_sub_a;
     }
+
+    for(0xA0..0xA7) |op| {
+        mainOpcodes[op] = main.decode_and_a;
+    }
 }

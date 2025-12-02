@@ -35,13 +35,13 @@ pub fn loadProgram() !u8 {
     return 0;
 }
 
-pub fn read_nn(addr: u16) u16 {
+fn read_nn(addr: u16) u16 {
     const lo = z80.memory[addr];
     const hi = z80.memory[addr + 1];
     return @as(u16, hi) << 8 | lo;
 }
 
-pub fn add_16bitRegs(reg1: u16, reg2: u16) u16 {
+fn add_16bitRegs(reg1: u16, reg2: u16) u16 {
     const sum = @addWithOverflow(reg1, reg2);
     if (sum[1] == 1) {
         //set the carry flag if an overflow happened
@@ -58,10 +58,7 @@ pub fn add_16bitRegs(reg1: u16, reg2: u16) u16 {
     return sum[0];
 }
 
-
-
-
-pub fn inc_8bitReg(reg: *u8) void{
+fn inc_8bitReg(reg: *u8) void{
     const inc = @addWithOverflow(reg.*, 1);
     if(inc[1] == 1){
         //set the carry flag if an overflow happened
@@ -79,7 +76,7 @@ pub fn inc_8bitReg(reg: *u8) void{
     reg.* = inc[0];
 }
 
-pub fn inc_16bitReg(reg: *u16) void{
+fn inc_16bitReg(reg: *u16) void{
     const inc = @addWithOverflow(reg.*, 1);
     if(inc[1] == 1){
         //set the carry flag if an overflow happened
@@ -101,7 +98,7 @@ const Register = enum(u3){
     B, C, D, E, H, L, A, HL,
 };
 
-pub fn getRegisterValue(r: Register) u8{
+fn getRegisterValue(r: Register) u8{
     return switch(r){
         .B => z80.cpu.bc.bytes.hi,
         .C => z80.cpu.bc.bytes.lo,
@@ -114,7 +111,7 @@ pub fn getRegisterValue(r: Register) u8{
     };
 }
 
-pub fn setRegisterValue(r: Register, value: u8) void {
+fn setRegisterValue(r: Register, value: u8) void {
     switch(r){
         .B => z80.cpu.bc.bytes.hi = value,
         .C => z80.cpu.bc.bytes.lo = value,
@@ -558,7 +555,7 @@ pub fn op_ccf() void {
     z80.cpu.af.bytes.lo ^= z80.FLAG_C;
 }
 
-pub fn op_ld(src: Register, dst: Register) void {
+fn op_ld(src: Register, dst: Register) void {
     const value = getRegisterValue(src);
     setRegisterValue(dst, value);
 }
@@ -569,7 +566,7 @@ pub fn decode_ld() void {
     op_ld(src, dst);
 }
 
-pub fn op_add_a(src:Register) void {
+fn op_add_a(src:Register) void {
     const value = getRegisterValue(src);
     z80.cpu.af.bytes.hi = add_a_value(value);
 }
@@ -579,7 +576,7 @@ pub fn decode_add_a() void {
     op_add_a(src);
 }
 
-pub fn add_a_value(value: u8) u8{
+fn add_a_value(value: u8) u8{
     const add:u16 = @as(u16, z80.cpu.af.bytes.hi) + @as(u16, value);    
 
     const res: u8 = @truncate(add);
@@ -606,7 +603,7 @@ pub fn add_a_value(value: u8) u8{
     return res;
 }
 
-pub fn op_adc_a(src: Register) void {
+fn op_adc_a(src: Register) void {
     var value: u8 = getRegisterValue(src);
     value += (z80.cpu.af.bytes.lo & z80.FLAG_C);
     z80.cpu.af.bytes.hi = adc_a_value(value);
@@ -617,7 +614,7 @@ pub fn decode_adc_a() void {
     op_adc_a(src);
 }
 
-pub fn adc_a_value(value: u8) u8{
+fn adc_a_value(value: u8) u8{
     const carry = (z80.cpu.af.bytes.lo & z80.FLAG_C);
     const sum = @as(u16, value) + @as(u16, z80.cpu.af.bytes.hi) + carry;
 
@@ -645,7 +642,7 @@ pub fn adc_a_value(value: u8) u8{
     return res;
 }
 
-pub fn op_sub_a(src:Register) void {
+fn op_sub_a(src:Register) void {
     const value = getRegisterValue(src);
     z80.cpu.af.bytes.hi = sub_a_value(value);
 }
@@ -655,7 +652,7 @@ pub fn decode_sub_a() void {
     op_sub_a(src);
 }
 
-pub fn sub_a_value(value: u8) u8{
+fn sub_a_value(value: u8) u8{
     const sub:u16 = @as(u16, z80.cpu.af.bytes.hi) - @as(u16, value);    
 
     const res: u8 = @truncate(sub);
@@ -682,7 +679,7 @@ pub fn sub_a_value(value: u8) u8{
     return res;
 }
 
-pub fn op_sbc_a(src: Register) void {
+fn op_sbc_a(src: Register) void {
     const value = getRegisterValue(src);
     value += (z80.cpu.af.bytes.lo & z80.FLAG_C);
     z80.cpu.af.bytes.hi = sbc_a_value(value);
@@ -694,7 +691,7 @@ pub fn decode_sbc_a() void {
     op_sbc_a(src);
 }
 
-pub fn sbc_a_value(value: u8) u8{
+fn sbc_a_value(value: u8) u8{
     const carry = (z80.cpu.af.bytes.lo & z80.FLAG_C);
     const sum = @as(u16, value) - @as(u16, z80.cpu.af.bytes.hi) - carry;
 
@@ -721,6 +718,28 @@ pub fn sbc_a_value(value: u8) u8{
 
     //reset the N flag
     z80.cpu.af.bytes.lo &= ~(z80.FLAG_N);
+
+    return res;
+}
+
+fn op_and_a(src:Register) void {
+    const value = getRegisterValue(src);
+    z80.cpu.af.bytes.hi = and_a_value(value);
+}
+
+pub fn decode_and_a() void {
+    const src: Register = @enumFromInt(z80.opcode & 0b1111);
+    op_and_a(src);
+}
+
+fn and_a_value(value: u8) u8 {
+    const res = z80.cpu.af.bytes.hi & value;  
+
+    //reset the N flag
+    z80.cpu.af.bytes.lo &= ~(z80.FLAG_N);
+
+    //reset the C flag
+    z80.cpu.af.bytes.lo &= ~(z80.FLAG_C);
 
     return res;
 }
