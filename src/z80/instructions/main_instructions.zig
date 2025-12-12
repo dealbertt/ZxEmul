@@ -722,9 +722,32 @@ fn sbc_a_value(value: u8) u8{
     return res;
 }
 
+const op = enum {
+    And,
+    Xor,
+    Or
+};
+
+fn decode_binary_operation(value: u8, operation: op) u8 {
+        var res: u8 = z80.cpu.af.bytes.hi;
+        switch(operation){
+            .And => res &= value,
+            .Xor => res ^= value,
+            .Or  => res |= value,
+        }
+
+        //reset the N flag
+        z80.cpu.af.bytes.lo &= ~(z80.FLAG_N);
+
+        //reset the C flag
+        z80.cpu.af.bytes.lo &= ~(z80.FLAG_C);
+
+        return res;
+}
+
 fn op_and_a(src:Register) void {
     const value = getRegisterValue(src);
-    z80.cpu.af.bytes.hi = and_a_value(value);
+    z80.cpu.af.bytes.hi = decode_binary_operation(value, .And);
 }
 
 pub fn decode_and_a() void {
@@ -732,21 +755,9 @@ pub fn decode_and_a() void {
     op_and_a(src);
 }
 
-fn and_a_value(value: u8) u8 {
-    const res = z80.cpu.af.bytes.hi & value;  
-
-    //reset the N flag
-    z80.cpu.af.bytes.lo &= ~(z80.FLAG_N);
-
-    //reset the C flag
-    z80.cpu.af.bytes.lo &= ~(z80.FLAG_C);
-
-    return res;
-}
-
 fn op_xor_a(src:Register) void {
     const value = getRegisterValue(src);
-    z80.cpu.af.bytes.hi = xor_a_value(value);
+    z80.cpu.af.bytes.hi = decode_binary_operation(value, .Xor);
 }
 
 pub fn decode_xor_a() void {
@@ -754,37 +765,14 @@ pub fn decode_xor_a() void {
     op_xor_a(src);
 }
 
-fn xor_a_value(value: u8) u8 {
-    const res = z80.cpu.af.bytes.hi ^ value;  
-
-    //reset the N flag
-    z80.cpu.af.bytes.lo &= ~(z80.FLAG_N);
-
-    //reset the C flag
-    z80.cpu.af.bytes.lo &= ~(z80.FLAG_C);
-
-    return res;
-}
 
 fn op_or_a(src:Register) void {
     const value = getRegisterValue(src);
-    z80.cpu.af.bytes.hi = xor_a_value(value);
+    z80.cpu.af.bytes.hi = decode_binary_operation(value, .Or);
 }
 
 pub fn decode_or_a() void {
     const src: Register = @enumFromInt(z80.opcode & 0b1111);
     op_xor_a(src);
-}
-
-fn or_a_value(value: u8) u8 {
-    const res = z80.cpu.af.bytes.hi | value;  
-
-    //reset the N flag
-    z80.cpu.af.bytes.lo &= ~(z80.FLAG_N);
-
-    //reset the C flag
-    z80.cpu.af.bytes.lo &= ~(z80.FLAG_C);
-
-    return res;
 }
 
