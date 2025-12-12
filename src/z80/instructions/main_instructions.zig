@@ -743,3 +743,48 @@ fn and_a_value(value: u8) u8 {
 
     return res;
 }
+
+fn op_xor_a(src:Register) void {
+    const value = getRegisterValue(src);
+    z80.cpu.af.bytes.hi = xor_a_value(value);
+}
+
+pub fn decode_xor_a() void {
+    const src: Register = @enumFromInt(z80.opcode & 0b1111);
+    op_xor_a(src);
+}
+
+fn xor_a_value(value: u8) u8 {
+    const res = z80.cpu.af.bytes.hi ^ value;  
+
+    //reset the N flag
+    z80.cpu.af.bytes.lo &= ~(z80.FLAG_N);
+
+    //reset the C flag
+    z80.cpu.af.bytes.lo &= ~(z80.FLAG_C);
+
+    return res;
+}
+
+fn op_or_a(src:Register) void {
+    const value = getRegisterValue(src);
+    z80.cpu.af.bytes.hi = xor_a_value(value);
+}
+
+pub fn decode_or_a() void {
+    const src: Register = @enumFromInt(z80.opcode & 0b1111);
+    op_xor_a(src);
+}
+
+fn or_a_value(value: u8) u8 {
+    const res = z80.cpu.af.bytes.hi | value;  
+
+    //reset the N flag
+    z80.cpu.af.bytes.lo &= ~(z80.FLAG_N);
+
+    //reset the C flag
+    z80.cpu.af.bytes.lo &= ~(z80.FLAG_C);
+
+    return res;
+}
+

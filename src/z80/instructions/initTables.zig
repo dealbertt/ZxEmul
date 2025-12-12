@@ -100,4 +100,12 @@ pub fn initTables() void {
     for(0xA0..0xA7) |op| {
         mainOpcodes[op] = main.decode_and_a;
     }
+
+    for(0xA8..0xAF) |op| {
+        mainOpcodes[op] = main.decode_xor_a;
+    }
+
+    for(0xB0..0xB7) |op| {
+        mainOpcodes[op] = main.decode_or_a;
+    }
 }
