@@ -14,7 +14,9 @@ const print = std.debug.print;
 //- Get the path to the rom or program through a command line argument
 
 const custom = error {
-    argumentNotProvided
+    argumentNotProvided,
+    romSizeTooBig
+
 };
 pub fn main() !void {
     //const emulConfig = config.emulConfig { .width= 1280, .height= 720, .debug = false, .fps = 60 };

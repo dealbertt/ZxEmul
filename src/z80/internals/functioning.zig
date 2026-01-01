@@ -17,18 +17,20 @@ pub fn loadProgram(path: []const u8) !u8 {
     const file = try std.fs.cwd().openFile(path, .{});
     defer file.close();
 
-    var buf:[4096]u8 = undefined;
-    var reader = file.reader(&buf);
 
-     while(true){
-        const line = reader.interface.takeDelimiterExclusive('\n') catch |e| {
-            if(e == error.EndOfStream) break;
-            return e;
-        };
+    const rom_size = try file.getEndPos();
+    std.debug.print("Size of the file: {}\n", .{rom_size});
 
-        std.debug.print("Line: {s}\n", .{line});
+    if(rom_size > 16384){
+        std.debug.print("The size of the ROM selected is too big!", .{});
+        return error.romSizeTooBig; 
     }
-     return 0;
+    
+    const bytes_read = try file.read(&comps.memory);
+
+
+    std.debug.print("Bytes read: {}\n", .{bytes_read});
+    return 0;
 }
 
 pub fn fetch() !u8 {
