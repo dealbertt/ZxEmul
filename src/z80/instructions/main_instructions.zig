@@ -776,3 +776,21 @@ pub fn decode_or_a() void {
     op_xor_a(src);
 }
 
+
+fn op_cp_a(src:Register) void {
+    const value = getRegisterValue(src);
+    z80.cpu.af.bytes.hi = cp_a_value(value);
+}
+
+pub fn decode_cp_a() void {
+    const src: Register = @enumFromInt(z80.opcode & 0b1111);
+    op_cp_a(src);
+}
+
+fn cp_a_value(value: u8) u8 {
+    const sub:u16 = @as(u16, z80.cpu.af.bytes.hi) - @as(u16, value);    
+
+    const res: u8 = @truncate(sub);
+
+    return res;
+}
