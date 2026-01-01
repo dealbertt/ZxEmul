@@ -1,6 +1,6 @@
 pub const std = @import("std");
 
-pub const memorySize: u16 = 16368;
+pub const memorySize: u32 = 65536;
 
 pub const regPair = extern union { pair: u16, bytes: extern struct {
     lo: u8,
