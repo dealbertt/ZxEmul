@@ -12,16 +12,23 @@ const print = std.debug.print;
 //- Load the config
 //- Initialize raylib
 //- Get the path to the rom or program through a command line argument
-//
 
+const custom = error {
+    argumentNotProvided
+};
 pub fn main() !void {
     //const emulConfig = config.emulConfig { .width= 1280, .height= 720, .debug = false, .fps = 60 };
     const cfg = try config.loadConfig();
     _ = try func.setup();
 
-    _ = try handleArgs();
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
 
-    //func.loadProgram(file_path);
+    const alloc = gpa.allocator();
+    const rom_path =  try handleArgs(alloc);
+    defer alloc.free(rom_path);
+
+    _ = try func.loadProgram(rom_path);
 
 
     rl.initWindow(cfg.width, cfg.height, "ZxSpectrum emulator");
@@ -39,22 +46,15 @@ pub fn main() !void {
     }
 }
 
-fn handleArgs() ![]u8 {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const alloc = gpa.allocator();
-    defer _ = gpa.deinit();
-
+fn handleArgs(alloc: std.mem.Allocator) ![]const u8 {
     const args = try std.process.argsAlloc(alloc);
     defer std.process.argsFree(alloc, args);
     
 
     if(args.len < 2){
         std.debug.print("Please provide a path to the ROM to load!", .{});
+        return custom.argumentNotProvided;
     }
 
-    for(args) |arg| {
-        std.debug.print("  {s}\n", .{arg});
-    }
-    
-    return args[1];
+    return try alloc.dupe(u8, args[1]);
 }

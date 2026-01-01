@@ -28,6 +28,7 @@ pub fn loadProgram(path: []const u8) !u8 {
 
         std.debug.print("Line: {s}\n", .{line});
     }
+     return 0;
 }
 
 pub fn fetch() !u8 {
