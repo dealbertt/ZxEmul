@@ -48,3 +48,4 @@ pub var memory: [memorySize]u8 = [_]u8{0x00} ** memorySize;
 //PROGRAM COUNTER
 pub var opcode: u16 = 0x0000;
 
+

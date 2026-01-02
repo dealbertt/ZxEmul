@@ -770,3 +770,17 @@ fn cp_a_value(value: u8) u8 {
 
     return res;
 }
+
+
+pub fn ret_nz() void {
+    if((z80.cpu.af.bytes.lo & z80.FLAG_Z) == 0){
+        //pop  
+        const lo = z80.memory[z80.cpu.sp];
+        z80.cpu.sp += 1;
+
+        const hi = z80.memory[z80.cpu.sp];
+        z80.cpu.sp += 1;
+
+        z80.cpu.pc = @as(u16, hi) << 8 | lo;
+    }
+}
