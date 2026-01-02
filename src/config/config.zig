@@ -5,7 +5,7 @@ const cwd = std.fs.cwd();
 const c = @cImport(@cInclude("stdio.h"));
 
 
-const configPath = "data/config.txt";
+const configPath = "src/config/config.txt";
 
 const emulConfig = struct{
     height: u16,

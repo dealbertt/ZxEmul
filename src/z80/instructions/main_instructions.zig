@@ -9,31 +9,7 @@ const tables = @import("initTables.zig");
 //We declare and initialize the registers to 0
 //One set is called BC, DE, and HL while the complementary set is called BC', DE', and HL'
 
-
-
-//This would be similar to C's typedef
-pub fn fetch() !u8 {
-    z80.opcode= z80.memory[z80.cpu.pc];
-    z80.cpu.pc += 1;
-    std.debug.print("Current opcode {} \n", .{z80.opcode});
-
-    //if its a normal, 1 byte z80.opcode, the instruction is already known
-    //if its a prefix, CB, ED, DD, or FD, then it must fetch another byte
-    //we might also need to fetch other operands, depending on the instruction
-    //
-    switch (z80.opcode) {
-        0xCB => print("Prefix CB z80.opcode\n", .{}),
-        0xED => print("Prefix CB z80.opcode\n", .{}),
-        else => {},
-    }
-    return z80.opcode;
-}
-
 //function to load the specified program, idk if its going to be throught a command line- argument
-pub fn loadProgram() !u8 {
-    tables.initTables();
-    return 0;
-}
 
 fn read_nn(addr: u16) u16 {
     const lo = z80.memory[addr];
@@ -151,7 +127,7 @@ pub fn op_nop() void {
 
 //Opcode unknown
 pub fn op_unknown() void {
-    print("Unknown opcoden", .{});
+    print("Unknown opcode {}", .{z80.opcode});
 }
 pub fn op_ld_bc_nn() void {
     const nn = read_nn(z80.cpu.pc);

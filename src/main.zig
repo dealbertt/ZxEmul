@@ -2,7 +2,7 @@ const std = @import("std");
 const rl = @import("raylib");
 
 const inst = @import("z80/instructions/main_instructions.zig");
-const config = @import("config.zig");
+const config = @import("config/config.zig");
 const func = @import("z80/internals/functioning.zig");
 
 
@@ -38,7 +38,6 @@ pub fn main() !void {
 
     rl.setTargetFPS(cfg.fps);
 
-    _ = try inst.loadProgram();
     while (!rl.windowShouldClose()) {
         rl.beginDrawing();
         defer rl.endDrawing();
