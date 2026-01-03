@@ -112,4 +112,6 @@ pub fn initTables() void {
     for(0xB8..0xBF) |op| {
         mainOpcodes[op] = main.decode_cp_a;
     }
+
+    mainOpcodes[0xC1] = main.decode_pop_reg;
 }

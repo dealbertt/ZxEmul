@@ -74,6 +74,10 @@ const Register = enum(u3){
     B, C, D, E, H, L, A, HL,
 };
 
+const RegisterPair = enum(u3){
+    BC, DE, HL, AF,
+};
+
 fn getRegisterValue(r: Register) u8{
     return switch(r){
         .B => z80.cpu.bc.bytes.hi,
@@ -87,6 +91,14 @@ fn getRegisterValue(r: Register) u8{
     };
 }
 
+fn getRegisterPair(rp: RegisterPair) *z80.regPair {
+    return switch(rp){
+        .BC => &z80.cpu.bc,
+        .DE => &z80.cpu.de,
+        .HL => &z80.cpu.hl,
+        .AF => &z80.cpu.af,
+    };
+}
 fn setRegisterValue(r: Register, value: u8) void {
     switch(r){
         .B => z80.cpu.bc.bytes.hi = value,
@@ -783,4 +795,22 @@ pub fn ret_nz() void {
 
         z80.cpu.pc = @as(u16, hi) << 8 | lo;
     }
+}
+
+fn op_pop_reg(src:RegisterPair) void {
+    const pair = getRegisterPair(src);
+    pop_reg(pair);
+}
+
+pub fn decode_pop_reg() void {
+    const src: RegisterPair = @enumFromInt(@as(u3, @intCast((z80.opcode >> 4) & 0b11)));
+    op_pop_reg(src);
+}
+
+fn pop_reg(regPair: *z80.regPair) void {
+    regPair.bytes.lo = z80.memory[z80.cpu.sp];
+    z80.cpu.sp += 1;
+
+    regPair.bytes.hi = z80.memory[z80.cpu.sp];
+    z80.cpu.sp += 1;
 }
