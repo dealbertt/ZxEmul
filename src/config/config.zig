@@ -1,6 +1,5 @@
 const std = @import("std");
 const print = std.debug.print;
-const cwd = std.fs.cwd();
 
 
 const configPath = "src/config/config.txt";
@@ -10,6 +9,7 @@ const emulConfig = struct{
     width: u16,
     debug: bool,
     fps: u8,
+
     pub fn reportConfig(self: emulConfig) void{
         print("Window Width: {}\n", .{self.width});
         print("Window Height: {}\n", .{self.height});
@@ -41,8 +41,6 @@ pub fn loadConfig() !emulConfig{
         .fps = 60,
     };
 
-    //given that in C, an array is pointer to the first element, we quite literally have to do that in Zig.
-    //
     while(true){
         const line = reader.interface.takeDelimiterExclusive('\n') catch |e| {
             if(e == error.EndOfStream) break;

@@ -7,6 +7,7 @@ const inst = @import("../instructions/initTables.zig");
 const print = std.debug.print;
 
 const ROM_MEMORY_LIMIT = 16384;
+
 pub fn setup() !u8{
     //load the initTables
     inst.initTables();
@@ -50,9 +51,20 @@ pub fn loadProgram(path: []const u8) !u8 {
     return 0;
 }
 
+pub fn read8(addr: u16) u8{
+    return comps.memory[addr];
+}
+
+
+pub fn write8(addr: u16, value: u8) void {
+    if(addr >= ROM_MEMORY_LIMIT){
+        comps.memory[addr] = value;
+    }
+    //CANNOT WRITE TO ROM MEMORY
+} 
 
 pub fn fetch() !u8 {
-    comps.opcode= comps.memory[comps.cpu.pc];
+    comps.opcode = read8(comps.cpu.pc);
     comps.cpu.pc += 1;
     std.debug.print("Current opcode {} \n", .{comps.opcode});
 
@@ -60,11 +72,11 @@ pub fn fetch() !u8 {
     //if its a prefix, CB, ED, DD, or FD, then it must fetch another byte
     //we might also need to fetch other operands, depending on the instruction
     //
-    switch (comps.opcode) {
-        0xCB => print("Prefix CB z80.opcode\n", .{}),
-        0xED => print("Prefix CB z80.opcode\n", .{}),
-        else => {},
-    }
+    //switch (comps.opcode) {
+    //   0xCB => print("Prefix CB z80.opcode\n", .{}),
+    //   0xED => print("Prefix CB z80.opcode\n", .{}),
+        //else => {},
+    //}
     return comps.opcode;
 }
 

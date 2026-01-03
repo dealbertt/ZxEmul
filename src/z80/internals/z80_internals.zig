@@ -2,11 +2,6 @@ pub const std = @import("std");
 
 pub const memorySize: u32 = 65536;
 
-pub const regPair = extern union { pair: u16, bytes: extern struct {
-    lo: u8,
-    hi: u8,
-    }
-};
 
 //The F register is used for flags :
 //Bit 7: Sign Flag
@@ -18,12 +13,6 @@ pub const regPair = extern union { pair: u16, bytes: extern struct {
 //Bit 1: Add/Substract Flag
 //Bit 0: Carry Flag
 
-pub const FLAG_C: u8 = 0b0000_0001;
-pub const FLAG_N: u8 = 0b0000_0010;
-pub const FLAG_P: u8 = 0b0000_0100;
-pub const FLAG_H: u8 = 0b0001_0000;
-pub const FLAG_Z: u8 = 0b0100_0000;
-pub const FLAG_S: u8 = 0b1000_0000;
 
 pub const registers = struct {
     af: regPair,
@@ -39,8 +28,6 @@ pub const registers = struct {
 //idk really know what to do with the "ghost" registers
 
 //and then we have the "shadow" registers
-
-pub var cpu = registers{ .af = .{ .pair = 0 }, .bc = .{ .pair = 0 }, .de = .{ .pair = 0 }, .hl = .{ .pair = 0 }, .ix = 0, .iy = 0, .sp = 0, .pc = 0 };
 
 pub var memory: [memorySize]u8 = [_]u8{0x00} ** memorySize;
 //STACK POINTER
