@@ -2,8 +2,6 @@ const std = @import("std");
 const print = std.debug.print;
 const cwd = std.fs.cwd();
 
-const c = @cImport(@cInclude("stdio.h"));
-
 
 const configPath = "src/config/config.txt";
 
@@ -26,12 +24,11 @@ pub fn loadConfig() !emulConfig{
     //We open the file only to read it
     //var file = try cwd.openFile(configPath, .{.mode = .read_only});
 
-    const file = c.fopen(configPath, "r");
+    const file = try std.fs.cwd().openFile(configPath, .{});
+    defer file.close();
 
-    if(file == null){
-        return error.FileNotFound;
-    }
-    var line: [100]u8 = undefined;
+    var buf: [4096]u8 = undefined;
+    var reader = file.reader(&buf);
 
     //var buf: [256]u8 = undefined;
     //var reader = file.reader(&buf).interface;
@@ -46,7 +43,12 @@ pub fn loadConfig() !emulConfig{
 
     //given that in C, an array is pointer to the first element, we quite literally have to do that in Zig.
     //
-    while(c.fgets(&line[0], line.len , file) != null){
+    while(true){
+        const line = reader.interface.takeDelimiterExclusive('\n') catch |e| {
+            if(e == error.EndOfStream) break;
+            return e;
+        };
+        if (line.len == 0) break;
         var end: usize = 0;
         while(end < line.len and line[end] != 0): (end += 1){}
 
