@@ -1,3 +1,4 @@
+pub var opcode: u16 = 0;
 
 pub const regPair = extern union { pair: u16, bytes: extern struct {
     lo: u8,
@@ -16,7 +17,6 @@ pub const State = struct{
     sp: u16,
     pc: u16,
 
-    
     memory: []u8,
 };
 

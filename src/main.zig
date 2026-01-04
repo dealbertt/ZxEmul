@@ -14,8 +14,8 @@ const print = std.debug.print;
 const custom = error {
     argumentNotProvided,
     romSizeTooBig
-
 };
+
 pub fn main() !void {
     //load the config from the config file
     const cfg = try config.loadConfig();
@@ -31,10 +31,6 @@ pub fn main() !void {
 
     const comp = try spec.Spectrum.init(rom_path);
     std.debug.print("AF: {}\n", .{comp.cpu.state.af.pair});
-
-
-
-
 
     rl.initWindow(cfg.width, cfg.height, "ZxSpectrum emulator");
     defer rl.closeWindow();

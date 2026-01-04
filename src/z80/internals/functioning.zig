@@ -7,14 +7,6 @@ const inst = @import("../instructions/tables.zig");
 const print = std.debug.print;
 
 
-pub fn setup() !u8{
-    //load the initTables
-    inst.initTables();
-
-    //i might have to do other things like initializing the screen, audio, keyboard, etc
-    return 0;
-}
-
 
 pub fn read8(addr: u16) u8{
     return comps.memory[addr];
