@@ -1,10 +1,8 @@
 const std = @import("std");
 const rl = @import("raylib");
 
-const inst = @import("z80/instructions/main_instructions.zig");
 const config = @import("config/config.zig");
-const func = @import("z80/internals/functioning.zig");
-
+const spec = @import("spectrum/spectrum.zig");
 
 const print = std.debug.print;
 
@@ -19,18 +17,23 @@ const custom = error {
 
 };
 pub fn main() !void {
-    //const emulConfig = config.emulConfig { .width= 1280, .height= 720, .debug = false, .fps = 60 };
+    //load the config from the config file
     const cfg = try config.loadConfig();
-    _ = try func.setup();
 
+    //create allocator to handle args
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
-
     const alloc = gpa.allocator();
+
+    //handle args
     const rom_path =  try handleArgs(alloc);
     defer alloc.free(rom_path);
 
-    _ = try func.loadProgram(rom_path);
+    const comp = try spec.Spectrum.init(rom_path);
+    std.debug.print("AF: {}\n", .{comp.cpu.state.af.pair});
+
+
+
 
 
     rl.initWindow(cfg.width, cfg.height, "ZxSpectrum emulator");
