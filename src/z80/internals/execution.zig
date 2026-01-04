@@ -2,6 +2,7 @@ const std = @import("std");
 
 const s = @import("state.zig");
 const mem = @import("memory.zig");
+const t = @import("../instructions/tables.zig");
 
 fn fetch(state: *s.State) u8 {
     state.opcode = mem.read8(state.cpu.pc);
@@ -10,7 +11,9 @@ fn fetch(state: *s.State) u8 {
 }
 
 pub fn step(state: *s.State) void {
-    _ = fetch(state);
+    const opcode = fetch(state);
+    const handle = t.mainOpcodes[opcode]; 
+    handle(state);
     //decode
     //execute
     //write back

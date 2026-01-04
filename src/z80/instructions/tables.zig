@@ -2,7 +2,7 @@ const main = @import("main.zig");
 const s = @import("../internals/state.zig");
 const OpcodeHandler = *const fn (*s.State) void;
 
-var mainOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) void{main.op_unknown} ** 256;
+pub var mainOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) void{main.op_unknown} ** 256;
 //function created to load all of the main.functions into the opcode arrays/lookup table
 pub fn initTables() void {
     for (0..256) |index| {
