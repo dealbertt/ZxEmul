@@ -18,6 +18,18 @@ const mem = @import("../internals/memory.zig");
 
 //gotta make a couple of optimizations for the first instructions like ld to use a template
 
+const Register = enum(u3){
+    B, C, D, E, H, L, A, HL,
+};
+
+const RegisterPair = enum(u3){
+    BC, DE, HL, AF,
+};
+
+const Flags = enum(u3){
+    NC, NZ, PO, P, Z, C, PE, M
+};
+
 fn add_16bitRegs(reg1: u16, reg2: u16, state: *s.State) u16 {
     const sum = @addWithOverflow(reg1, reg2);
     if (sum[1] == 1) {
@@ -72,13 +84,6 @@ fn inc_16bitReg(reg: *u16, state: *s.State) void{
     reg.* = inc[0];
 }
 
-const Register = enum(u3){
-    B, C, D, E, H, L, A, HL,
-};
-
-const RegisterPair = enum(u3){
-    BC, DE, HL, AF,
-};
 
 fn getRegisterValue(r: Register, state: *s.State) u8{
     return switch(r){
@@ -101,6 +106,7 @@ fn getRegisterPair(rp: RegisterPair, state: *s.State) *s.regPair {
         .AF => &state.af,
     };
 }
+
 fn setRegisterValue(r: Register, value: u8, state: *s.State) void {
     switch(r){
         .B => state.bc.bytes.hi = value,
@@ -114,6 +120,14 @@ fn setRegisterValue(r: Register, value: u8, state: *s.State) void {
     }
 }
 
+fn getFlag(f: Flags) u8 {
+    return switch (f) {
+        .NC, .C => s.FLAG_C,
+        .NZ, .Z => s.FLAG_Z,
+        .PO, .PE => s.FLAG_P,
+        .P, .M => s.FLAG_S,
+    };
+}
 
 //pub fn add_offset(reg: u16, offset: i8) u16{
 //return 0;
@@ -788,9 +802,18 @@ fn cp_a_value(value: u8, state: *s.State) u8 {
     return res;
 }
 
+fn op_ret_unset_flag(src:Flags, state: *s.State) void {
+    const flag = getFlag(src);
+    ret_unset_flag(flag, state);
+}
 
-pub fn ret_nz(state: *s.State) void {
-    if((state.af.bytes.lo & s.FLAG_Z) == 0){
+pub fn decode_ret_unset_flag(state: *s.State) void {
+    const src: Flags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    op_ret_unset_flag(src, state);
+}
+
+pub fn ret_unset_flag(flag: u8, state: *s.State) void {
+    if((state.af.bytes.lo & flag) == 0){
         //pop  
         const lo = state.memory[state.sp];
         state.sp += 1;
@@ -821,3 +844,20 @@ fn pop_reg(regPair: *s.regPair, state: *s.State) void {
 }
 
 
+
+//pub fn op_jp_nc_nn(state: *s.State) void {
+//    const nn = mem.read16(state, state.pc);
+//
+//    if(state.af.bytes.hi & s.FLAG_C == 0){
+//        state.pc = nn;
+//    }
+//}
+//
+//pub fn out_n_a(state: *s.State) void {
+//    _ = state;
+//}
+//
+//pub fn call_nc_nn(state: *s.State) void {
+//    const nn = mem.read16(state, state.pc);
+//
+//}

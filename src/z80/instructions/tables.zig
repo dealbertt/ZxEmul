@@ -115,6 +115,8 @@ pub fn initTables() void {
     }
 
 
+    mainOpcodes[0xC0] = main.decode_ret_unset_flag;
+
     mainOpcodes[0xC1] = main.decode_pop_reg;
     mainOpcodes[0xD1] = main.decode_pop_reg;
     mainOpcodes[0xE1] = main.decode_pop_reg;

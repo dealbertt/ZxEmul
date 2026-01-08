@@ -4,7 +4,7 @@ const s = @import("state.zig");
 const mem = @import("memory.zig");
 const t = @import("../instructions/tables.zig");
 
-fn fetch(state: *s.State) u8 {
+pub fn fetch(state: *s.State) u8 {
     state.opcode = mem.read8(state.cpu.pc);
     state.cpu.pc += 1;
     std.debug.print("Current opcode {} \n", .{state.opcode});
