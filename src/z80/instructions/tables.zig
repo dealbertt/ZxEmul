@@ -82,6 +82,8 @@ pub fn initTables() void {
         mainOpcodes[op] = main.decode_ld;
     }
 
+    mainOpcodes[0x76] = main.op_halt;
+
     for(0x80..0x87) |op| {
         mainOpcodes[op] = main.decode_add_a;
     }
@@ -116,10 +118,19 @@ pub fn initTables() void {
 
 
     mainOpcodes[0xC0] = main.decode_ret_unset_flag;
+    mainOpcodes[0xD0] = main.decode_ret_unset_flag;
+    mainOpcodes[0xE0] = main.decode_ret_unset_flag;
+    mainOpcodes[0xF0] = main.decode_ret_unset_flag;
 
     mainOpcodes[0xC1] = main.decode_pop_reg;
     mainOpcodes[0xD1] = main.decode_pop_reg;
     mainOpcodes[0xE1] = main.decode_pop_reg;
     mainOpcodes[0xF1] = main.decode_pop_reg;
+    
+    mainOpcodes[0xC2] = main.decode_jp_unset_flag;
+    mainOpcodes[0xD2] = main.decode_jp_unset_flag;
+    mainOpcodes[0xE2] = main.decode_jp_unset_flag;
+    mainOpcodes[0xF2] = main.decode_jp_unset_flag;
+
 }
 

@@ -12,10 +12,8 @@ const mem = @import("../internals/memory.zig");
 //- implement the missing flag handles on ops like inc, dec, add, sub, etc,...
 
 //KEEP IN MIND THAT THE Z80 IS LITTLE ENDIAN
-//We declare and initialize the registers to 0
 //One set is called BC, DE, and HL while the complementary set is called BC', DE', and HL'
 
-//function to load the specified program, idk if its going to be throught a command line- argument
 
 //gotta make a couple of optimizations for the first instructions like ld to use a template
 
@@ -512,6 +510,9 @@ pub fn decode_ld(state: *s.State) void {
 }
 
 
+pub fn op_halt(state: *s.State) void {
+    _ = state;
+}
 
 //Opcode 80-87
 fn op_add_a(src:h.Register, state: *s.State) void {
@@ -785,6 +786,7 @@ pub fn decode_pop_reg(state: *s.State) void {
     op_pop_reg(src, state);
 }
 
+
 fn pop_reg(regPair: *s.regPair, state: *s.State) void {
     regPair.bytes.lo = state.memory[state.sp];
     state.sp += 1;
@@ -794,6 +796,27 @@ fn pop_reg(regPair: *s.regPair, state: *s.State) void {
 }
 
 
+//Opcode C0, D0, E0, F0
+fn op_jp_unset_flag(src:h.Flags, state: *s.State) void {
+    const flag = h.getFlag(src);
+    const nn = mem.read16(state, state.pc);
+
+    jp_unset_flag(flag, nn, state);
+}
+
+pub fn decode_jp_unset_flag(state: *s.State) void {
+    const src: h.Flags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const flag = h.getFlag(src);
+    const nn = mem.read16(state, state.pc);
+
+    jp_unset_flag(flag, nn, state);
+}
+
+fn jp_unset_flag(flag: u8, value: u16, state: *s.State) void {
+    if((state.af.bytes.lo & flag) == 0){
+        state.pc = value;
+    }
+}
 
 //pub fn op_jp_nc_nn(state: *s.State) void {
 //    const nn = mem.read16(state, state.pc);
