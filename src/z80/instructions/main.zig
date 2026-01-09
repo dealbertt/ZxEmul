@@ -224,6 +224,7 @@ pub fn rla(state: *s.State) void {
     state.af.bytes.hi |= prevCarry;
 }
 
+//Opcode 18
 pub fn jr_d(state: *s.State) void {
     const jump: i8 = @bitCast(state.memory[state.pc]);
     const new_pc: i16 = @as(i16, @bitCast(state.pc)) + @as(i16, jump);
@@ -231,30 +232,38 @@ pub fn jr_d(state: *s.State) void {
     state.pc = @bitCast(@as(i16, new_pc));
 }
 
+//Opcode 19
 pub fn op_add_hl_de(state: *s.State) void {
     state.hl.pair = h.add_16bitRegs(state.hl.pair, state.de.pair, state);
 }
 
+//Opcode 1A 
 pub fn op_ld_de_addr_a(state: *s.State) void {
     state.af.bytes.hi = state.memory[state.de.pair];
 }
 
+//Opcode 1B 
 pub fn op_dec_de(state: *s.State) void {
     state.de.pair -= 1;
 }
 
+//Opcode 1C 
 pub fn op_inc_e(state: *s.State) void {
     h.inc_8bitReg(&state.de.bytes.lo, state);
 }
 
+//Opcode 1D 
 pub fn op_dec_e(state: *s.State) void {
     state.de.bytes.lo -= 1;
 }
+
+//Opcode 1E
 pub fn op_ld_e_n(state: *s.State) void {
     state.de.bytes.lo = state.memory[state.pc];
     state.pc += 1;
 }
 
+//Opcode 1F
 pub fn op_rra(state: *s.State) void {
     const bit7: u8 = (state.af.bytes.hi >> 7) & 1;
     const prevCarry: u8 = state.af.bytes.lo & 0x01; //get the last bit -> carry flag
@@ -267,6 +276,7 @@ pub fn op_rra(state: *s.State) void {
     state.af.bytes.hi |= prevCarry;
 }
 
+//Opcode 20
 pub fn op_jr_nz(state: *s.State) void {
     if ((state.af.bytes.lo & s.FLAG_Z) == 0) {
         //zero flag is not set
@@ -277,6 +287,7 @@ pub fn op_jr_nz(state: *s.State) void {
     }
 }
 
+//Opcode 21
 pub fn op_ld_hl_nn(state: *s.State) void {
     const nn = mem.read16(state, state.pc);
     state.hl.pair = nn;
@@ -284,6 +295,7 @@ pub fn op_ld_hl_nn(state: *s.State) void {
     state.pc += 2;
 }
 
+//Opcode 22
 pub fn op_ld_nn_addr_hl(state: *s.State) void {
     const nn = mem.read16(state, state.pc);
     state.memory[nn] = state.hl.bytes.lo;
@@ -292,27 +304,37 @@ pub fn op_ld_nn_addr_hl(state: *s.State) void {
     state.pc += 2;
 }
 
+//Opcode 23
 pub fn op_inc_hl(state: *s.State) void {
     h.inc_16bitReg(&state.hl.pair, state);
 }
 
+
+//Opcode 24
 pub fn op_inc_h(state: *s.State) void {
     h.inc_8bitReg(&state.hl.bytes.hi, state);
 }
 
+
+//Opcode 25
 pub fn op_dec_h(state: *s.State) void {
     state.hl.bytes.hi -= 1;
 }
 
+
+//Opcode 26
 pub fn op_ld_h_n(state: *s.State) void {
     state.hl.bytes.hi = state.memory[state.pc];
     state.pc += 1;
 }
 
+//Opcode 27
 pub fn op_daa(state: *s.State) void {
     _ = state;
 }
 
+
+//Opcode 28
 pub fn op_jr_z(state: *s.State) void {
     if ((state.af.bytes.lo & s.FLAG_Z) != 0) {
         //zero flag is not set
@@ -324,10 +346,13 @@ pub fn op_jr_z(state: *s.State) void {
     }
 }
 
+//Opcode 29
 pub fn op_add_hl_hl(state: *s.State) void {
     state.hl.pair += state.hl.pair;
 }
 
+
+//Opcode 2A
 //1 byte for the s.opcode?
 //1 byte for
 pub fn op_ld_hl_nn_addr(state: *s.State) void {
@@ -338,22 +363,27 @@ pub fn op_ld_hl_nn_addr(state: *s.State) void {
     state.pc += 2;
 }
 
+//Opcode 2B
 pub fn op_dec_hl(state: *s.State) void {
     state.hl.pair -= 1;
 }
 
+//Opcode 2C
 pub fn op_inc_l(state: *s.State) void {
     h.inc_8bitReg(&state.hl.bytes.lo, state);
 }
 
+//Opcode 2D
 pub fn op_dec_l(state: *s.State) void {
     state.hl.bytes.lo -= 1;
 }
 
+//Opcode 2E
 pub fn op_ld_l_n(state: *s.State) void {
     state.hl.bytes.lo = state.memory[state.pc];
 }
 
+//Opcode 2F
 pub fn op_cpl(state: *s.State) void {
     state.af.bytes.hi = ~state.af.bytes.hi;
 
@@ -361,6 +391,7 @@ pub fn op_cpl(state: *s.State) void {
     state.af.bytes.lo |= (s.FLAG_H | s.FLAG_C);
 }
 
+//Opcode 30
 pub fn op_jr_nc(state: *s.State) void {
     if ((state.af.bytes.lo & s.FLAG_C) == 0) {
         //Carry flag is not set
@@ -372,6 +403,7 @@ pub fn op_jr_nc(state: *s.State) void {
     }
 }
 
+//Opcode 31
 pub fn op_ld_sp_nn(state: *s.State) void {
     const nn = mem.read16(state, state.pc);
     state.sp = nn;
@@ -379,6 +411,7 @@ pub fn op_ld_sp_nn(state: *s.State) void {
     state.pc += 2;
 }
 
+//Opcode 32
 pub fn op_ld_nn_addr_a(state: *s.State) void {
     const nn = mem.read16(state, state.pc);
 
@@ -387,28 +420,35 @@ pub fn op_ld_nn_addr_a(state: *s.State) void {
     state.pc += 2;
 }
 
+//Opcode 33
 pub fn op_inc_sp(state: *s.State) void {
     state.sp += 1;
 }
 
+//Opcode 34
 pub fn op_inc_hl_addr(state: *s.State) void {
     //state.memory[state.hl.pair] += 1;
     h.inc_8bitReg(&state.memory[state.hl.pair], state);
 }
 
+
+//Opcode 35
 pub fn op_dec_hl_addr(state: *s.State) void {
     state.memory[state.hl.pair] -= 1;
 }
 
+//Opcode 36
 pub fn op_ld_hl_addr_n(state: *s.State) void {
     state.memory[state.hl.pair] = state.memory[state.pc];
 }
 
+//Opcode 37
 pub fn op_scf(state: *s.State) void {
     state.af.bytes.lo &= ~(s.FLAG_C | s.FLAG_N | s.FLAG_H);
     state.af.bytes.lo |= s.FLAG_C;
 }
 
+//Opcode 38
 pub fn op_jr_c(state: *s.State) void {
     if ((state.af.bytes.lo & s.FLAG_C) != 0) {
         //Carry flag is set
@@ -420,10 +460,12 @@ pub fn op_jr_c(state: *s.State) void {
     }
 }
 
+//Opcode 39
 pub fn op_add_hl_sp(state: *s.State) void {
     state.hl.pair += state.sp;
 }
 
+//Opcode 3A
 pub fn op_ld_a_nn_addr(state: *s.State) void {
     const nn = mem.read16(state, state.pc);
     state.af.bytes.hi = state.memory[nn];
@@ -431,27 +473,33 @@ pub fn op_ld_a_nn_addr(state: *s.State) void {
     state.pc += 2;
 }
 
+//Opcode 3B
 pub fn op_dec_sp(state: *s.State) void {
     state.sp -= 1;
 }
 
+//Opcode 3C
 pub fn op_inc_a(state: *s.State) void {
     h.inc_8bitReg(&state.af.bytes.hi, state);
 }
 
+//Opcode 3D
 pub fn op_dec_a(state: *s.State) void {
     state.af.bytes.hi -= 1;
 }
 
+//Opcode 3E
 pub fn op_ld_a_n(state: *s.State) void {
     state.af.bytes.hi = state.memory[state.pc];
     state.pc += 1;
 }
 
+//Opcode 3F
 pub fn op_ccf(state: *s.State) void {
     state.af.bytes.lo ^= s.FLAG_C;
 }
 
+//Opcode 40-7F
 fn op_ld(src: h.Register, dst: h.Register, state: *s.State) void {
     const value = h.getRegisterValue(src, state);
     h.setRegisterValue(dst, value, state);
@@ -463,6 +511,9 @@ pub fn decode_ld(state: *s.State) void {
     op_ld(src, dst, state);
 }
 
+
+
+//Opcode 80-87
 fn op_add_a(src:h.Register, state: *s.State) void {
     const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = add_a_value(value, state);
@@ -500,6 +551,7 @@ fn add_a_value(value: u8, state: *s.State) u8{
     return res;
 }
 
+//Opcode 88-8F
 fn op_adc_a(src: h.Register, state: *s.State) void {
     var value: u8 = h.getRegisterValue(src, state);
     value += (state.af.bytes.lo & s.FLAG_C);
@@ -539,6 +591,7 @@ fn adc_a_value(value: u8, state: *s.State) u8{
     return res;
 }
 
+//Opcode 90-97
 fn op_sub_a(src:h.Register, state: *s.State) void {
     const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = sub_a_value(value, state);
@@ -576,6 +629,7 @@ fn sub_a_value(value: u8, state: *s.State) u8{
     return res;
 }
 
+//Opcode 98-9F
 fn op_sbc_a(src: h.Register, state: *s.State) void {
     const value = h.getRegisterValue(src, state);
     value += (state.af.bytes.lo & s.FLAG_C);
@@ -642,6 +696,7 @@ fn decode_binary_operation(value: u8, operation: op, state: *s.State) u8 {
         return res;
 }
 
+//Opcode A0-A7
 fn op_and_a(src:h.Register, state: *s.State) void {
     const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = decode_binary_operation(value, .And, state);
@@ -652,6 +707,7 @@ pub fn decode_and_a(state: *s.State) void {
     op_and_a(src, state);
 }
 
+//Opcode A8-AF
 fn op_xor_a(src:h.Register, state: *s.State) void {
     const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = decode_binary_operation(value, .Xor, state);
@@ -663,6 +719,7 @@ pub fn decode_xor_a(state: *s.State) void {
 }
 
 
+//Opcode B0-B7
 fn op_or_a(src:h.Register, state: *s.State) void {
     const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = decode_binary_operation(value, .Or, state);
@@ -674,6 +731,7 @@ pub fn decode_or_a(state: *s.State) void {
 }
 
 
+//Opcode B8-BF
 fn op_cp_a(src:h.Register, state: *s.State) void {
     const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = cp_a_value(value, state);
@@ -692,6 +750,7 @@ fn cp_a_value(value: u8, state: *s.State) u8 {
     return res;
 }
 
+//Opcode C0, D0, E0, F0
 fn op_ret_unset_flag(src:h.Flags, state: *s.State) void {
     const flag = h.getFlag(src);
     ret_unset_flag(flag, state);
@@ -715,6 +774,7 @@ pub fn ret_unset_flag(flag: u8, state: *s.State) void {
     }
 }
 
+//Opcode C1, D1, E1, F1
 fn op_pop_reg(src:h.RegisterPair, state: *s.State) void {
     const pair = h.getRegisterPair(src, state);
     pop_reg(pair, state);
