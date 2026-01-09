@@ -1,7 +1,8 @@
 const std = @import("std");
 
-const print = std.debug.print;
 const s = @import("../internals/state.zig");
+
+const h = @import("helpers.zig");
 
 const tables = @import("tables.zig");
 
@@ -17,117 +18,6 @@ const mem = @import("../internals/memory.zig");
 //function to load the specified program, idk if its going to be throught a command line- argument
 
 //gotta make a couple of optimizations for the first instructions like ld to use a template
-
-const Register = enum(u3){
-    B, C, D, E, H, L, A, HL,
-};
-
-const RegisterPair = enum(u3){
-    BC, DE, HL, AF,
-};
-
-const Flags = enum(u3){
-    NC, NZ, PO, P, Z, C, PE, M
-};
-
-fn add_16bitRegs(reg1: u16, reg2: u16, state: *s.State) u16 {
-    const sum = @addWithOverflow(reg1, reg2);
-    if (sum[1] == 1) {
-        //set the carry flag if an overflow happened
-        state.af.bytes.lo |= s.FLAG_C;
-    }
-
-    if(sum[0] == 0){
-        //set the zero flag
-        state.af.bytes.lo |= s.FLAG_Z;
-    }
-
-    //reset the N flag
-    state.af.bytes.lo &= ~(s.FLAG_N); 
-    return sum[0];
-}
-
-fn inc_8bitReg(reg: *u8, state: *s.State) void{
-    const inc = @addWithOverflow(reg.*, 1);
-    if(inc[1] == 1){
-        //set the carry flag if an overflow happened
-        state.af.bytes.lo |= s.FLAG_C;
-    }
-
-    if(inc[0] == 0){
-        //set the zero flag
-        state.af.bytes.lo |= s.FLAG_Z;
-    }
-
-
-    //reset the N flag
-    state.af.bytes.lo &= ~(s.FLAG_N);
-    reg.* = inc[0];
-}
-
-fn inc_16bitReg(reg: *u16, state: *s.State) void{
-    const inc = @addWithOverflow(reg.*, 1);
-    if(inc[1] == 1){
-        //set the carry flag if an overflow happened
-        state.af.bytes.lo |= s.FLAG_C;
-
-    }
-
-    if(inc[0] == 0){
-        //set the zero flag
-        state.af.bytes.lo |= s.FLAG_Z;
-    }
-
-
-    //reset the N flag
-    state.af.bytes.lo &= ~(s.FLAG_N);
-    reg.* = inc[0];
-}
-
-
-fn getRegisterValue(r: Register, state: *s.State) u8{
-    return switch(r){
-        .B => state.bc.bytes.hi,
-        .C => state.bc.bytes.lo,
-        .D => state.de.bytes.hi,
-        .E => state.de.bytes.lo,
-        .H => state.hl.bytes.hi,
-        .L => state.hl.bytes.lo,
-        .A => state.af.bytes.hi,
-        .HL=> state.memory[state.hl.pair]
-    };
-}
-
-fn getRegisterPair(rp: RegisterPair, state: *s.State) *s.regPair {
-    return switch(rp){
-        .BC => &state.bc,
-        .DE => &state.de,
-        .HL => &state.hl,
-        .AF => &state.af,
-    };
-}
-
-fn setRegisterValue(r: Register, value: u8, state: *s.State) void {
-    switch(r){
-        .B => state.bc.bytes.hi = value,
-        .C => state.bc.bytes.lo = value,
-        .D => state.de.bytes.hi = value,
-        .E => state.de.bytes.lo = value,
-        .H => state.hl.bytes.hi = value,
-        .L => state.hl.bytes.lo = value,
-        .A => state.af.bytes.hi = value,
-        .HL=> state.memory[state.hl.pair] = value,
-    }
-}
-
-fn getFlag(f: Flags) u8 {
-    return switch (f) {
-        .NC, .C => s.FLAG_C,
-        .NZ, .Z => s.FLAG_Z,
-        .PO, .PE => s.FLAG_P,
-        .P, .M => s.FLAG_S,
-    };
-}
 
 //pub fn add_offset(reg: u16, offset: i8) u16{
 //return 0;
@@ -156,7 +46,7 @@ pub fn op_nop(state: *s.State) void {
 //Opcode unknown
 pub fn op_unknown(state: *s.State) void {
     _ = state;
-    print("Unknown opcode {}", .{s.opcode});
+    std.debug.print("Unknown opcode {}", .{s.opcode});
 }
 pub fn op_ld_bc_nn(state: *s.State) void {
     const nn = mem.read16(state, state.pc);
@@ -171,12 +61,12 @@ pub fn op_ld_bc_addr_a(state: *s.State) void {
 
 //Opcode 03
 pub fn op_inc_bc(state: *s.State) void {
-    inc_16bitReg(&state.bc.pair, state);
+    h.inc_16bitReg(&state.bc.pair, state);
 }
 
 //Opcode 04
 pub fn op_inc_b(state: *s.State) void {
-    inc_8bitReg(&state.bc.bytes.hi, state);
+    h.inc_8bitReg(&state.bc.bytes.hi, state);
 }
 
 //Opcode 05
@@ -244,7 +134,7 @@ pub fn op_dec_bc(state: *s.State) void {
 
 //Opcode 0C
 pub fn op_inc_c(state: *s.State) void {
-    inc_8bitReg(&state.bc.bytes.lo, state);
+    h.inc_8bitReg(&state.bc.bytes.lo, state);
 }
 
 //Opcode 0D
@@ -301,12 +191,12 @@ pub fn op_ld_a_de_addr(state: *s.State) void {
 
 //Opcode 13
 pub fn op_inc_de(state: *s.State) void {
-    inc_16bitReg(&state.de.pair, state);
+    h.inc_16bitReg(&state.de.pair, state);
 }
 
 //Opcode 14
 pub fn op_inc_d(state: *s.State) void {
-    inc_8bitReg(&state.de.bytes.hi, state);
+    h.inc_8bitReg(&state.de.bytes.hi, state);
 }
 
 //Opcode 15
@@ -342,7 +232,7 @@ pub fn jr_d(state: *s.State) void {
 }
 
 pub fn op_add_hl_de(state: *s.State) void {
-    state.hl.pair = add_16bitRegs(state.hl.pair, state.de.pair, state);
+    state.hl.pair = h.add_16bitRegs(state.hl.pair, state.de.pair, state);
 }
 
 pub fn op_ld_de_addr_a(state: *s.State) void {
@@ -354,7 +244,7 @@ pub fn op_dec_de(state: *s.State) void {
 }
 
 pub fn op_inc_e(state: *s.State) void {
-    inc_8bitReg(&state.de.bytes.lo, state);
+    h.inc_8bitReg(&state.de.bytes.lo, state);
 }
 
 pub fn op_dec_e(state: *s.State) void {
@@ -403,11 +293,11 @@ pub fn op_ld_nn_addr_hl(state: *s.State) void {
 }
 
 pub fn op_inc_hl(state: *s.State) void {
-    inc_16bitReg(&state.hl.pair, state);
+    h.inc_16bitReg(&state.hl.pair, state);
 }
 
 pub fn op_inc_h(state: *s.State) void {
-    inc_8bitReg(&state.hl.bytes.hi, state);
+    h.inc_8bitReg(&state.hl.bytes.hi, state);
 }
 
 pub fn op_dec_h(state: *s.State) void {
@@ -453,7 +343,7 @@ pub fn op_dec_hl(state: *s.State) void {
 }
 
 pub fn op_inc_l(state: *s.State) void {
-    inc_8bitReg(&state.hl.bytes.lo, state);
+    h.inc_8bitReg(&state.hl.bytes.lo, state);
 }
 
 pub fn op_dec_l(state: *s.State) void {
@@ -503,7 +393,7 @@ pub fn op_inc_sp(state: *s.State) void {
 
 pub fn op_inc_hl_addr(state: *s.State) void {
     //state.memory[state.hl.pair] += 1;
-    inc_8bitReg(&state.memory[state.hl.pair], state);
+    h.inc_8bitReg(&state.memory[state.hl.pair], state);
 }
 
 pub fn op_dec_hl_addr(state: *s.State) void {
@@ -546,7 +436,7 @@ pub fn op_dec_sp(state: *s.State) void {
 }
 
 pub fn op_inc_a(state: *s.State) void {
-    inc_8bitReg(&state.af.bytes.hi, state);
+    h.inc_8bitReg(&state.af.bytes.hi, state);
 }
 
 pub fn op_dec_a(state: *s.State) void {
@@ -562,24 +452,24 @@ pub fn op_ccf(state: *s.State) void {
     state.af.bytes.lo ^= s.FLAG_C;
 }
 
-fn op_ld(src: Register, dst: Register, state: *s.State) void {
-    const value = getRegisterValue(src, state);
-    setRegisterValue(dst, value, state);
+fn op_ld(src: h.Register, dst: h.Register, state: *s.State) void {
+    const value = h.getRegisterValue(src, state);
+    h.setRegisterValue(dst, value, state);
 }
 
 pub fn decode_ld(state: *s.State) void {
-    const src: Register = @enumFromInt(s.opcode & 0b111);
-    const dst: Register = @enumFromInt((s.opcode >> 3) & 0b111);
+    const src: h.Register = @enumFromInt(s.opcode & 0b111);
+    const dst: h.Register = @enumFromInt((s.opcode >> 3) & 0b111);
     op_ld(src, dst, state);
 }
 
-fn op_add_a(src:Register, state: *s.State) void {
-    const value = getRegisterValue(src, state);
+fn op_add_a(src:h.Register, state: *s.State) void {
+    const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = add_a_value(value, state);
 }
 
 pub fn decode_add_a(state: *s.State) void {
-    const src: Register = @enumFromInt(s.opcode & 0b1111);
+    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
     op_add_a(src, state);
 }
 
@@ -610,14 +500,14 @@ fn add_a_value(value: u8, state: *s.State) u8{
     return res;
 }
 
-fn op_adc_a(src: Register, state: *s.State) void {
-    var value: u8 = getRegisterValue(src, state);
+fn op_adc_a(src: h.Register, state: *s.State) void {
+    var value: u8 = h.getRegisterValue(src, state);
     value += (state.af.bytes.lo & s.FLAG_C);
     state.af.bytes.hi = adc_a_value(value, state);
 }
 
 pub fn decode_adc_a(state: *s.State) void {
-    const src: Register = @enumFromInt(s.opcode & 0b1111);
+    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
     op_adc_a(src, state);
 }
 
@@ -649,13 +539,13 @@ fn adc_a_value(value: u8, state: *s.State) u8{
     return res;
 }
 
-fn op_sub_a(src:Register, state: *s.State) void {
-    const value = getRegisterValue(src, state);
+fn op_sub_a(src:h.Register, state: *s.State) void {
+    const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = sub_a_value(value, state);
 }
 
 pub fn decode_sub_a(state: *s.State) void {
-    const src: Register = @enumFromInt(s.opcode & 0b1111);
+    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
     op_sub_a(src, state);
 }
 
@@ -686,15 +576,15 @@ fn sub_a_value(value: u8, state: *s.State) u8{
     return res;
 }
 
-fn op_sbc_a(src: Register, state: *s.State) void {
-    const value = getRegisterValue(src, state);
+fn op_sbc_a(src: h.Register, state: *s.State) void {
+    const value = h.getRegisterValue(src, state);
     value += (state.af.bytes.lo & s.FLAG_C);
     state.af.bytes.hi = sbc_a_value(value);
     
 }
 
 pub fn decode_sbc_a(state: *s.State) void {
-    const src: Register = @enumFromInt(s.opcode & 0b1111);
+    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
     op_sbc_a(src, state);
 }
 
@@ -752,45 +642,45 @@ fn decode_binary_operation(value: u8, operation: op, state: *s.State) u8 {
         return res;
 }
 
-fn op_and_a(src:Register, state: *s.State) void {
-    const value = getRegisterValue(src, state);
+fn op_and_a(src:h.Register, state: *s.State) void {
+    const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = decode_binary_operation(value, .And, state);
 }
 
 pub fn decode_and_a(state: *s.State) void {
-    const src: Register = @enumFromInt(s.opcode & 0b1111);
+    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
     op_and_a(src, state);
 }
 
-fn op_xor_a(src:Register, state: *s.State) void {
-    const value = getRegisterValue(src, state);
+fn op_xor_a(src:h.Register, state: *s.State) void {
+    const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = decode_binary_operation(value, .Xor, state);
 }
 
 pub fn decode_xor_a(state: *s.State) void {
-    const src: Register = @enumFromInt(s.opcode & 0b1111);
+    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
     op_xor_a(src, state);
 }
 
 
-fn op_or_a(src:Register, state: *s.State) void {
-    const value = getRegisterValue(src, state);
+fn op_or_a(src:h.Register, state: *s.State) void {
+    const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = decode_binary_operation(value, .Or, state);
 }
 
 pub fn decode_or_a(state: *s.State) void {
-    const src: Register = @enumFromInt(s.opcode & 0b1111);
+    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
     op_xor_a(src, state);
 }
 
 
-fn op_cp_a(src:Register, state: *s.State) void {
-    const value = getRegisterValue(src, state);
+fn op_cp_a(src:h.Register, state: *s.State) void {
+    const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = cp_a_value(value, state);
 }
 
 pub fn decode_cp_a(state: *s.State) void {
-    const src: Register = @enumFromInt(s.opcode & 0b1111);
+    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
     op_cp_a(src, state);
 }
 
@@ -802,13 +692,13 @@ fn cp_a_value(value: u8, state: *s.State) u8 {
     return res;
 }
 
-fn op_ret_unset_flag(src:Flags, state: *s.State) void {
-    const flag = getFlag(src);
+fn op_ret_unset_flag(src:h.Flags, state: *s.State) void {
+    const flag = h.getFlag(src);
     ret_unset_flag(flag, state);
 }
 
 pub fn decode_ret_unset_flag(state: *s.State) void {
-    const src: Flags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const src: h.Flags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
     op_ret_unset_flag(src, state);
 }
 
@@ -825,13 +715,13 @@ pub fn ret_unset_flag(flag: u8, state: *s.State) void {
     }
 }
 
-fn op_pop_reg(src:RegisterPair, state: *s.State) void {
-    const pair = getRegisterPair(src, state);
+fn op_pop_reg(src:h.RegisterPair, state: *s.State) void {
+    const pair = h.getRegisterPair(src, state);
     pop_reg(pair, state);
 }
 
 pub fn decode_pop_reg(state: *s.State) void {
-    const src: RegisterPair = @enumFromInt(@as(u3, @intCast((s.opcode >> 4) & 0b11)));
+    const src: h.RegisterPair = @enumFromInt(@as(u3, @intCast((s.opcode >> 4) & 0b11)));
     op_pop_reg(src, state);
 }
 
