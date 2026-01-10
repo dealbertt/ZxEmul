@@ -818,6 +818,30 @@ fn jp_unset_flag(flag: u8, value: u16, state: *s.State) void {
     }
 }
 
+//Opcode C3
+pub fn op_jp_nn(state: *s.State) void {
+    const nn = mem.read16(state, state.pc);
+
+    state.pc = nn; 
+}
+
+
+pub fn decode_call_unset_flag(state: *s.State) void {
+    const src: h.Flags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const flag = h.getFlag(src);
+    const nn = mem.read16(state, state.pc);
+
+    call_unset_flag(flag, nn, state);
+}
+
+fn call_unset_flag(flag: u8, value: u16, state: *s.State) void {
+    if((state.af.bytes.lo & flag) == 0){
+        state.pc = value;
+    }
+}
+
+
+
 //pub fn op_jp_nc_nn(state: *s.State) void {
 //    const nn = mem.read16(state, state.pc);
 //
