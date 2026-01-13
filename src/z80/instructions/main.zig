@@ -10,6 +10,7 @@ const mem = @import("../internals/memory.zig");
 
 //TODO
 //- implement the missing flag handles on ops like inc, dec, add, sub, etc,...
+//- Fix enums
 
 //KEEP IN MIND THAT THE Z80 IS LITTLE ENDIAN
 //One set is called BC, DE, and HL while the complementary set is called BC', DE', and HL'
@@ -46,10 +47,25 @@ pub fn op_unknown(state: *s.State) void {
     _ = state;
     std.debug.print("Unknown opcode {}", .{s.opcode});
 }
-pub fn op_ld_bc_nn(state: *s.State) void {
+//possible opcodes for this kind of instructions are
+//01
+//11
+//21
+//31
+//the only difference between all of these is the first digit
+//all of these instructions are 3 bytes, 1 for the opcode and 2 for the nn
+//so we have to extract the first digit of the first byte? and then cast it
+
+pub fn decode_ld_16reg_nn(state: *s.State) void {
+    const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    
+    const regs = h.get16BitRegister(src, state);
     const nn = mem.read16(state, state.pc);
-    state.pc += 2;
-    state.bc.pair = nn;
+    ld_16reg_nn(regs, nn);
+}
+
+fn ld_16reg_nn(regs: *u16, value: u16) void {
+    regs.* = value;
 }
 
 //Opcode 02
@@ -58,13 +74,18 @@ pub fn op_ld_bc_addr_a(state: *s.State) void {
 }
 
 //Opcode 03
-pub fn op_inc_bc(state: *s.State) void {
-    h.inc_16bitReg(&state.bc.pair, state);
+pub fn decode_inc_16reg(state: *s.State) void {
+    const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const regs = h.get16BitRegister(src, state);
+    
+    h.inc_16bitReg(regs, state);
 }
 
-//Opcode 04
-pub fn op_inc_b(state: *s.State) void {
-    h.inc_8bitReg(&state.bc.bytes.hi, state);
+pub fn decode_inc_8reg(state: *s.State) void {
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const reg = h.getRegister(src, state); 
+    
+    h.inc_8bitReg(reg, state);
 }
 
 //Opcode 05
@@ -131,9 +152,6 @@ pub fn op_dec_bc(state: *s.State) void {
 }
 
 //Opcode 0C
-pub fn op_inc_c(state: *s.State) void {
-    h.inc_8bitReg(&state.bc.bytes.lo, state);
-}
 
 //Opcode 0D
 pub fn op_dec_c(state: *s.State) void {
@@ -187,15 +205,6 @@ pub fn op_ld_a_de_addr(state: *s.State) void {
     state.memory[state.de.pair] = state.af.bytes.hi;
 }
 
-//Opcode 13
-pub fn op_inc_de(state: *s.State) void {
-    h.inc_16bitReg(&state.de.pair, state);
-}
-
-//Opcode 14
-pub fn op_inc_d(state: *s.State) void {
-    h.inc_8bitReg(&state.de.bytes.hi, state);
-}
 
 //Opcode 15
 pub fn op_dec_d(state: *s.State) void {
@@ -245,10 +254,6 @@ pub fn op_dec_de(state: *s.State) void {
     state.de.pair -= 1;
 }
 
-//Opcode 1C 
-pub fn op_inc_e(state: *s.State) void {
-    h.inc_8bitReg(&state.de.bytes.lo, state);
-}
 
 //Opcode 1D 
 pub fn op_dec_e(state: *s.State) void {
@@ -303,15 +308,8 @@ pub fn op_ld_nn_addr_hl(state: *s.State) void {
 }
 
 //Opcode 23
-pub fn op_inc_hl(state: *s.State) void {
-    h.inc_16bitReg(&state.hl.pair, state);
-}
-
 
 //Opcode 24
-pub fn op_inc_h(state: *s.State) void {
-    h.inc_8bitReg(&state.hl.bytes.hi, state);
-}
 
 
 //Opcode 25
@@ -366,10 +364,6 @@ pub fn op_dec_hl(state: *s.State) void {
     state.hl.pair -= 1;
 }
 
-//Opcode 2C
-pub fn op_inc_l(state: *s.State) void {
-    h.inc_8bitReg(&state.hl.bytes.lo, state);
-}
 
 //Opcode 2D
 pub fn op_dec_l(state: *s.State) void {
@@ -476,10 +470,6 @@ pub fn op_dec_sp(state: *s.State) void {
     state.sp -= 1;
 }
 
-//Opcode 3C
-pub fn op_inc_a(state: *s.State) void {
-    h.inc_8bitReg(&state.af.bytes.hi, state);
-}
 
 //Opcode 3D
 pub fn op_dec_a(state: *s.State) void {
@@ -815,7 +805,7 @@ fn call_unset_flag(flag: u8, value: u16, state: *s.State) void {
 
 //Opcode C5, D5, E5, F5
 pub fn decode_push_reg(state: *s.State) void {
-    const src: h.RegisterPair = @enumFromInt(@as(u3, @intCast((s.opcode >> 4) & 0b11)));
+    const src: h.RegisterPair = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
     const pair = h.getRegisterPair(src, state);
     push_reg(pair, state);
 }

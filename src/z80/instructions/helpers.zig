@@ -5,7 +5,11 @@ pub const Register = enum(u3){
 };
 
 pub const RegisterPair = enum(u3){
-    BC, DE, HL, AF,
+    BC, DE, HL, AF
+};
+
+pub const Reg16Bit = enum(u3) {
+    BC, DE, HL, SP
 };
 
 pub const Flags = enum(u3){
@@ -66,6 +70,18 @@ pub fn inc_16bitReg(reg: *u16, state: *s.State) void{
     reg.* = inc[0];
 }
 
+pub fn getRegister(r: Register, state: *s.State) *u8{
+    return switch(r){
+        .B => &state.bc.bytes.hi,
+        .C => &state.bc.bytes.lo,
+        .D => &state.de.bytes.hi,
+        .E => &state.de.bytes.lo,
+        .H => &state.hl.bytes.hi,
+        .L => &state.hl.bytes.lo,
+        .A => &state.af.bytes.hi,
+        .HL=> &state.memory[state.hl.pair]
+    };
+}
 
 pub fn getRegisterValue(r: Register, state: *s.State) u8{
     return switch(r){
@@ -89,6 +105,14 @@ pub fn getRegisterPair(rp: RegisterPair, state: *s.State) *s.regPair {
     };
 }
 
+pub fn get16BitRegister(r16: Reg16Bit, state: *s.State) *u16 {
+    return switch(r16){
+        .BC => &state.bc.pair,
+        .DE => &state.de.pair,
+        .HL => &state.hl.pair,
+        .SP => &state.sp,
+    };
+}
 pub fn setRegisterValue(r: Register, value: u8, state: *s.State) void {
     switch(r){
         .B => state.bc.bytes.hi = value,
