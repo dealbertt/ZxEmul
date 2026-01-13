@@ -13,15 +13,15 @@ pub fn initTables() void {
     mainOpcodes[0x02] = main.op_ld_a_bc_addr;
     mainOpcodes[0x03] = main.decode_inc_16reg;
     mainOpcodes[0x04] = main.decode_inc_8reg;
-    mainOpcodes[0x05] = main.op_dec_b;
+    mainOpcodes[0x05] = main.decode_dec_8reg;
     mainOpcodes[0x06] = main.op_ld_b_n;
     mainOpcodes[0x07] = main.op_rlca;
     mainOpcodes[0x08] = main.op_ex_af_af_shadow;
     mainOpcodes[0x09] = main.op_add_hl_bc;
     mainOpcodes[0x0A] = main.op_ld_a_bc_addr;
-    mainOpcodes[0x0B] = main.op_dec_bc;
+    mainOpcodes[0x0B] = main.decode_dec_16reg;
     mainOpcodes[0x0C] = main.decode_inc_8reg;
-    mainOpcodes[0x0D] = main.op_dec_c;
+    mainOpcodes[0x0D] = main.decode_dec_8reg;
     mainOpcodes[0x0E] = main.op_ld_c_n;
     mainOpcodes[0x0F] = main.op_rrca;
 
@@ -30,15 +30,15 @@ pub fn initTables() void {
     mainOpcodes[0x12] = main.op_ld_a_de_addr;
     mainOpcodes[0x13] = main.decode_inc_16reg;
     mainOpcodes[0x14] = main.decode_inc_8reg;
-    mainOpcodes[0x15] = main.op_dec_d;
+    mainOpcodes[0x15] = main.decode_dec_8reg;
     mainOpcodes[0x16] = main.op_ld_d_n;
     mainOpcodes[0x17] = main.rla;
     mainOpcodes[0x18] = main.jr_d;
     mainOpcodes[0x19] = main.op_add_hl_de;
     mainOpcodes[0x1A] = main.op_ld_de_addr_a;
-    mainOpcodes[0x1B] = main.op_dec_de;
+    mainOpcodes[0x1B] = main.decode_dec_16reg;
     mainOpcodes[0x1C] = main.decode_inc_8reg;
-    mainOpcodes[0x1D] = main.op_dec_e;
+    mainOpcodes[0x1D] = main.decode_dec_8reg;
     mainOpcodes[0x1E] = main.op_ld_e_n;
     mainOpcodes[0x1F] = main.op_rra;
 
@@ -47,32 +47,32 @@ pub fn initTables() void {
     mainOpcodes[0x22] = main.op_ld_nn_addr_hl;
     mainOpcodes[0x23] = main.decode_inc_16reg;
     mainOpcodes[0x24] = main.decode_inc_8reg;
-    mainOpcodes[0x25] = main.op_dec_h;
+    mainOpcodes[0x25] = main.decode_dec_8reg;
     mainOpcodes[0x26] = main.op_ld_h_n;
     mainOpcodes[0x27] = main.op_daa;
     mainOpcodes[0x28] = main.op_jr_z;
     mainOpcodes[0x29] = main.op_add_hl_hl;
     mainOpcodes[0x2A] = main.op_ld_hl_nn_addr;
-    mainOpcodes[0x2B] = main.op_dec_hl;
+    mainOpcodes[0x2B] = main.decode_dec_16reg;
     mainOpcodes[0x2C] = main.decode_inc_8reg;
-    mainOpcodes[0x2D] = main.op_dec_l;
+    mainOpcodes[0x2D] = main.decode_dec_8reg;
     mainOpcodes[0x2E] = main.op_ld_l_n;
     mainOpcodes[0x2F] = main.op_cpl;
 
     mainOpcodes[0x30] = main.op_jr_nc;
     mainOpcodes[0x31] = main.decode_ld_16reg_nn;
     mainOpcodes[0x32] = main.op_ld_nn_addr_a;
-    mainOpcodes[0x33] = main.op_inc_sp;
+    mainOpcodes[0x33] = main.decode_inc_16reg;
     mainOpcodes[0x34] = main.op_inc_hl_addr;
-    mainOpcodes[0x35] = main.op_dec_hl_addr;
+    mainOpcodes[0x35] = main.decode_dec_8reg;
     mainOpcodes[0x36] = main.op_ld_hl_addr_n;
     mainOpcodes[0x38] = main.op_scf;
     mainOpcodes[0x38] = main.op_jr_c;
     mainOpcodes[0x39] = main.op_add_hl_sp;
     mainOpcodes[0x3A] = main.op_ld_a_nn_addr;
-    mainOpcodes[0x3B] = main.op_dec_sp;
+    mainOpcodes[0x3B] = main.decode_dec_16reg;
     mainOpcodes[0x3C] = main.decode_inc_8reg;
-    mainOpcodes[0x3D] = main.op_dec_a;
+    mainOpcodes[0x3D] = main.decode_dec_8reg;
     mainOpcodes[0x3E] = main.op_ld_a_n;
     mainOpcodes[0x3F] = main.op_ccf;
 

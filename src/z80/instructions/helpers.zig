@@ -69,6 +69,42 @@ pub fn inc_16bitReg(reg: *u16, state: *s.State) void{
     state.af.bytes.lo &= ~(s.FLAG_N);
     reg.* = inc[0];
 }
+pub fn dec_8bitReg(reg: *u8, state: *s.State) void{
+    const res = @subWithOverflow(reg.*, 1);
+    if(res[1] == 1){
+        //set the carry flag if an overflow happened
+        state.af.bytes.lo |= s.FLAG_C;
+    }
+
+    if(res[0] == 0){
+        //set the zero flag
+        state.af.bytes.lo |= s.FLAG_Z;
+    }
+
+
+    //reset the N flag
+    state.af.bytes.lo &= ~(s.FLAG_N);
+    reg.* = res[0];
+}
+
+pub fn dec_16bitReg(reg: *u16, state: *s.State) void{
+    const res = @subWithOverflow(reg.*, 1);
+    if(res[1] == 1){
+        //set the carry flag if an overflow happened
+        state.af.bytes.lo |= s.FLAG_C;
+
+    }
+
+    if(res[0] == 0){
+        //set the zero flag
+        state.af.bytes.lo |= s.FLAG_Z;
+    }
+
+
+    //reset the N flag
+    state.af.bytes.lo &= ~(s.FLAG_N);
+    reg.* = res[0];
+}
 
 pub fn getRegister(r: Register, state: *s.State) *u8{
     return switch(r){

@@ -89,9 +89,20 @@ pub fn decode_inc_8reg(state: *s.State) void {
 }
 
 //Opcode 05
-pub fn op_dec_b(state: *s.State) void {
-    state.bc.bytes.hi -= 1;
+pub fn decode_dec_8reg(state: *s.State) void {
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const reg = h.getRegister(src, state); 
+    
+    h.dec_8bitReg(reg, state);
 }
+
+pub fn decode_dec_16reg(state: *s.State) void {
+    const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const reg = h.get16BitRegister(src, state); 
+    
+    h.dec_16bitReg(reg, state);
+}
+
 
 //Opcode 06
 pub fn op_ld_b_n(state: *s.State) void {
@@ -146,17 +157,8 @@ pub fn op_ld_a_bc_addr(state: *s.State) void {
     state.af.bytes.hi = state.memory[state.hl.pair];
 }
 
-//Opcode 0B
-pub fn op_dec_bc(state: *s.State) void {
-    state.bc.pair += 1;
-}
 
 //Opcode 0C
-
-//Opcode 0D
-pub fn op_dec_c(state: *s.State) void {
-    state.bc.bytes.lo -= 1;
-}
 
 //Opcode 0E
 pub fn op_ld_c_n(state: *s.State) void {
@@ -206,10 +208,6 @@ pub fn op_ld_a_de_addr(state: *s.State) void {
 }
 
 
-//Opcode 15
-pub fn op_dec_d(state: *s.State) void {
-    state.de.bytes.hi -= 1;
-}
 
 //Opcode 16
 pub fn op_ld_d_n(state: *s.State) void {
@@ -249,16 +247,6 @@ pub fn op_ld_de_addr_a(state: *s.State) void {
     state.af.bytes.hi = state.memory[state.de.pair];
 }
 
-//Opcode 1B 
-pub fn op_dec_de(state: *s.State) void {
-    state.de.pair -= 1;
-}
-
-
-//Opcode 1D 
-pub fn op_dec_e(state: *s.State) void {
-    state.de.bytes.lo -= 1;
-}
 
 //Opcode 1E
 pub fn op_ld_e_n(state: *s.State) void {
@@ -307,16 +295,6 @@ pub fn op_ld_nn_addr_hl(state: *s.State) void {
     state.pc += 2;
 }
 
-//Opcode 23
-
-//Opcode 24
-
-
-//Opcode 25
-pub fn op_dec_h(state: *s.State) void {
-    state.hl.bytes.hi -= 1;
-}
-
 
 //Opcode 26
 pub fn op_ld_h_n(state: *s.State) void {
@@ -359,16 +337,6 @@ pub fn op_ld_hl_nn_addr(state: *s.State) void {
     state.pc += 2;
 }
 
-//Opcode 2B
-pub fn op_dec_hl(state: *s.State) void {
-    state.hl.pair -= 1;
-}
-
-
-//Opcode 2D
-pub fn op_dec_l(state: *s.State) void {
-    state.hl.bytes.lo -= 1;
-}
 
 //Opcode 2E
 pub fn op_ld_l_n(state: *s.State) void {
@@ -436,7 +404,10 @@ pub fn op_ld_hl_addr_n(state: *s.State) void {
 
 //Opcode 37
 pub fn op_scf(state: *s.State) void {
+    //reset
     state.af.bytes.lo &= ~(s.FLAG_C | s.FLAG_N | s.FLAG_H);
+
+    //set
     state.af.bytes.lo |= s.FLAG_C;
 }
 
@@ -463,17 +434,6 @@ pub fn op_ld_a_nn_addr(state: *s.State) void {
     state.af.bytes.hi = state.memory[nn];
 
     state.pc += 2;
-}
-
-//Opcode 3B
-pub fn op_dec_sp(state: *s.State) void {
-    state.sp -= 1;
-}
-
-
-//Opcode 3D
-pub fn op_dec_a(state: *s.State) void {
-    state.af.bytes.hi -= 1;
 }
 
 //Opcode 3E
