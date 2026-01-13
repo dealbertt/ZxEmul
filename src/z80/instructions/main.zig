@@ -698,49 +698,33 @@ fn decode_binary_operation(value: u8, operation: op, state: *s.State) u8 {
 }
 
 //Opcode A0-A7
-fn op_and_a(src:h.Register, state: *s.State) void {
+pub fn decode_and_a(state: *s.State) void {
+    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
     const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = decode_binary_operation(value, .And, state);
 }
 
-pub fn decode_and_a(state: *s.State) void {
-    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
-    op_and_a(src, state);
-}
-
 //Opcode A8-AF
-fn op_xor_a(src:h.Register, state: *s.State) void {
+pub fn decode_xor_a(state: *s.State) void {
+    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
     const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = decode_binary_operation(value, .Xor, state);
 }
 
-pub fn decode_xor_a(state: *s.State) void {
-    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
-    op_xor_a(src, state);
-}
-
 
 //Opcode B0-B7
-fn op_or_a(src:h.Register, state: *s.State) void {
+pub fn decode_or_a(state: *s.State) void {
+    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
     const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = decode_binary_operation(value, .Or, state);
 }
 
-pub fn decode_or_a(state: *s.State) void {
-    const src: h.Register = @enumFromInt(s.opcode & 0b1111);
-    op_xor_a(src, state);
-}
-
 
 //Opcode B8-BF
-fn op_cp_a(src:h.Register, state: *s.State) void {
-    const value = h.getRegisterValue(src, state);
-    state.af.bytes.hi = cp_a_value(value, state);
-}
-
 pub fn decode_cp_a(state: *s.State) void {
     const src: h.Register = @enumFromInt(s.opcode & 0b1111);
-    op_cp_a(src, state);
+    const value = h.getRegisterValue(src, state);
+    state.af.bytes.hi = cp_a_value(value, state);
 }
 
 fn cp_a_value(value: u8, state: *s.State) u8 {
@@ -752,14 +736,10 @@ fn cp_a_value(value: u8, state: *s.State) u8 {
 }
 
 //Opcode C0, D0, E0, F0
-fn op_ret_unset_flag(src:h.Flags, state: *s.State) void {
-    const flag = h.getFlag(src);
-    ret_unset_flag(flag, state);
-}
-
 pub fn decode_ret_unset_flag(state: *s.State) void {
     const src: h.Flags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
-    op_ret_unset_flag(src, state);
+    const flag = h.getFlag(src);
+    ret_unset_flag(flag, state);
 }
 
 pub fn ret_unset_flag(flag: u8, state: *s.State) void {
@@ -776,14 +756,10 @@ pub fn ret_unset_flag(flag: u8, state: *s.State) void {
 }
 
 //Opcode C1, D1, E1, F1
-fn op_pop_reg(src:h.RegisterPair, state: *s.State) void {
-    const pair = h.getRegisterPair(src, state);
-    pop_reg(pair, state);
-}
-
 pub fn decode_pop_reg(state: *s.State) void {
     const src: h.RegisterPair = @enumFromInt(@as(u3, @intCast((s.opcode >> 4) & 0b11)));
-    op_pop_reg(src, state);
+    const pair = h.getRegisterPair(src, state);
+    pop_reg(pair, state);
 }
 
 
@@ -797,13 +773,6 @@ fn pop_reg(regPair: *s.regPair, state: *s.State) void {
 
 
 //Opcode C0, D0, E0, F0
-fn op_jp_unset_flag(src:h.Flags, state: *s.State) void {
-    const flag = h.getFlag(src);
-    const nn = mem.read16(state, state.pc);
-
-    jp_unset_flag(flag, nn, state);
-}
-
 pub fn decode_jp_unset_flag(state: *s.State) void {
     const src: h.Flags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
     const flag = h.getFlag(src);
@@ -826,6 +795,7 @@ pub fn op_jp_nn(state: *s.State) void {
 }
 
 
+//Opcode C4, D4, E4, F4
 pub fn decode_call_unset_flag(state: *s.State) void {
     const src: h.Flags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
     const flag = h.getFlag(src);
@@ -834,12 +804,30 @@ pub fn decode_call_unset_flag(state: *s.State) void {
     call_unset_flag(flag, nn, state);
 }
 
+
 fn call_unset_flag(flag: u8, value: u16, state: *s.State) void {
     if((state.af.bytes.lo & flag) == 0){
         state.pc = value;
     }
 }
 
+
+
+//Opcode C5, D5, E5, F5
+pub fn decode_push_reg(state: *s.State) void {
+    const src: h.RegisterPair = @enumFromInt(@as(u3, @intCast((s.opcode >> 4) & 0b11)));
+    const pair = h.getRegisterPair(src, state);
+    push_reg(pair, state);
+}
+
+
+fn push_reg(regPair: *s.regPair, state: *s.State) void {
+    regPair.bytes.lo = state.memory[state.sp];
+    state.sp -= 1;
+
+    regPair.bytes.hi = state.memory[state.sp];
+    state.sp -= 1;
+}
 
 
 //pub fn op_jp_nc_nn(state: *s.State) void {
