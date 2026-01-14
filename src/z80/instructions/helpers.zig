@@ -16,6 +16,12 @@ pub const Flags = enum(u3){
     NC, NZ, PO, P, Z, C, PE, M
 };
 
+pub const op = enum {
+    And,
+    Xor,
+    Or
+};
+
 pub fn add_16bitRegs(reg1: u16, reg2: u16, state: *s.State) u16 {
     const sum = @addWithOverflow(reg1, reg2);
     if (sum[1] == 1) {

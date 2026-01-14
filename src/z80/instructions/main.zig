@@ -624,13 +624,8 @@ fn sbc_a_value(value: u8, state: *s.State) u8{
     return res;
 }
 
-const op = enum {
-    And,
-    Xor,
-    Or
-};
 
-fn decode_binary_operation(value: u8, operation: op, state: *s.State) u8 {
+fn decode_binary_operation(value: u8, operation: h.op, state: *s.State) u8 {
         var res: u8 = state.af.bytes.hi;
         switch(operation){
             .And => res &= value,
@@ -778,6 +773,19 @@ fn push_reg(regPair: *s.regPair, state: *s.State) void {
     regPair.bytes.hi = state.memory[state.sp];
     state.sp -= 1;
 }
+
+pub fn decode_add_a_n(state: *s.State) void {
+    const value = mem.read8(state, state.pc);
+
+    add_a_value(value, state);
+}
+
+pub fn decode_sub_n(state: *s.State) void {
+    const value = mem.read8(state, state.pc); 
+
+    sub_a_value(value, state);
+}
+
 
 
 //pub fn op_jp_nc_nn(state: *s.State) void {
