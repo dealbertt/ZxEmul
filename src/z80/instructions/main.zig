@@ -767,11 +767,11 @@ pub fn decode_push_reg(state: *s.State) void {
 
 
 fn push_reg(regPair: *s.regPair, state: *s.State) void {
-    regPair.bytes.lo = state.memory[state.sp];
     state.sp -= 1;
+    state.memory[state.sp] = regPair.byte.hi;
 
-    regPair.bytes.hi = state.memory[state.sp];
     state.sp -= 1;
+    regPair.bytes.lo = state.memory[state.sp];
 }
 
 pub fn decode_add_a_n(state: *s.State) void {
@@ -786,21 +786,12 @@ pub fn decode_sub_n(state: *s.State) void {
     sub_a_value(value, state);
 }
 
+pub fn decode_rst_value_h(state: *s.State) void {
+    //get value for what has to be loaded in pc after pushing
+    
+}
 
+pub fn op_rst_00_h(state: *s.State) void {
+    h.push16BitValue(state.pc, state);
+}
 
-//pub fn op_jp_nc_nn(state: *s.State) void {
-//    const nn = mem.read16(state, state.pc);
-//
-//    if(state.af.bytes.hi & s.FLAG_C == 0){
-//        state.pc = nn;
-//    }
-//}
-//
-//pub fn out_n_a(state: *s.State) void {
-//    _ = state;
-//}
-//
-//pub fn call_nc_nn(state: *s.State) void {
-//    const nn = mem.read16(state, state.pc);
-//
-//}

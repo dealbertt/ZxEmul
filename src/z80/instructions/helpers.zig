@@ -177,3 +177,12 @@ pub fn getFlag(f: Flags) u8 {
     };
 }
 
+
+pub fn push16BitValue(value: u16, state: *s.State) void {
+    state.sp -%= 1;
+    state.memory[state.sp] = @intCast((value >> 8) & 0xFF); 
+
+    state.sp -%= 1;
+    state.memory[state.sp] = @intCast(value & 0xFF); 
+}
+
