@@ -788,10 +788,12 @@ pub fn decode_sub_n(state: *s.State) void {
 
 pub fn decode_rst_value_h(state: *s.State) void {
     //get value for what has to be loaded in pc after pushing
-    
+    const vector = h.getTargetAddress(s.opcode);
+    op_rst_nn_h(vector, state);
 }
 
-pub fn op_rst_00_h(state: *s.State) void {
+pub fn op_rst_nn_h(vector: u8, state: *s.State) void {
     h.push16BitValue(state.pc, state);
+    state.pc = vector;
 }
 

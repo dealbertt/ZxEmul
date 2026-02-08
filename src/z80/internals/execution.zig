@@ -12,8 +12,8 @@ pub fn fetch(state: *s.State) u8 {
 }
 
 pub fn step(state: *s.State) void {
-    const opcode = fetch(state);
-    const handle = t.mainOpcodes[opcode]; 
+    s.opcode = fetch(state);
+    const handle = t.mainOpcodes[s.opcode]; 
     handle(state);
     //decode
     //execute

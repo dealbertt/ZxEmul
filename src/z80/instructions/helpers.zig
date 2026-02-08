@@ -186,3 +186,9 @@ pub fn push16BitValue(value: u16, state: *s.State) void {
     state.memory[state.sp] = @intCast(value & 0xFF); 
 }
 
+//for the RST instructions
+pub fn getTargetAddress(value: u16) u8 {
+    //i guess both do the same thing
+    //return opcode << 3;
+    return @intCast(value & 0b0011100);
+}
