@@ -12,10 +12,13 @@ pub const Reg16Bit = enum(u3) {
     BC, DE, HL, SP
 };
 
-pub const Flags = enum(u3){
-    NC, NZ, PO, P, Z, C, PE, M
+pub const SetFlags = enum(u3){
+     Z, C, PE, M
 };
 
+pub const UnsetFlags = enum(u3){
+    NC, NZ, PO, P
+};
 pub const op = enum {
     And,
     Xor,
@@ -168,12 +171,21 @@ pub fn setRegisterValue(r: Register, value: u8, state: *s.State) void {
     }
 }
 
-pub fn getFlag(f: Flags) u8 {
+pub fn getSetFlag(f: SetFlags) u8 {
     return switch (f) {
-        .NC, .C => s.FLAG_C,
-        .NZ, .Z => s.FLAG_Z,
-        .PO, .PE => s.FLAG_P,
-        .P, .M => s.FLAG_S,
+        .C => s.FLAG_C,
+        .Z => s.FLAG_Z,
+        .PE => s.FLAG_P,
+        .M => s.FLAG_S,
+    };
+}
+
+pub fn getUnSetFlag(f: UnsetFlags) u8 {
+    return switch (f) {
+        .NC => s.FLAG_C,
+        .NZ => s.FLAG_Z,
+        .PO => s.FLAG_P,
+        .P => s.FLAG_S,
     };
 }
 

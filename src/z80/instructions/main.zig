@@ -682,8 +682,8 @@ fn cp_a_value(value: u8, state: *s.State) u8 {
 
 //Opcode C0, D0, E0, F0
 pub fn decode_ret_unset_flag(state: *s.State) void {
-    const src: h.Flags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
-    const flag = h.getFlag(src);
+    const src: h.UnsetFlags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const flag = h.getUnSetFlag(src);
     ret_unset_flag(flag, state);
 }
 
@@ -719,8 +719,8 @@ fn pop_reg(regPair: *s.regPair, state: *s.State) void {
 
 //Opcode C0, D0, E0, F0
 pub fn decode_jp_unset_flag(state: *s.State) void {
-    const src: h.Flags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
-    const flag = h.getFlag(src);
+    const src: h.UnsetFlags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const flag = h.getUnSetFlag(src);
     const nn = mem.read16(state, state.pc);
 
     jp_unset_flag(flag, nn, state);
@@ -742,8 +742,8 @@ pub fn op_jp_nn(state: *s.State) void {
 
 //Opcode C4, D4, E4, F4
 pub fn decode_call_unset_flag(state: *s.State) void {
-    const src: h.Flags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
-    const flag = h.getFlag(src);
+    const src: h.UnsetFlags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const flag = h.getUnSetFlag(src);
     const nn = mem.read16(state, state.pc);
 
     call_unset_flag(flag, nn, state);
@@ -777,7 +777,7 @@ fn push_reg(regPair: *s.regPair, state: *s.State) void {
 pub fn decode_add_a_n(state: *s.State) void {
     const value = mem.read8(state, state.pc);
 
-    add_a_value(value, state);
+    _ = add_a_value(value, state);
 }
 
 pub fn decode_sub_n(state: *s.State) void {
@@ -809,5 +809,4 @@ pub fn op_ret(state: *s.State) void {
     //resets the high byte and loads the second part, shifting it 8 bits to the left to not overwrite the previously loaded value
     state.pc = (high << 8) | low;
 }
-
 
