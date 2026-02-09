@@ -797,3 +797,17 @@ pub fn op_rst_nn_h(vector: u8, state: *s.State) void {
     state.pc = vector;
 }
 
+pub fn op_ret(state: *s.State) void {
+    //moved to the low-order 8 bits of the pc
+    //resets the low byte and loads the first part
+    const low: u16 = state.memory[state.sp];
+
+    state.sp +%= 1;
+    const high: u16 = state.memory[state.sp];
+
+    //moved to the high-order 8 bits of the pc
+    //resets the high byte and loads the second part, shifting it 8 bits to the left to not overwrite the previously loaded value
+    state.pc = (high << 8) | low;
+}
+
+
