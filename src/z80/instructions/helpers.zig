@@ -12,13 +12,13 @@ pub const Reg16Bit = enum(u3) {
     BC, DE, HL, SP
 };
 
-pub const SetFlags = enum(u3){
-     Z, C, PE, M
+pub const Condition = enum(u3){
+    NZ, Z,
+    NC, C,
+    PO, PE,
+    P, M,
 };
 
-pub const UnsetFlags = enum(u3){
-    NC, NZ, PO, P
-};
 pub const op = enum {
     And,
     Xor,
@@ -171,24 +171,19 @@ pub fn setRegisterValue(r: Register, value: u8, state: *s.State) void {
     }
 }
 
-pub fn getSetFlag(f: SetFlags) u8 {
-    return switch (f) {
-        .C => s.FLAG_C,
-        .Z => s.FLAG_Z,
-        .PE => s.FLAG_P,
-        .M => s.FLAG_S,
+pub fn conditionMet(cond: Condition, state: *s.State) bool {
+
+    return switch (cond) {
+        .Z => (state.af.bytes.lo & s.FLAG_Z) != 0, 
+        .NZ => (state.af.bytes.lo & s.FLAG_Z) == 0, 
+        .C => (state.af.bytes.lo & s.FLAG_C) != 0,
+        .NC => (state.af.bytes.lo & s.FLAG_C) == 0,
+        .PE => (state.af.bytes.lo & s.FLAG_P) != 0,
+        .PO => (state.af.bytes.lo & s.FLAG_P) == 0,
+        .M => (state.af.bytes.lo & s.FLAG_S) != 0,
+        .P => (state.af.bytes.lo & s.FLAG_S) == 0,
     };
 }
-
-pub fn getUnSetFlag(f: UnsetFlags) u8 {
-    return switch (f) {
-        .NC => s.FLAG_C,
-        .NZ => s.FLAG_Z,
-        .PO => s.FLAG_P,
-        .P => s.FLAG_S,
-    };
-}
-
 
 pub fn push16BitValue(value: u16, state: *s.State) void {
     state.sp -%= 1;

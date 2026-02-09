@@ -117,25 +117,25 @@ pub fn initTables() void {
     }
 
 
-    mainOpcodes[0xC0] = main.decode_ret_unset_flag;
-    mainOpcodes[0xD0] = main.decode_ret_unset_flag;
-    mainOpcodes[0xE0] = main.decode_ret_unset_flag;
-    mainOpcodes[0xF0] = main.decode_ret_unset_flag;
+    mainOpcodes[0xC0] = main.decode_ret_condition_nn;
+    mainOpcodes[0xD0] = main.decode_ret_condition_nn;
+    mainOpcodes[0xE0] = main.decode_ret_condition_nn;
+    mainOpcodes[0xF0] = main.decode_ret_condition_nn;
 
     mainOpcodes[0xC1] = main.decode_pop_reg;
     mainOpcodes[0xD1] = main.decode_pop_reg;
     mainOpcodes[0xE1] = main.decode_pop_reg;
     mainOpcodes[0xF1] = main.decode_pop_reg;
     
-    mainOpcodes[0xC2] = main.decode_jp_unset_flag;
-    mainOpcodes[0xD2] = main.decode_jp_unset_flag;
-    mainOpcodes[0xE2] = main.decode_jp_unset_flag;
-    mainOpcodes[0xF2] = main.decode_jp_unset_flag;
+    mainOpcodes[0xC2] = main.decode_jp_condition_nn;
+    mainOpcodes[0xD2] = main.decode_jp_condition_nn;
+    mainOpcodes[0xE2] = main.decode_jp_condition_nn;
+    mainOpcodes[0xF2] = main.decode_jp_condition_nn;
 
-    mainOpcodes[0xC4] = main.decode_call_unset_flag;
-    mainOpcodes[0xD4] = main.decode_call_unset_flag;
-    mainOpcodes[0xE4] = main.decode_call_unset_flag;
-    mainOpcodes[0xF4] = main.decode_call_unset_flag;
+    mainOpcodes[0xC4] = main.decode_call_condition_nn;
+    mainOpcodes[0xD4] = main.decode_call_condition_nn;
+    mainOpcodes[0xE4] = main.decode_call_condition_nn;
+    mainOpcodes[0xF4] = main.decode_call_condition_nn;
 
     mainOpcodes[0xC6] = main.decode_add_a_n;
     mainOpcodes[0xD6] = main.decode_sub_a;
@@ -145,10 +145,10 @@ pub fn initTables() void {
     mainOpcodes[0xE7] = main.decode_rst_value_h;
     mainOpcodes[0xF7] = main.decode_rst_value_h;
 
-    mainOpcodes[0xC8] = main.decode_ret_unset_flag;
-    mainOpcodes[0xD8] = main.decode_ret_unset_flag;
-    mainOpcodes[0xE8] = main.decode_ret_unset_flag;
-    mainOpcodes[0xF8] = main.decode_ret_unset_flag;
+    mainOpcodes[0xC8] = main.decode_ret_condition_nn;
+    mainOpcodes[0xD8] = main.decode_ret_condition_nn;
+    mainOpcodes[0xE8] = main.decode_ret_condition_nn;
+    mainOpcodes[0xF8] = main.decode_ret_condition_nn;
 
     mainOpcodes[0xC9] = main.op_ret;
 

@@ -681,13 +681,13 @@ fn cp_a_value(value: u8, state: *s.State) u8 {
 }
 
 //Opcode C0, D0, E0, F0
-pub fn decode_ret_unset_flag(state: *s.State) void {
+pub fn decode_ret_condition_nn(state: *s.State) void {
     const src: h.UnsetFlags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
     const flag = h.getUnSetFlag(src);
-    ret_unset_flag(flag, state);
+    ret_condition_nn(flag, state);
 }
 
-pub fn ret_unset_flag(flag: u8, state: *s.State) void {
+pub fn ret_condition_nn(flag: u8, state: *s.State) void {
     if((state.af.bytes.lo & flag) == 0){
         //pop  
         const lo = state.memory[state.sp];
@@ -718,15 +718,15 @@ fn pop_reg(regPair: *s.regPair, state: *s.State) void {
 
 
 //Opcode C0, D0, E0, F0
-pub fn decode_jp_unset_flag(state: *s.State) void {
+pub fn decode_jp_condition_nn(state: *s.State) void {
     const src: h.UnsetFlags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
     const flag = h.getUnSetFlag(src);
     const nn = mem.read16(state, state.pc);
 
-    jp_unset_flag(flag, nn, state);
+    jp_condition_nn(flag, nn, state);
 }
 
-fn jp_unset_flag(flag: u8, value: u16, state: *s.State) void {
+fn jp_condition_nn(flag: u8, value: u16, state: *s.State) void {
     if((state.af.bytes.lo & flag) == 0){
         state.pc = value;
     }
@@ -741,16 +741,16 @@ pub fn op_jp_nn(state: *s.State) void {
 
 
 //Opcode C4, D4, E4, F4
-pub fn decode_call_unset_flag(state: *s.State) void {
+pub fn decode_call_condition_nn(state: *s.State) void {
     const src: h.UnsetFlags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
     const flag = h.getUnSetFlag(src);
     const nn = mem.read16(state, state.pc);
 
-    call_unset_flag(flag, nn, state);
+    call_condition_nn(flag, nn, state);
 }
 
 
-fn call_unset_flag(flag: u8, value: u16, state: *s.State) void {
+fn call_condition_nn(flag: u8, value: u16, state: *s.State) void {
     if((state.af.bytes.lo & flag) == 0){
         state.pc = value;
     }
