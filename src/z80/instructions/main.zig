@@ -60,7 +60,7 @@ pub fn decode_ld_16reg_nn(state: *s.State) void {
     const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
     
     const regs = h.get16BitRegister(src, state);
-    const nn = mem.read16(state, state.pc);
+    const nn = mem.read16(state, &state.pc);
     ld_16reg_nn(regs, nn);
 }
 
@@ -197,7 +197,7 @@ pub fn op_djnz_d(state: *s.State) void {
 //Opcode 11
 pub fn op_ld_de_nn(state: *s.State) void {
     //the pc has been incremented, meaning that i am going to get the high bytes of nn
-    const nn: u16 = mem.read16(state, state.pc);
+    const nn: u16 = mem.read16(state, &state.pc);
     state.pc += 2;
     state.de.pair = nn;
 }
@@ -280,7 +280,7 @@ pub fn op_jr_nz(state: *s.State) void {
 
 //Opcode 21
 pub fn op_ld_hl_nn(state: *s.State) void {
-    const nn = mem.read16(state, state.pc);
+    const nn = mem.read16(state, &state.pc);
     state.hl.pair = nn;
 
     state.pc += 2;
@@ -288,7 +288,7 @@ pub fn op_ld_hl_nn(state: *s.State) void {
 
 //Opcode 22
 pub fn op_ld_nn_addr_hl(state: *s.State) void {
-    const nn = mem.read16(state, state.pc);
+    const nn = mem.read16(state, &state.pc);
     state.memory[nn] = state.hl.bytes.lo;
     state.memory[nn + 1] = state.hl.bytes.hi;
 
@@ -330,7 +330,7 @@ pub fn op_add_hl_hl(state: *s.State) void {
 //1 byte for the s.opcode?
 //1 byte for
 pub fn op_ld_hl_nn_addr(state: *s.State) void {
-    const nn = mem.read16(state, state.pc);
+    const nn = mem.read16(state, &state.pc);
     state.hl.bytes.lo = state.memory[nn];
     state.hl.bytes.hi = state.memory[nn + 1];
 
@@ -365,7 +365,7 @@ pub fn op_jr_nc(state: *s.State) void {
 
 //Opcode 31
 pub fn op_ld_sp_nn(state: *s.State) void {
-    const nn = mem.read16(state, state.pc);
+    const nn = mem.read16(state, &state.pc);
     state.sp = nn;
 
     state.pc += 2;
@@ -373,7 +373,7 @@ pub fn op_ld_sp_nn(state: *s.State) void {
 
 //Opcode 32
 pub fn op_ld_nn_addr_a(state: *s.State) void {
-    const nn = mem.read16(state, state.pc);
+    const nn = mem.read16(state, &state.pc);
 
     state.memory[nn] = state.af.bytes.hi;
 
@@ -430,7 +430,7 @@ pub fn op_add_hl_sp(state: *s.State) void {
 
 //Opcode 3A
 pub fn op_ld_a_nn_addr(state: *s.State) void {
-    const nn = mem.read16(state, state.pc);
+    const nn = mem.read16(state, &state.pc);
     state.af.bytes.hi = state.memory[nn];
 
     state.pc += 2;
@@ -701,7 +701,7 @@ pub fn ret_condition_nn(cond: h.Condition, state: *s.State) void {
 
 //Opcode C1, D1, E1, F1
 pub fn decode_pop_reg(state: *s.State) void {
-    const src: h.RegisterPair = @enumFromInt(@as(u3, @intCast((s.opcode >> 4) & 0b11)));
+    const src: h.RegisterPair = @enumFromInt(@as(u3, @intCast((s.opcode >> 3) & 0b111)));
     const pair = h.getRegisterPair(src, state);
     pop_reg(pair, state);
 }
@@ -718,8 +718,8 @@ fn pop_reg(regPair: *s.regPair, state: *s.State) void {
 
 //Opcode C0, D0, E0, F0
 pub fn decode_jp_condition_nn(state: *s.State) void {
-    const cond: h.Condition = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
-    const nn = mem.read16(state, state.pc);
+    const cond: h.Condition = @enumFromInt(@as(u8, @intCast((s.opcode >> 3) & 0b111)));
+    const nn = mem.read16(state, &state.pc);
 
     jp_condition_nn(cond, nn, state);
 }
@@ -732,7 +732,7 @@ fn jp_condition_nn(cond: h.Condition, value: u16, state: *s.State) void {
 
 //Opcode C3
 pub fn op_jp_nn(state: *s.State) void {
-    const nn = mem.read16(state, state.pc);
+    const nn = mem.read16(state, &state.pc);
 
     state.pc = nn; 
 }
@@ -740,13 +740,14 @@ pub fn op_jp_nn(state: *s.State) void {
 
 //Opcode C4, D4, E4, F4
 pub fn decode_call_condition_nn(state: *s.State) void {
-    const cond: h.Condition = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
-    const nn = mem.read16(state, state.pc);
+    const cond: h.Condition = @enumFromInt(@as(u8, @intCast((s.opcode >> 3) & 0b111)));
+    const nn = mem.read16(state, &state.pc);
 
     call_condition_nn(cond, nn, state);
 }
 
 
+//you fetch the byte for the instruction itself, and then 2 for nn
 fn call_condition_nn(cond: h.Condition, value: u16, state: *s.State) void {
     if(h.conditionMet(cond, state)){
         state.pc = value;
@@ -772,13 +773,13 @@ fn push_reg(regPair: *s.regPair, state: *s.State) void {
 }
 
 pub fn decode_add_a_n(state: *s.State) void {
-    const value = mem.read8(state, state.pc);
+    const value = mem.read8(state, &state.pc);
 
     _ = add_a_value(value, state);
 }
 
 pub fn decode_sub_n(state: *s.State) void {
-    const value = mem.read8(state, state.pc); 
+    const value = mem.read8(state, &state.pc); 
 
     sub_a_value(value, state);
 }
