@@ -682,13 +682,12 @@ fn cp_a_value(value: u8, state: *s.State) u8 {
 
 //Opcode C0, D0, E0, F0
 pub fn decode_ret_condition_nn(state: *s.State) void {
-    const src: h.UnsetFlags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
-    const flag = h.getUnSetFlag(src);
-    ret_condition_nn(flag, state);
+    const cond: h.Condition = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    ret_condition_nn(cond, state);
 }
 
-pub fn ret_condition_nn(flag: u8, state: *s.State) void {
-    if((state.af.bytes.lo & flag) == 0){
+pub fn ret_condition_nn(cond: h.Condition, state: *s.State) void {
+    if(h.conditionMet(cond, state)){
         //pop  
         const lo = state.memory[state.sp];
         state.sp += 1;
@@ -719,15 +718,14 @@ fn pop_reg(regPair: *s.regPair, state: *s.State) void {
 
 //Opcode C0, D0, E0, F0
 pub fn decode_jp_condition_nn(state: *s.State) void {
-    const src: h.UnsetFlags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
-    const flag = h.getUnSetFlag(src);
+    const cond: h.Condition = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
     const nn = mem.read16(state, state.pc);
 
-    jp_condition_nn(flag, nn, state);
+    jp_condition_nn(cond, nn, state);
 }
 
-fn jp_condition_nn(flag: u8, value: u16, state: *s.State) void {
-    if((state.af.bytes.lo & flag) == 0){
+fn jp_condition_nn(cond: h.Condition, value: u16, state: *s.State) void {
+    if(h.conditionMet(cond, state)){
         state.pc = value;
     }
 }
@@ -742,16 +740,15 @@ pub fn op_jp_nn(state: *s.State) void {
 
 //Opcode C4, D4, E4, F4
 pub fn decode_call_condition_nn(state: *s.State) void {
-    const src: h.UnsetFlags = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
-    const flag = h.getUnSetFlag(src);
+    const cond: h.Condition = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
     const nn = mem.read16(state, state.pc);
 
-    call_condition_nn(flag, nn, state);
+    call_condition_nn(cond, nn, state);
 }
 
 
-fn call_condition_nn(flag: u8, value: u16, state: *s.State) void {
-    if((state.af.bytes.lo & flag) == 0){
+fn call_condition_nn(cond: h.Condition, value: u16, state: *s.State) void {
+    if(h.conditionMet(cond, state)){
         state.pc = value;
     }
 }

@@ -172,7 +172,6 @@ pub fn setRegisterValue(r: Register, value: u8, state: *s.State) void {
 }
 
 pub fn conditionMet(cond: Condition, state: *s.State) bool {
-
     return switch (cond) {
         .Z => (state.af.bytes.lo & s.FLAG_Z) != 0, 
         .NZ => (state.af.bytes.lo & s.FLAG_Z) == 0, 
