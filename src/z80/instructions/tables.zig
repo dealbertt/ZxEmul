@@ -156,5 +156,15 @@ pub fn initTables() void {
     mainOpcodes[0xDF] = main.decode_rst_value_h;
     mainOpcodes[0xEF] = main.decode_rst_value_h;
     mainOpcodes[0xFF] = main.decode_rst_value_h;
+
+    mainOpcodes[0xCA] = main.decode_jp_condition_nn;
+    mainOpcodes[0xDA] = main.decode_jp_condition_nn;
+    mainOpcodes[0xEA] = main.decode_jp_condition_nn;
+    mainOpcodes[0xFA] = main.decode_jp_condition_nn;
+
+    mainOpcodes[0xCC] = main.decode_call_condition_nn;
+    mainOpcodes[0xDC] = main.decode_call_condition_nn;
+    mainOpcodes[0xEC] = main.decode_call_condition_nn;
+    mainOpcodes[0xFC] = main.decode_call_condition_nn;
 }
 
