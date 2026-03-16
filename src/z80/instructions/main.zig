@@ -808,3 +808,32 @@ pub fn op_ret(state: *s.State) void {
     state.pc = (high << 8) | low;
 }
 
+pub fn op_jp_hl(state: *s.State) void {
+    state.pc = state.hl.pair; 
+}
+
+
+pub fn op_ex_de_hl(state: *s.State) void {
+        state.de.pair = state.de.pair ^ state.hl.pair;
+        state.hl.pair = state.de.pair ^ state.hl.pair;
+        state.de.pair = state.de.pair ^ state.hl.pair;
+}
+
+pub fn op_xor_n(state: *s.State) void {
+    const n = mem.read8(state, &state.pc);
+    state.af.bytes.hi = decode_binary_operation(n, .Xor, state);
+}
+
+pub fn op_sbc_a_n(state: *s.State) void {
+    const n = mem.read8(state, &state.pc);
+
+    state.af.bytes.hi = sbc_a_value(n, state);
+}
+
+pub fn op_cp_n(state: *s.State) void {
+    const n = mem.read8(state, &state.pc);
+
+    state.af.bytes.hi = cp_a_value(n, state);
+}
+
+
