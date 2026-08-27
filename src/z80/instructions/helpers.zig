@@ -1,7 +1,8 @@
 const s = @import("../internals/state.zig");
 
+//order matches the Z80's 3-bit register field encoding: (HL)=110, A=111
 pub const Register = enum(u3){
-    B, C, D, E, H, L, A, HL,
+    B, C, D, E, H, L, HL, A,
 };
 
 pub const RegisterPair = enum(u3){
@@ -192,9 +193,7 @@ pub fn push16BitValue(value: u16, state: *s.State) void {
     state.memory[state.sp] = @intCast(value & 0xFF); 
 }
 
-//for the RST instructions
+//for the RST instructions: the target address is encoded in bits 3-5 (t*8)
 pub fn getTargetAddress(value: u16) u8 {
-    //i guess both do the same thing
-    //return opcode << 3;
-    return @intCast(value & 0b0011100);
+    return @intCast(value & 0b00111000);
 }
