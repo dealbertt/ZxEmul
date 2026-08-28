@@ -23,6 +23,7 @@ pub const Spectrum = struct{
             .memory = [_]u8{0} ** memorySize,
             .cpu = undefined,
         };
+
         spec.cpu = z.Z80.init(spec.memory[0..]);
         _ = try spec.loadROM(path, init_proc);
 
@@ -43,7 +44,9 @@ pub const Spectrum = struct{
             return error.romSizeTooBig; 
         }
 
-        const bytes_read = file.reader(io, &self.memory);
+        var reader = file.reader(io, &self.memory);
+
+        const bytes_read = try reader.interface.readSliceShort(&self.memory);
         //const bytes_read = try file.read(&self.memory);
 
 
