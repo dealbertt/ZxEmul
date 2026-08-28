@@ -19,16 +19,19 @@ const emulConfig = struct{
     
 };
 
-pub fn loadConfig() !emulConfig{
+pub fn loadConfig(init: std.process.Init) !emulConfig{
 
-    //We open the file only to read it
-    //var file = try cwd.openFile(configPath, .{.mode = .read_only});
+    const io = init.io;
+    const file = try std.Io.Dir.cwd().openFile(io, configPath, .{.mode = .read_only});
+    defer file.close(io);
 
-    const file = try std.fs.cwd().openFile(configPath, .{});
-    defer file.close();
+    //deprecated method
+    //const file = try std.fs.cwd().openFile(configPath, .{});
+
+
 
     var buf: [4096]u8 = undefined;
-    var reader = file.reader(&buf);
+    var reader = file.reader(io, &buf);
 
     //var buf: [256]u8 = undefined;
     //var reader = file.reader(&buf).interface;

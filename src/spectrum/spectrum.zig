@@ -18,23 +18,24 @@ pub const Spectrum = struct{
     memory: [memorySize] u8,
     cpu: z.Z80,
 
-    pub fn init(path: []const u8) !Spectrum {
+    pub fn init(path: []const u8, init_proc: std.process.Init) !Spectrum {
         var spec = Spectrum {
             .memory = [_]u8{0} ** memorySize,
             .cpu = undefined,
         };
         spec.cpu = z.Z80.init(spec.memory[0..]);
-        _ = try spec.loadROM(path);
+        _ = try spec.loadROM(path, init_proc);
 
         return spec;
     }
 
-    fn loadROM(self: *Spectrum, path: []const u8) !u8 {
-        const file = try std.fs.cwd().openFile(path, .{});
-        defer file.close();
+    fn loadROM(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !u8 {
 
+        const io = init_proc.io;
+        const file = try std.Io.Dir.cwd().openFile(io, path, .{.mode = .read_only});
+        defer file.close(io);
 
-        const rom_size = try file.getEndPos();
+        const rom_size = try file.length(io);
         std.debug.print("Size of the file: {}\n", .{rom_size});
 
         if(rom_size > ROM_MEMORY_LIMIT){
@@ -42,7 +43,8 @@ pub const Spectrum = struct{
             return error.romSizeTooBig; 
         }
 
-        const bytes_read = try file.read(&self.memory);
+        const bytes_read = file.reader(io, &self.memory);
+        //const bytes_read = try file.read(&self.memory);
 
 
         std.debug.print("Bytes read: {}\n", .{bytes_read});

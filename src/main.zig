@@ -16,20 +16,18 @@ const custom = error {
     romSizeTooBig
 };
 
-pub fn main() !void {
+pub fn main(init: std.process.Init) !void {
     //load the config from the config file
-    const cfg = try config.loadConfig();
+    const cfg = try config.loadConfig(init);
 
     //create allocator to handle args
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const alloc = gpa.allocator();
+    //
 
     //handle args
-    const rom_path =  try handleArgs(alloc);
-    defer alloc.free(rom_path);
+    const rom_path =  try handleArgs(init);
+    std.debug.print("PATH: {s}\n", .{rom_path});
 
-    const comp = try spec.Spectrum.init(rom_path);
+    const comp = try spec.Spectrum.init(rom_path, init);
     std.debug.print("AF: {}\n", .{comp.cpu.state.af.pair});
 
     rl.initWindow(cfg.width, cfg.height, "ZxSpectrum emulator");
@@ -46,15 +44,14 @@ pub fn main() !void {
     }
 }
 
-fn handleArgs(alloc: std.mem.Allocator) ![]const u8 {
-    const args = try std.process.argsAlloc(alloc);
-    defer std.process.argsFree(alloc, args);
-    
+fn handleArgs(init: std.process.Init) ![]const u8 {
+    const args = try init.minimal.args.toSlice(init.arena.allocator());
 
     if(args.len < 2){
         std.debug.print("Please provide a path to the ROM to load!", .{});
         return custom.argumentNotProvided;
     }
 
-    return try alloc.dupe(u8, args[1]);
+    //return try alloc.dupe(u8, args[1]);
+    return args[1];
 }
