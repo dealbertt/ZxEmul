@@ -20,9 +20,6 @@ pub fn main(init: std.process.Init) !void {
     //load the config from the config file
     const cfg = try config.loadConfig(init);
 
-    //create allocator to handle args
-    //
-
     //handle args
     const rom_path =  try handleArgs(init);
     std.debug.print("PATH: {s}\n", .{rom_path});

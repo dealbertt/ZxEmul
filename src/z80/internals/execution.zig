@@ -6,8 +6,10 @@ const t = @import("../instructions/tables.zig");
 
 pub fn fetch(state: *s.State) u8 {
     const opcode = mem.read8(state.pc);
+
     state.pc +%= 1;
     std.debug.print("Current opcode {} \n", .{state.opcode});
+
     return opcode;
 }
 
@@ -15,6 +17,7 @@ pub fn step(state: *s.State) void {
     s.opcode = fetch(state);
     const handle = t.mainOpcodes[s.opcode]; 
     handle(state);
+
     //decode
     //execute
     //write back
