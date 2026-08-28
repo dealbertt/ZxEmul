@@ -44,8 +44,7 @@ pub fn op_nop(state: *s.State) void {
 
 //Opcode unknown
 pub fn op_unknown(state: *s.State) void {
-    _ = state;
-    std.debug.print("Unknown opcode {}", .{s.opcode});
+    std.debug.print("Unknown opcode {}", .{state.opcode});
 }
 //possible opcodes for this kind of instructions are
 //01
@@ -57,7 +56,7 @@ pub fn op_unknown(state: *s.State) void {
 //so we have to extract the first digit of the first byte? and then cast it
 
 pub fn decode_ld_16reg_nn(state: *s.State) void {
-    const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
     
     const regs = h.get16BitRegister(src, state);
     const nn = mem.read16(state, &state.pc);
@@ -75,14 +74,14 @@ pub fn op_ld_bc_addr_a(state: *s.State) void {
 
 //Opcode 03
 pub fn decode_inc_16reg(state: *s.State) void {
-    const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
     const regs = h.get16BitRegister(src, state);
     
     h.inc_16bitReg(regs, state);
 }
 
 pub fn decode_inc_8reg(state: *s.State) void {
-    const src: h.Register = @enumFromInt(@as(u8, @intCast((s.opcode >> 3) & 0b111)));
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
     const reg = h.getRegister(src, state);
 
     h.inc_8bitReg(reg, state);
@@ -90,14 +89,14 @@ pub fn decode_inc_8reg(state: *s.State) void {
 
 //Opcode 05
 pub fn decode_dec_8reg(state: *s.State) void {
-    const src: h.Register = @enumFromInt(@as(u8, @intCast((s.opcode >> 3) & 0b111)));
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
     const reg = h.getRegister(src, state);
 
     h.dec_8bitReg(reg, state);
 }
 
 pub fn decode_dec_16reg(state: *s.State) void {
-    const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
     const reg = h.get16BitRegister(src, state); 
     
     h.dec_16bitReg(reg, state);
@@ -106,7 +105,7 @@ pub fn decode_dec_16reg(state: *s.State) void {
 
 //Opcodes 06, 0E, 16, 1E, 26, 2E, 36, 3E (LD r,n)
 pub fn decode_ld_reg_n(state: *s.State) void {
-    const dst: h.Register = @enumFromInt(@as(u8, @intCast((s.opcode >> 3) & 0b111)));
+    const dst: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
     const value = mem.read8(state, &state.pc);
     h.setRegisterValue(dst, value, state);
 }
@@ -335,8 +334,8 @@ fn op_ld(src: h.Register, dst: h.Register, state: *s.State) void {
 }
 
 pub fn decode_ld(state: *s.State) void {
-    const src: h.Register = @enumFromInt(s.opcode & 0b111);
-    const dst: h.Register = @enumFromInt((s.opcode >> 3) & 0b111);
+    const src: h.Register = @enumFromInt(state.opcode & 0b111);
+    const dst: h.Register = @enumFromInt((state.opcode >> 3) & 0b111);
     op_ld(src, dst, state);
 }
 
@@ -352,7 +351,7 @@ fn op_add_a(src:h.Register, state: *s.State) void {
 }
 
 pub fn decode_add_a(state: *s.State) void {
-    const src: h.Register = @enumFromInt(s.opcode & 0b111);
+    const src: h.Register = @enumFromInt(state.opcode & 0b111);
     op_add_a(src, state);
 }
 
@@ -390,7 +389,7 @@ fn op_adc_a(src: h.Register, state: *s.State) void {
 }
 
 pub fn decode_adc_a(state: *s.State) void {
-    const src: h.Register = @enumFromInt(s.opcode & 0b111);
+    const src: h.Register = @enumFromInt(state.opcode & 0b111);
     op_adc_a(src, state);
 }
 
@@ -429,7 +428,7 @@ fn op_sub_a(src:h.Register, state: *s.State) void {
 }
 
 pub fn decode_sub_a(state: *s.State) void {
-    const src: h.Register = @enumFromInt(s.opcode & 0b111);
+    const src: h.Register = @enumFromInt(state.opcode & 0b111);
     op_sub_a(src, state);
 }
 
@@ -465,7 +464,7 @@ fn op_sbc_a(src: h.Register, state: *s.State) void {
 }
 
 pub fn decode_sbc_a(state: *s.State) void {
-    const src: h.Register = @enumFromInt(s.opcode & 0b111);
+    const src: h.Register = @enumFromInt(state.opcode & 0b111);
     op_sbc_a(src, state);
 }
 
@@ -528,14 +527,14 @@ fn decode_binary_operation(value: u8, operation: h.op, state: *s.State) u8 {
 
 //Opcode A0-A7
 pub fn decode_and_a(state: *s.State) void {
-    const src: h.Register = @enumFromInt(s.opcode & 0b111);
+    const src: h.Register = @enumFromInt(state.opcode & 0b111);
     const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = decode_binary_operation(value, .And, state);
 }
 
 //Opcode A8-AF
 pub fn decode_xor_a(state: *s.State) void {
-    const src: h.Register = @enumFromInt(s.opcode & 0b111);
+    const src: h.Register = @enumFromInt(state.opcode & 0b111);
     const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = decode_binary_operation(value, .Xor, state);
 }
@@ -543,7 +542,7 @@ pub fn decode_xor_a(state: *s.State) void {
 
 //Opcode B0-B7
 pub fn decode_or_a(state: *s.State) void {
-    const src: h.Register = @enumFromInt(s.opcode & 0b111);
+    const src: h.Register = @enumFromInt(state.opcode & 0b111);
     const value = h.getRegisterValue(src, state);
     state.af.bytes.hi = decode_binary_operation(value, .Or, state);
 }
@@ -552,14 +551,14 @@ pub fn decode_or_a(state: *s.State) void {
 //Opcode B8-BF
 //CP compares A with the operand (like SUB) but discards the result, leaving A unchanged
 pub fn decode_cp_a(state: *s.State) void {
-    const src: h.Register = @enumFromInt(s.opcode & 0b111);
+    const src: h.Register = @enumFromInt(state.opcode & 0b111);
     const value = h.getRegisterValue(src, state);
     _ = sub_a_value(value, state);
 }
 
 //Opcode C0, D0, E0, F0, C8, D8, E8, F8
 pub fn decode_ret_condition_nn(state: *s.State) void {
-    const cond: h.Condition = @enumFromInt(@as(u8, @intCast((s.opcode >> 3) & 0b111)));
+    const cond: h.Condition = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
     ret_condition_nn(cond, state);
 }
 
@@ -578,7 +577,7 @@ pub fn ret_condition_nn(cond: h.Condition, state: *s.State) void {
 
 //Opcode C1, D1, E1, F1
 pub fn decode_pop_reg(state: *s.State) void {
-    const src: h.RegisterPair = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const src: h.RegisterPair = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
     const pair = h.getRegisterPair(src, state);
     pop_reg(pair, state);
 }
@@ -595,7 +594,7 @@ fn pop_reg(regPair: *s.regPair, state: *s.State) void {
 
 //Opcode C2, D2, E2, F2, CA, DA, EA, FA
 pub fn decode_jp_condition_nn(state: *s.State) void {
-    const cond: h.Condition = @enumFromInt(@as(u8, @intCast((s.opcode >> 3) & 0b111)));
+    const cond: h.Condition = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
     const nn = mem.read16(state, &state.pc);
 
     jp_condition_nn(cond, nn, state);
@@ -617,7 +616,7 @@ pub fn op_jp_nn(state: *s.State) void {
 
 //Opcode C4, D4, E4, F4, CC, DC, EC, FC
 pub fn decode_call_condition_nn(state: *s.State) void {
-    const cond: h.Condition = @enumFromInt(@as(u8, @intCast((s.opcode >> 3) & 0b111)));
+    const cond: h.Condition = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
     const nn = mem.read16(state, &state.pc);
 
     call_condition_nn(cond, nn, state);
@@ -642,7 +641,7 @@ pub fn op_call_nn(state: *s.State) void {
 
 //Opcode C5, D5, E5, F5
 pub fn decode_push_reg(state: *s.State) void {
-    const src: h.RegisterPair = @enumFromInt(@as(u8, @intCast((s.opcode >> 4) & 0b11)));
+    const src: h.RegisterPair = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
     const pair = h.getRegisterPair(src, state);
     h.push16BitValue(pair.pair, state);
 }
@@ -661,7 +660,7 @@ pub fn decode_sub_n(state: *s.State) void {
 
 pub fn decode_rst_value_h(state: *s.State) void {
     //get value for what has to be loaded in pc after pushing
-    const vector = h.getTargetAddress(s.opcode);
+    const vector = h.getTargetAddress(state.opcode);
     op_rst_nn_h(vector, state);
 }
 

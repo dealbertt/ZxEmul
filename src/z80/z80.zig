@@ -1,5 +1,6 @@
 const s = @import("internals/state.zig");
 const t = @import("instructions/tables.zig");
+const e = @import("internals/execution.zig");
 
 pub const Z80 = struct {
     state: s.State,
@@ -17,7 +18,21 @@ pub const Z80 = struct {
                 .hl = .{ .pair = 0 },
                 .ix = 0,
                 .iy = 0,
+
+                .opcode = 0,
             }
         };
     } 
+
+    pub fn step(self: *Z80, state: *s.State) void {
+        self.state.opcode = e.fetch(state);
+        const handle = t.mainOpcodes[self.state.opcode];
+
+        handle(state);
+
+        //decode
+        //execute
+        //write back
+        //whatever else is needed typeshee
+    }
 };

@@ -1,5 +1,6 @@
 const std = @import("std");
 const z = @import("../z80/z80.zig");
+const z80 = z.Z80;
 
 const ROM_MEMORY_LIMIT = 16384;
 
@@ -16,18 +17,20 @@ const memorySize: u32 = 65536;
 
 pub const Spectrum = struct{
     memory: [memorySize] u8,
-    cpu: z.Z80,
+    cpu: z80,
 
-    pub fn init(path: []const u8, init_proc: std.process.Init) !Spectrum {
-        var spec = Spectrum {
-            .memory = [_]u8{0} ** memorySize,
-            .cpu = undefined,
-        };
+    pub fn init(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !void {
+        //var spec = Spectrum {
+            //initialize the memory to 0
+            //.memory = [_]u8{0} ** memorySize,
+            //.cpu = undefined,
+        //};
 
-        spec.cpu = z.Z80.init(spec.memory[0..]);
-        _ = try spec.loadROM(path, init_proc);
+        self.memory = [_]u8{0} ** memorySize;
+        //initialize the cpu
+        self.cpu = z80.init(self.memory[0..]);
 
-        return spec;
+        _ = try self.loadROM(path, init_proc);
     }
 
     fn loadROM(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !u8 {
@@ -52,5 +55,9 @@ pub const Spectrum = struct{
 
         std.debug.print("Bytes read: {}\n", .{bytes_read});
         return 0;
+    }
+
+    pub fn runFrame(self: *Spectrum) void {
+        self.cpu.step(&self.cpu.state);
     }
 };

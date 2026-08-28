@@ -24,7 +24,9 @@ pub fn main(init: std.process.Init) !void {
     const rom_path =  try handleArgs(init);
     std.debug.print("PATH: {s}\n", .{rom_path});
 
-    const comp = try spec.Spectrum.init(rom_path, init);
+    var comp:spec.Spectrum = undefined;
+
+    try comp.init(rom_path, init);
     std.debug.print("AF: {}\n", .{comp.cpu.state.af.pair});
 
     rl.initWindow(cfg.width, cfg.height, "ZxSpectrum emulator");
@@ -38,6 +40,7 @@ pub fn main(init: std.process.Init) !void {
 
         rl.clearBackground(.white);
         rl.drawText("Welcome to the ZXSpectrum emulator", cfg.width / 2, cfg.height / 2, 40, .red);
+        comp.runFrame();
     }
 }
 
