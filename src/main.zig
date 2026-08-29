@@ -29,17 +29,28 @@ pub fn main(init: std.process.Init) !void {
     try comp.init(rom_path, init);
     std.debug.print("AF: {}\n", .{comp.cpu.state.af.pair});
 
-    rl.initWindow(cfg.width, cfg.height, "ZxSpectrum emulator");
+    rl.initWindow(cfg.width, cfg.height, "ZxEmul");
+
+    const pos = rl.getWindowPosition();
+    const monitor = rl.getCurrentMonitor();
+
+    //to display the window in my principal monitor, having problems with the dual screen setup
+    rl.setWindowMonitor(1);
+
+    std.debug.print("Pos: {}\n", .{pos});
+    std.debug.print("Monitor: {}\n", .{monitor});
+
     defer rl.closeWindow();
 
     rl.setTargetFPS(cfg.fps);
 
     while (!rl.windowShouldClose()) {
         rl.beginDrawing();
-        defer rl.endDrawing();
 
         rl.clearBackground(.white);
-        rl.drawText("Welcome to the ZXSpectrum emulator", cfg.width / 2, cfg.height / 2, 40, .red);
+        rl.drawText("Welcome to the ZXSpectrum emulator", @divTrunc(cfg.width, 2),  @divTrunc(cfg.height, 2), 40, .red);
+
+        rl.endDrawing();
         comp.runFrame();
     }
 }
@@ -55,3 +66,4 @@ fn handleArgs(init: std.process.Init) ![]const u8 {
     //return try alloc.dupe(u8, args[1]);
     return args[1];
 }
+

@@ -26,6 +26,7 @@ pub const Z80 = struct {
 
     pub fn step(self: *Z80, state: *s.State) void {
         self.state.opcode = e.fetch(state);
+
         const handle = t.mainOpcodes[self.state.opcode];
 
         handle(state);
