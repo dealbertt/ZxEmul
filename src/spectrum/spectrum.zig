@@ -19,6 +19,7 @@ pub const Spectrum = struct{
     memory: [memorySize] u8,
     cpu: z80,
 
+    cycles: u32,
     pub fn init(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !void {
         //var spec = Spectrum {
             //initialize the memory to 0
@@ -30,6 +31,7 @@ pub const Spectrum = struct{
         //initialize the cpu
         self.cpu = z80.init(self.memory[0..]);
 
+        self.cycles = 0;
         _ = try self.loadROM(path, init_proc);
     }
 
@@ -57,7 +59,13 @@ pub const Spectrum = struct{
         return 0;
     }
 
+    //this will run ~70k cycles of z80 per frame 
     pub fn runFrame(self: *Spectrum) void {
-        self.cpu.step(&self.cpu.state);
+        self.cpu.cycle(&self.cpu.state, &self.cycles);
+        std.debug.print("cycles: {}", .{self.cycles});
+        if(self.cycles > 700){
+            self.cycles = 0;
+            //refresh screen
+        }
     }
 };

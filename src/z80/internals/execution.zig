@@ -7,8 +7,10 @@ const t = @import("../instructions/tables.zig");
 pub fn fetch(state: *s.State) u8 {
     const opcode = mem.read8(state, &state.pc);
 
+    //increase pc, avoiding overflow with %
     state.pc +%= 1;
-    std.debug.print("Current opcode {} \n", .{state.opcode});
+
+    //std.debug.print("Current opcode {} \n", .{state.opcode});
 
     return opcode;
 }

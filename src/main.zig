@@ -16,6 +16,9 @@ const custom = error {
     romSizeTooBig
 };
 
+const Emul = struct{
+    window: rl.window
+};
 pub fn main(init: std.process.Init) !void {
     //load the config from the config file
     const cfg = try config.loadConfig(init);
@@ -66,4 +69,7 @@ fn handleArgs(init: std.process.Init) ![]const u8 {
     //return try alloc.dupe(u8, args[1]);
     return args[1];
 }
+
+//so for the main loop, i kind of have two things to care about, the frame rate of the emulator, as in the whole program,
+//and the frame rate of the cpu/computer itself which is 3,5mhz and 50hz, and idk if i should do that in timing.zig or directly in here
 
