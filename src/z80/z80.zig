@@ -27,20 +27,19 @@ pub const Z80 = struct {
     //one full cycle of z80, 70k per frame
     //there will need to be some sort of cycle counter that updates it in this function
     //but should that be part of the z80 state?
-    pub fn cycle(self: *Z80, state: *s.State, cycles: *u32) void {
+    pub fn cycle(self: *Z80) u16 {
         //retrieve the opcode
-        self.state.opcode = e.fetch(state);
+        self.state.opcode = e.fetch(&self.state);
 
         //decode, kind of?
         const handle = t.mainOpcodes[self.state.opcode];
 
         //execute, which i guess includes all of the write back, and operand read, etc
-        handle(state);
+        handle(&self.state);
         
-        cycles.* += 1;
-
         //execute
         //write back
         //whatever else is needed typeshee
+        return 1;
     }
 };

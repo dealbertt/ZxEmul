@@ -55,6 +55,7 @@ pub fn main(init: std.process.Init) !void {
 
         rl.endDrawing();
         comp.runFrame();
+        //update the buffer to refresh the screen 
     }
 }
 

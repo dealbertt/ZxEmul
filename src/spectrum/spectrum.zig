@@ -4,6 +4,8 @@ const z80 = z.Z80;
 
 const ROM_MEMORY_LIMIT = 16384;
 
+const CYCLES_PER_REFRESH = 69888;
+
 const hiResWidth: u8 = 256;
 const hiResHeight: u8 = 192;
 
@@ -31,7 +33,6 @@ pub const Spectrum = struct{
         //initialize the cpu
         self.cpu = z80.init(self.memory[0..]);
 
-        self.cycles = 0;
         _ = try self.loadROM(path, init_proc);
     }
 
@@ -60,12 +61,14 @@ pub const Spectrum = struct{
     }
 
     //this will run ~70k cycles of z80 per frame 
+    //50 frames/refresh per second -> total of 3.500.000 cycles per second
+    //how am i going to get that? 
     pub fn runFrame(self: *Spectrum) void {
-        self.cpu.cycle(&self.cpu.state, &self.cycles);
-        std.debug.print("cycles: {}", .{self.cycles});
-        if(self.cycles > 700){
-            self.cycles = 0;
-            //refresh screen
+        var statesInFrame: u32 = 0; 
+        while(statesInFrame > CYCLES_PER_REFRESH){
+            const cycles = self.cpu.cycle();
+            statesInFrame += cycles;
         }
+        std.debug.print("REFRESH!\n", .{});
     }
 };
