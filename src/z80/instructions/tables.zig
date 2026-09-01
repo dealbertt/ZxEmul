@@ -1,8 +1,9 @@
 const main = @import("main.zig");
 const s = @import("../internals/state.zig");
-const OpcodeHandler = *const fn (*s.State) void;
+const OpcodeHandler = *const fn (*s.State) u8;
 
-pub var mainOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) void{main.op_unknown} ** 256;
+//how the fuck do i assign the cycles for each instruction, this is some bullshit
+pub var mainOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unknown} ** 256;
 //function created to load all of the main.functions into the opcode arrays/lookup table
 pub fn initTables() void {
     for (0..256) |index| {

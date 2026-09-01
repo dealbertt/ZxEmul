@@ -69,6 +69,6 @@ pub const Spectrum = struct{
             const cycles = self.cpu.cycle();
             statesInFrame += cycles;
         }
-        std.debug.print("REFRESH!\n", .{});
+        std.debug.print("REFRESH!", .{});
     }
 };

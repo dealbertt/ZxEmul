@@ -35,11 +35,11 @@ pub const Z80 = struct {
         const handle = t.mainOpcodes[self.state.opcode];
 
         //execute, which i guess includes all of the write back, and operand read, etc
-        handle(&self.state);
+        const cycles = handle(&self.state);
         
         //execute
         //write back
         //whatever else is needed typeshee
-        return 1;
+        return cycles;
     }
 };

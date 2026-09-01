@@ -4,7 +4,6 @@ const rl = @import("raylib");
 const config = @import("config/config.zig");
 const spec = @import("spectrum/spectrum.zig");
 
-const print = std.debug.print;
 
 //Todo on main:
 //- Load the config
