@@ -15,9 +15,6 @@ const custom = error {
     romSizeTooBig
 };
 
-const Emul = struct{
-    window: rl.window
-};
 pub fn main(init: std.process.Init) !void {
     //load the config from the config file
     const cfg = try config.loadConfig(init);
@@ -44,16 +41,25 @@ pub fn main(init: std.process.Init) !void {
 
     defer rl.closeWindow();
 
-    rl.setTargetFPS(cfg.fps);
+    rl.setTargetFPS(50);
+
+    var lastTime: f64 = rl.getTime();
 
     while (!rl.windowShouldClose()) {
+        const currentTime: f64  = rl.getTime();
+
+        const deltaTime: f64 = currentTime - lastTime;
+        lastTime = currentTime;
+
         rl.beginDrawing();
 
         rl.clearBackground(.white);
         rl.drawText("Welcome to the ZXSpectrum emulator", @divTrunc(cfg.width, 2),  @divTrunc(cfg.height, 2), 40, .red);
 
-        rl.endDrawing();
+        std.debug.print("Delta: {}\n", .{deltaTime});
         comp.runFrame();
+
+        rl.endDrawing();
         //update the buffer to refresh the screen 
     }
 }

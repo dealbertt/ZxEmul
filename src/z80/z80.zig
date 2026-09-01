@@ -2,6 +2,7 @@ const s = @import("internals/state.zig");
 const t = @import("instructions/tables.zig");
 const e = @import("internals/execution.zig");
 
+const std = @import("std");
 pub const Z80 = struct {
     state: s.State,
 
@@ -31,6 +32,7 @@ pub const Z80 = struct {
         //retrieve the opcode
         self.state.opcode = e.fetch(&self.state);
 
+        std.debug.print("Opcode: {}\n", .{self.state.opcode});
         //decode, kind of?
         const handle = t.mainOpcodes[self.state.opcode];
 

@@ -1,10 +1,13 @@
 const std = @import("std");
 const z = @import("../z80/z80.zig");
 const z80 = z.Z80;
+const rl = @import("raylib");
 
 const ROM_MEMORY_LIMIT = 16384;
 
 const CYCLES_PER_REFRESH = 69888;
+
+const FREQ = 3500000;
 
 const hiResWidth: u8 = 256;
 const hiResHeight: u8 = 192;
@@ -64,11 +67,10 @@ pub const Spectrum = struct{
     //50 frames/refresh per second -> total of 3.500.000 cycles per second
     //how am i going to get that? 
     pub fn runFrame(self: *Spectrum) void {
-        var statesInFrame: u32 = 0; 
-        while(statesInFrame > CYCLES_PER_REFRESH){
+        var statesInFrame: u32 = 0;
+        while(statesInFrame < CYCLES_PER_REFRESH){
             const cycles = self.cpu.cycle();
             statesInFrame += cycles;
         }
-        std.debug.print("REFRESH!", .{});
     }
 };

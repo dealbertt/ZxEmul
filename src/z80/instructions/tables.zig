@@ -6,9 +6,6 @@ const OpcodeHandler = *const fn (*s.State) u8;
 pub var mainOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unknown} ** 256;
 //function created to load all of the main.functions into the opcode arrays/lookup table
 pub fn initTables() void {
-    for (0..256) |index| {
-        mainOpcodes[index] = main.op_unknown;
-    }
     mainOpcodes[0x00] = main.op_nop;
     mainOpcodes[0x01] = main.decode_ld_16reg_nn;
     mainOpcodes[0x02] = main.op_ld_bc_addr_a;
