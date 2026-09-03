@@ -185,4 +185,5 @@ pub fn initTables() void {
 
     mainOpcodes[0xE3] = main.op_ex_sp_addr_hl;
     mainOpcodes[0xEB] = main.op_ex_de_hl;
+
 }

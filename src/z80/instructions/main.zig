@@ -4,6 +4,7 @@ const s = @import("../internals/state.zig");
 
 const h = @import("helpers.zig");
 
+const c = @import("common.zig");
 const tables = @import("tables.zig");
 
 const mem = @import("../internals/memory.zig");
@@ -143,7 +144,6 @@ pub fn op_rlca(state: *s.State) u8 {
     //because bit0 now has the contents of bit 7
     //
     //Reset the N and H flag
-    state.af.bytes.hi = ((state.af.bytes.hi << 1) | bit7) & 0xFF;
     //because we shift to the left, zig might promote to a bigger value, but we only
     //want to keep the lowest 8 bits
     //this is basically a NOT of s.FLAG_C or FLAG_N or FLAG_H
@@ -180,16 +180,11 @@ pub fn op_ld_a_bc_addr(state: *s.State) u8 {
     return 7;
 }
 
-//Opcoe 0F
-pub fn op_rrca(state: *s.State) u8 {
-    const bit0: u8 = state.af.bytes.hi & 1;
-
-    state.af.bytes.hi = (state.af.bytes.hi >> 1) | (bit0 << 7);
-    state.af.bytes.lo &= ~(s.FLAG_C | s.FLAG_N | s.FLAG_H);
-
-    state.af.bytes.lo |= bit0;
-    return 4;
+pub fn decode_rrca(state: *s.State) u8 {
+   c.op_rrc(state, &state.af.bytes.hi); 
+   return 4;
 }
+
 
 //Opcode 10
 pub fn op_djnz_d(state: *s.State) u8 {
@@ -216,13 +211,8 @@ pub fn op_ld_de_addr_a(state: *s.State) u8 {
 
 //Opcode 17
 //The contents of A are rotated left one bit position. Bit 7 is copied to the carry flag and the previous contents of the carry flag are copied to bit 0.
-pub fn rla(state: *s.State) u8 {
-    const bit7: u8 = (state.af.bytes.hi >> 7) & 1;
-    const prevCarry: u8 = state.af.bytes.lo & s.FLAG_C;
-
-    state.af.bytes.hi = (state.af.bytes.hi << 1) | prevCarry;
-    state.af.bytes.lo &= ~(s.FLAG_C | s.FLAG_N | s.FLAG_H);
-    state.af.bytes.lo |= bit7;
+pub fn decode_rla(state: *s.State) u8 {
+    c.op_rl(state, &state.af.bytes.hi);
     return 4;
 }
 
@@ -251,13 +241,8 @@ pub fn op_ld_a_de_addr(state: *s.State) u8 {
 }
 
 //Opcode 1F
-pub fn op_rra(state: *s.State) u8 {
-    const bit0: u8 = state.af.bytes.hi & 1;
-    const prevCarry: u8 = state.af.bytes.lo & s.FLAG_C;
-
-    state.af.bytes.hi = (state.af.bytes.hi >> 1) | (prevCarry << 7);
-    state.af.bytes.lo &= ~(s.FLAG_C | s.FLAG_N | s.FLAG_H);
-    state.af.bytes.lo |= bit0;
+pub fn decode_rra(state: *s.State) u8 {
+    c.op_rr(state, &state.af.bytes.hi);
     return 4;
 }
 
