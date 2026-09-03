@@ -17,7 +17,7 @@ pub const State = struct{
 
     memory: []u8,
 
-    opcode: u16,
+    opcode: u8,
 };
 
 pub const FLAG_C: u8 = 0b0000_0001;
