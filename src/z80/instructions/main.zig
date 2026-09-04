@@ -4,7 +4,6 @@ const s = @import("../internals/state.zig");
 
 const h = @import("helpers.zig");
 
-const c = @import("common.zig");
 const tables = @import("tables.zig");
 
 const mem = @import("../internals/memory.zig");
@@ -181,7 +180,7 @@ pub fn op_ld_a_bc_addr(state: *s.State) u8 {
 }
 
 pub fn decode_rrca(state: *s.State) u8 {
-   c.op_rrc(state, &state.af.bytes.hi); 
+   h.op_rrc(state, &state.af.bytes.hi); 
    return 4;
 }
 
@@ -212,7 +211,7 @@ pub fn op_ld_de_addr_a(state: *s.State) u8 {
 //Opcode 17
 //The contents of A are rotated left one bit position. Bit 7 is copied to the carry flag and the previous contents of the carry flag are copied to bit 0.
 pub fn decode_rla(state: *s.State) u8 {
-    c.op_rl(state, &state.af.bytes.hi);
+    h.op_rl(state, &state.af.bytes.hi);
     return 4;
 }
 
@@ -242,7 +241,7 @@ pub fn op_ld_a_de_addr(state: *s.State) u8 {
 
 //Opcode 1F
 pub fn decode_rra(state: *s.State) u8 {
-    c.op_rr(state, &state.af.bytes.hi);
+    h.op_rr(state, &state.af.bytes.hi);
     return 4;
 }
 

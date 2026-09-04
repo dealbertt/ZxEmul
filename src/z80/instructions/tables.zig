@@ -21,7 +21,7 @@ pub fn initTables() void {
     mainOpcodes[0x0C] = main.decode_inc_8reg;
     mainOpcodes[0x0D] = main.decode_dec_8reg;
     mainOpcodes[0x0E] = main.decode_ld_reg_n;
-    mainOpcodes[0x0F] = main.op_rrca;
+    mainOpcodes[0x0F] = main.decode_rrca;
 
     mainOpcodes[0x10] = main.op_djnz_d;
     mainOpcodes[0x11] = main.decode_ld_16reg_nn;
@@ -30,7 +30,7 @@ pub fn initTables() void {
     mainOpcodes[0x14] = main.decode_inc_8reg;
     mainOpcodes[0x15] = main.decode_dec_8reg;
     mainOpcodes[0x16] = main.decode_ld_reg_n;
-    mainOpcodes[0x17] = main.rla;
+    mainOpcodes[0x17] = main.decode_rla;
     mainOpcodes[0x18] = main.jr_d;
     mainOpcodes[0x19] = main.op_add_hl_de;
     mainOpcodes[0x1A] = main.op_ld_a_de_addr;
@@ -38,7 +38,7 @@ pub fn initTables() void {
     mainOpcodes[0x1C] = main.decode_inc_8reg;
     mainOpcodes[0x1D] = main.decode_dec_8reg;
     mainOpcodes[0x1E] = main.decode_ld_reg_n;
-    mainOpcodes[0x1F] = main.op_rra;
+    mainOpcodes[0x1F] = main.decode_rra;
 
     mainOpcodes[0x20] = main.op_jr_nz;
     mainOpcodes[0x21] = main.decode_ld_16reg_nn;

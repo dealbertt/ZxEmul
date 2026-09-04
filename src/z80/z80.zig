@@ -30,17 +30,17 @@ pub const Z80 = struct {
     //but should that be part of the z80 state?
     pub fn cycle(self: *Z80) u16 {
         //retrieve the opcode
-        const prefix: u8 = e.fetch_byte(&self.state);
+        //const prefix: u8 = e.fetch_byte(&self.state);
+        self.state.opcode = e.fetch_byte(&self.state);
 
-
-        switch (prefix) {
-            0xCB => //t.CBOpcodes table,
-            0xDD => //
+        //switch (prefix) {
+            //0xCB => //t.CBOpcodes table,
+            //0xDD => //
                     //,
-            0xFD => //,
-            0xED => //,
-            else => t.mainOpcodes
-        }
+            //0xFD => //,
+            //0xED => //,
+            //else => t.mainOpcodes
+        //}
 
         //shit i might need a decode part, to decode the bytes depending on the type of instructions
         //once i have fetched the opcode, i have to decode depending on the prefix
