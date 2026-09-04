@@ -1,9 +1,13 @@
 const main = @import("main.zig");
+const cb = @import("cb.zig");
 const s = @import("../internals/state.zig");
 const OpcodeHandler = *const fn (*s.State) u8;
 
 //how the fuck do i assign the cycles for each instruction, this is some bullshit
 pub var mainOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unknown} ** 256;
+
+//opcodes reached through the CB prefix (bit/rotate/shift instructions)
+pub var cbOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unknown} ** 256;
 //function created to load all of the main.functions into the opcode arrays/lookup table
 pub fn initTables() void {
     mainOpcodes[0x00] = main.op_nop;
@@ -186,4 +190,30 @@ pub fn initTables() void {
     mainOpcodes[0xE3] = main.op_ex_sp_addr_hl;
     mainOpcodes[0xEB] = main.op_ex_de_hl;
 
+
+    //CB-prefixed opcodes: each rotate/shift operation covers a fixed block of 8 opcodes,
+    //one per register (B, C, D, E, H, L, (HL), A)
+    for(0x00..0x08) |op| {
+        cbOpcodes[op] = cb.decode_rlc;
+    }
+
+    for(0x08..0x10) |op| {
+        cbOpcodes[op] = cb.decode_rrc;
+    }
+
+    for(0x10..0x18) |op| {
+        cbOpcodes[op] = cb.decode_rl;
+    }
+
+    for(0x18..0x20) |op| {
+        cbOpcodes[op] = cb.decode_rr;
+    }
+
+    for(0x20..0x28) |op| {
+        cbOpcodes[op] = cb.decode_sla;
+    }
+
+    for(0x28..0x30) |op| {
+        cbOpcodes[op] = cb.decode_sra;
+    }
 }

@@ -4,7 +4,6 @@ const s = @import("../internals/state.zig");
 
 const h = @import("helpers.zig");
 
-const c = @import("common.zig");
 const tables = @import("tables.zig");
 
 const mem = @import("../internals/memory.zig");
@@ -29,10 +28,10 @@ fn setZSPFlag(state: *s.State, result: u8) void {
 }
 
 pub fn decode_rlc(state: *s.State) u8 {
-    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
     const reg = h.getRegister(src, state);
 
-    c.op_rlc(state, &reg);
+    h.op_rlc(state, reg);
 
     setZSPFlag(state, reg.*);
     return regOrHLCycles(src);
@@ -40,39 +39,39 @@ pub fn decode_rlc(state: *s.State) u8 {
 
 
 pub fn decode_rrc(state: *s.State) u8 {
-    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
     const reg = h.getRegister(src, state);
 
-    c.op_rrc(state, &reg);
+    h.op_rrc(state, reg);
 
     setZSPFlag(state, reg.*);
     return regOrHLCycles(src);
 }
 
 pub fn decode_rl(state: *s.State) u8 {
-    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
     const reg = h.getRegister(src, state);
 
-    c.op_rl(state, &reg);
+    h.op_rl(state, reg);
 
     setZSPFlag(state, reg.*);
     return regOrHLCycles(src);
 }
 
 pub fn decode_rr(state: *s.State) u8 {
-    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
     const reg = h.getRegister(src, state);
 
-    c.op_rr(state, &reg);
+    h.op_rr(state, reg);
 
     setZSPFlag(state, reg.*);
     return regOrHLCycles(src);
 }
 
 pub fn decode_sla(state: *s.State) u8 {
-    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
     const reg = h.getRegister(src, state);
-    op_sla(state, &reg);
+    op_sla(state, reg);
 
     setZSPFlag(state, reg.*);
     return regOrHLCycles(src);
@@ -91,9 +90,9 @@ fn op_sla(state: *s.State, reg: *u8) void {
 }
 
 pub fn decode_sra(state: *s.State) u8 {
-    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
     const reg = h.getRegister(src, state);
-    op_sra(state, &reg);
+    op_sra(state, reg);
 
     setZSPFlag(state, reg.*);
     return regOrHLCycles(src);
@@ -113,3 +112,4 @@ fn op_sra(state: *s.State, reg: *u8) void {
     if(bit0 == 1) state.af.bytes.lo |= s.FLAG_C;
 
 }
+
