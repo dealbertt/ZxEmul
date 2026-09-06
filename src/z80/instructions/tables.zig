@@ -216,4 +216,18 @@ pub fn initTables() void {
     for(0x28..0x30) |op| {
         cbOpcodes[op] = cb.decode_sra;
     }
+
+
+    for(0x30..0x38) |op| {
+        cbOpcodes[op] = cb.decode_sll;
+    }
+
+    for(0x38..0x40) |op| {
+        cbOpcodes[op] = cb.decode_srl;
+    }
+
+    for(0x40..0x80) |op| {
+        cbOpcodes[op] = cb.decode_bit;
+    }
 }
+

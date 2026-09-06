@@ -110,6 +110,93 @@ fn op_sra(state: *s.State, reg: *u8) void {
 
     //contents of bit0 copied to carry flag
     if(bit0 == 1) state.af.bytes.lo |= s.FLAG_C;
+}
+
+pub fn decode_sll(state: *s.State) u8 {
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
+    const reg = h.getRegister(src, state);
+    op_sll(state, reg);
+
+    setZSPFlag(state, reg.*);
+    return regOrHLCycles(src);
+}
+
+fn op_sll(state: *s.State, reg: *u8) void {
+    const bit7: u8 = reg.* & 0x80;
+
+    //shifted, automatically puts a 1 on bit0
+    //its using the FLAG_C as its b0000_0001
+    reg.* = (reg.* << 1) | s.FLAG_C;
+    //reset flags
+    //
+    state.af.bytes.lo &= ~(s.FLAG_C | s.FLAG_N | s.FLAG_H);
+
+    if(bit7 == 1) state.af.bytes.lo |= s.FLAG_C;
 
 }
 
+
+pub fn decode_srl(state: *s.State) u8 {
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
+    const reg = h.getRegister(src, state);
+    op_srl(state, reg);
+
+    setZSPFlag(state, reg.*);
+    return regOrHLCycles(src);
+}
+
+fn op_srl(state: *s.State, reg: *u8) void {
+    const bit0: u8 = reg.* & 1;
+
+    //shifted, and bit7 gets put to 0 
+    reg.* = (reg.* >> 1);
+
+    //reset flags
+    state.af.bytes.lo &= ~(s.FLAG_C | s.FLAG_N | s.FLAG_H);
+
+    //contents of bit0 copied to carry flag
+    if(bit0 == 1) state.af.bytes.lo |= s.FLAG_C;
+}
+
+//for bit0
+//40
+//0100 0000
+//41
+//0100 0001
+//
+//for bit1
+//48
+//0100 1000
+//49
+//0100 1001
+//the first byte is for the CB prefix
+//the second byte:
+//01 - bbb - rrr
+//01 -> 64
+//01-xxx-yyy
+//01-xxx-111
+//
+pub fn decode_bit(state: *s.State) u8 {
+    const bit: u3 = @intCast((state.opcode >> 3) & 0b111);
+
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
+    const reg = h.getRegister(src, state);
+    
+    op_bit(state, reg, bit);
+    return 8;
+}
+
+fn op_bit(state: *s.State, reg: *u8, bit: u3) void {
+    const testBit = (reg.* >> bit) & 1;  
+
+    if(testBit == 0){
+        state.af.bytes.lo |= s.FLAG_Z;
+    }else{
+        state.af.bytes.lo &= ~s.FLAG_Z;
+    }
+
+    //set H
+    state.af.bytes.lo |= s.FLAG_H;
+    //reset N
+    state.af.bytes.lo &= ~s.FLAG_N;
+}
