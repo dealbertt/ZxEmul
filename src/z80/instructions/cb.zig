@@ -203,3 +203,37 @@ fn op_bit(state: *s.State, reg: *u8, bit: u3) void {
     //reset N
     state.af.bytes.lo &= ~s.FLAG_N;
 }
+
+pub fn decode_res(state: *s.State) u8 {
+    const bit: u3 = @intCast((state.opcode >> 3) & 0b111);
+
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
+    const reg = h.getRegister(src, state);
+    
+    op_res(reg, bit);
+    return regOrHLCycles(src);
+} 
+
+fn op_res(reg: *u8, bit: u3) void {
+    const mask = @as(u8, 1) << bit;   
+
+    //reset
+    reg.* &= ~mask;
+}
+
+pub fn decode_set(state: *s.State) u8 {
+    const bit: u3 = @intCast((state.opcode >> 3) & 0b111);
+
+    const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
+    const reg = h.getRegister(src, state);
+    
+    op_set(reg, bit);
+    return regOrHLCycles(src);
+} 
+
+fn op_set(reg: *u8, bit: u3) void {
+    const mask = @as(u8, 1) << bit;   
+
+    //set
+    reg.* |= mask;
+}

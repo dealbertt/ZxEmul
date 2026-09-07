@@ -229,5 +229,15 @@ pub fn initTables() void {
     for(0x40..0x80) |op| {
         cbOpcodes[op] = cb.decode_bit;
     }
+
+    for(0x80..0xC0) |op| {
+        cbOpcodes[op] = cb.decode_res;
+    }
+
+    for(0xC0..0xFF) |op| {
+        cbOpcodes[op] = cb.decode_set;
+    }
+
+    cbOpcodes[0xFF] = cb.decode_set;
 }
 
