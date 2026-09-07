@@ -6,11 +6,10 @@ const std = @import("std");
 pub const Z80 = struct {
     state: s.State,
 
-    pub fn init(memory: []u8) Z80 {
+    pub fn init() Z80 {
         t.initTables();
         return Z80 {
             .state =  s.State{
-                .memory = memory, 
                 .pc = 0x0000,
                 .sp = 0xFFFF,
                 .af = .{ .pair = 0 },
@@ -20,6 +19,11 @@ pub const Z80 = struct {
                 .ix = 0,
                 .iy = 0,
 
+                .bus = s.Bus {
+                    .border_color = 7,
+                    .memory = [_]u8{0} ** 65536,
+                    .key_matrix = [_]u8 {0x1F} ** 8, 
+                },
                 .opcode = 0,
             }
         };

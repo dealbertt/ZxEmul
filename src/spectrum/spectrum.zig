@@ -21,7 +21,6 @@ var keyPad: u8[40] = [_]u8{0} ** 40;
 const memorySize: u32 = 65536;
 
 pub const Spectrum = struct{
-    memory: [memorySize] u8,
     cpu: z80,
 
     cycles: u32,
@@ -32,9 +31,8 @@ pub const Spectrum = struct{
             //.cpu = undefined,
         //};
 
-        self.memory = [_]u8{0} ** memorySize;
         //initialize the cpu
-        self.cpu = z80.init(self.memory[0..]);
+        self.cpu = z80.init();
 
         _ = try self.loadROM(path, init_proc);
     }
@@ -53,9 +51,9 @@ pub const Spectrum = struct{
             return error.romSizeTooBig; 
         }
 
-        var reader = file.reader(io, &self.memory);
+        var reader = file.reader(io, &self.cpu.state.bus.memory);
 
-        const bytes_read = try reader.interface.readSliceShort(&self.memory);
+        const bytes_read = try reader.interface.readSliceShort(&self.cpu.state.bus.memory);
         //const bytes_read = try file.read(&self.memory);
 
 

@@ -175,7 +175,8 @@ pub fn getRegister(r: Register, state: *s.State) *u8{
         .H => &state.hl.bytes.hi,
         .L => &state.hl.bytes.lo,
         .A => &state.af.bytes.hi,
-        .HL=> &state.memory[state.hl.pair]
+        //.HL=> &state.memory[state.hl.pair]
+        .HL => state.bus.get_memory_ptr(state.hl.pair),
     };
 }
 
@@ -188,7 +189,8 @@ pub fn getRegisterValue(r: Register, state: *s.State) u8{
         .H => state.hl.bytes.hi,
         .L => state.hl.bytes.lo,
         .A => state.af.bytes.hi,
-        .HL=> state.memory[state.hl.pair]
+        //.HL=> state.memory[state.hl.pair],
+        .HL => state.bus.read_memory(state.hl.pair),
     };
 }
 
@@ -218,7 +220,8 @@ pub fn setRegisterValue(r: Register, value: u8, state: *s.State) void {
         .H => state.hl.bytes.hi = value,
         .L => state.hl.bytes.lo = value,
         .A => state.af.bytes.hi = value,
-        .HL=> state.memory[state.hl.pair] = value,
+        //.HL=> state.memory[state.hl.pair] = value,
+        .HL => state.bus.write_memory(state.hl.pair, value),
     }
 }
 
@@ -237,10 +240,12 @@ pub fn conditionMet(cond: Condition, state: *s.State) bool {
 
 pub fn push16BitValue(value: u16, state: *s.State) void {
     state.sp -%= 1;
-    state.memory[state.sp] = @intCast((value >> 8) & 0xFF); 
+    //state.memory[state.sp] = @intCast((value >> 8) & 0xFF); 
+    state.bus.write_memory(state.sp, @intCast((value >> 8) & 0xFF));
 
     state.sp -%= 1;
-    state.memory[state.sp] = @intCast(value & 0xFF); 
+    //state.memory[state.sp] = @intCast(value & 0xFF); 
+    state.bus.write_memory(state.sp, @intCast((value >> 8) & 0xFF));
 }
 
 //for the RST instructions: the target address is encoded in bits 3-5 (t*8)

@@ -29,12 +29,15 @@ pub const Bus = struct{
 
     border_color: u8,
 
-    key_matrix: []u8,
+    key_matrix: [8]u8,
 
     pub fn read_memory(self: *Bus, address: u16) u8{
         return self.memory[address];
     }
 
+    pub fn get_memory_ptr(self: *Bus, address: u16) *u8{
+        return &self.memory[address];
+    }
     pub fn write_memory(self: *Bus, address: u16, value:u8) void {
         if(address < 0x4000){
             std.debug.print("ROM memory!\n", .{}); 
@@ -47,7 +50,6 @@ pub const Bus = struct{
         return self.border_color;
     }
 };
-
 
 pub const FLAG_C: u8 = 0b0000_0001;
 pub const FLAG_N: u8 = 0b0000_0010;
