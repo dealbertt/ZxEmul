@@ -1,3 +1,5 @@
+const std = @import("std");
+
 pub const regPair = extern union { pair: u16, bytes: extern struct {
     lo: u8,
     hi: u8,
@@ -15,8 +17,7 @@ pub const State = struct{
     sp: u16,
     pc: u16,
 
-    memory: []u8,
-
+    bus: Bus,
     opcode: u8,
 };
 
@@ -24,23 +25,26 @@ pub const Bus = struct{
     //3 memory arrays
     //rom
     //lower ram
-    rom: [16384]u8,
-    lower_ram: [16384]u8,
-    ram: [32768]u8,
-    
+    memory: [65536]u8,
+
     border_color: u8,
+
     key_matrix: []u8,
 
-    pub fn read_memory(self: *Bus) u8{
-
+    pub fn read_memory(self: *Bus, address: u16) u8{
+        return self.memory[address];
     }
 
-    pub fn write_memory(self: *Bus) u8{
-
+    pub fn write_memory(self: *Bus, address: u16, value:u8) void {
+        if(address < 0x4000){
+            std.debug.print("ROM memory!\n", .{}); 
+        }else{
+            self.memory[address] = value;
+        }
     }
 
     pub fn get_border_color(self: *Bus) u8{
-        return self.border_color; 
+        return self.border_color;
     }
 };
 

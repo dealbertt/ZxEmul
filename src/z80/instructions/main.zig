@@ -72,7 +72,7 @@ fn ld_16reg_nn(regs: *u16, value: u16) void {
 
 //Opcode 02
 pub fn op_ld_bc_addr_a(state: *s.State) u8 {
-    state.memory[state.bc.pair] = state.af.bytes.hi;
+    mem.write8(state, state.bc.pair, state.af.bytes.hi);
     return 7;
 }
 
@@ -175,7 +175,7 @@ pub fn op_add_hl_bc(state: *s.State) u8 {
 
 //Opcode 0A
 pub fn op_ld_a_bc_addr(state: *s.State) u8 {
-    state.af.bytes.hi = state.memory[state.bc.pair];
+    state.af.bytes.hi = state.bus.read_memory(state.bc.pair);
     return 7;
 }
 
@@ -204,7 +204,7 @@ pub fn op_djnz_d(state: *s.State) u8 {
 
 //Opcode 12
 pub fn op_ld_de_addr_a(state: *s.State) u8 {
-    state.memory[state.de.pair] = state.af.bytes.hi;
+    mem.write8(state, state.de.pair, state.af.bytes.hi);
     return 7;
 }
 
@@ -235,7 +235,7 @@ pub fn op_add_hl_de(state: *s.State) u8 {
 
 //Opcode 1A
 pub fn op_ld_a_de_addr(state: *s.State) u8 {
-    state.af.bytes.hi = state.memory[state.de.pair];
+    state.af.bytes.hi = state.bus.read_memory(state.de.pair);
     return 7;
 }
 
@@ -258,8 +258,8 @@ pub fn op_jr_nz(state: *s.State) u8 {
 //Opcode 22
 pub fn op_ld_nn_addr_hl(state: *s.State) u8 {
     const nn = mem.read16(state, &state.pc);
-    state.memory[nn] = state.hl.bytes.lo;
-    state.memory[nn + 1] = state.hl.bytes.hi;
+    mem.write8(state, nn, state.hl.bytes.lo);
+    mem.write8(state, nn + 1, state.hl.bytes.hi);
     return 16;
 }
 
@@ -289,8 +289,8 @@ pub fn op_add_hl_hl(state: *s.State) u8 {
 //Opcode 2A
 pub fn op_ld_hl_nn_addr(state: *s.State) u8 {
     const nn = mem.read16(state, &state.pc);
-    state.hl.bytes.lo = state.memory[nn];
-    state.hl.bytes.hi = state.memory[nn + 1];
+    state.hl.bytes.lo = state.bus.read_memory(nn);
+    state.hl.bytes.hi = state.bus.read_memory(nn + 1);
     return 16;
 }
 
@@ -316,7 +316,7 @@ pub fn op_jr_nc(state: *s.State) u8 {
 //Opcode 32
 pub fn op_ld_nn_addr_a(state: *s.State) u8 {
     const nn = mem.read16(state, &state.pc);
-    state.memory[nn] = state.af.bytes.hi;
+    mem.write8(state, nn, state.af.bytes.hi);
     return 13;
 }
 
@@ -349,7 +349,7 @@ pub fn op_add_hl_sp(state: *s.State) u8 {
 //Opcode 3A
 pub fn op_ld_a_nn_addr(state: *s.State) u8 {
     const nn = mem.read16(state, &state.pc);
-    state.af.bytes.hi = state.memory[nn];
+    state.af.bytes.hi = state.bus.read_memory(nn);
     return 13;
 }
 
@@ -615,10 +615,10 @@ pub fn decode_ret_condition_nn(state: *s.State) u8 {
 pub fn ret_condition_nn(cond: h.Condition, state: *s.State) u8 {
     if(h.conditionMet(cond, state)){
         //pop
-        const lo = state.memory[state.sp];
+        const lo = state.bus.read_memory(state.sp);
         state.sp +%= 1;
 
-        const hi = state.memory[state.sp];
+        const hi = state.bus.read_memory(state.sp);
         state.sp +%= 1;
 
         state.pc = @as(u16, hi) << 8 | lo;
@@ -637,10 +637,10 @@ pub fn decode_pop_reg(state: *s.State) u8 {
 
 
 fn pop_reg(regPair: *s.regPair, state: *s.State) void {
-    regPair.bytes.lo = state.memory[state.sp];
+    regPair.bytes.lo = state.bus.read_memory(state.sp);
     state.sp +%= 1;
 
-    regPair.bytes.hi = state.memory[state.sp];
+    regPair.bytes.hi = state.bus.read_memory(state.sp);
     state.sp +%= 1;
 }
 
@@ -735,10 +735,10 @@ pub fn op_rst_nn_h(vector: u8, state: *s.State) void {
 pub fn op_ret(state: *s.State) u8 {
     //moved to the low-order 8 bits of the pc
     //resets the low byte and loads the first part
-    const low: u16 = state.memory[state.sp];
+    const low: u16 = state.bus.read_memory(state.sp);
     state.sp +%= 1;
 
-    const high: u16 = state.memory[state.sp];
+    const high: u16 = state.bus.read_memory(state.sp);
     state.sp +%= 1;
 
     //moved to the high-order 8 bits of the pc
@@ -762,11 +762,11 @@ pub fn op_ex_de_hl(state: *s.State) u8 {
 
 //Opcode E3
 pub fn op_ex_sp_addr_hl(state: *s.State) u8 {
-    const lo = state.memory[state.sp];
-    const hi = state.memory[state.sp +% 1];
+    const lo = state.bus.read_memory(state.sp);
+    const hi = state.bus.read_memory(state.sp +% 1);
 
-    state.memory[state.sp] = state.hl.bytes.lo;
-    state.memory[state.sp +% 1] = state.hl.bytes.hi;
+    mem.write8(state, state.sp, state.hl.bytes.lo);
+    mem.write8(state, state.sp +% 1, state.hl.bytes.hi);
 
     state.hl.bytes.lo = lo;
     state.hl.bytes.hi = hi;
