@@ -16,7 +16,6 @@ pub fn read16(state: *s.State, pc: *u16) u16 {
 
     const hi = state.memory[pc.*];
     pc.* +%= 1;
-
     return @as(u16, hi) << 8 | lo;
 }
 

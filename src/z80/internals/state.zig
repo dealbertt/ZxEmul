@@ -20,6 +20,31 @@ pub const State = struct{
     opcode: u8,
 };
 
+pub const Bus = struct{
+    //3 memory arrays
+    //rom
+    //lower ram
+    rom: [16384]u8,
+    lower_ram: [16384]u8,
+    ram: [32768]u8,
+    
+    border_color: u8,
+    key_matrix: []u8,
+
+    pub fn read_memory(self: *Bus) u8{
+
+    }
+
+    pub fn write_memory(self: *Bus) u8{
+
+    }
+
+    pub fn get_border_color(self: *Bus) u8{
+        return self.border_color; 
+    }
+};
+
+
 pub const FLAG_C: u8 = 0b0000_0001;
 pub const FLAG_N: u8 = 0b0000_0010;
 pub const FLAG_P: u8 = 0b0000_0100;
