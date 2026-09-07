@@ -86,7 +86,7 @@ fn op_sla(state: *s.State, reg: *u8) void {
     //
     state.af.bytes.lo &= ~(s.FLAG_C | s.FLAG_N | s.FLAG_H);
 
-    if(bit7 == 1) state.af.bytes.lo |= s.FLAG_C;
+    if(bit7 != 0) state.af.bytes.lo |= s.FLAG_C;
 }
 
 pub fn decode_sra(state: *s.State) u8 {
@@ -100,7 +100,7 @@ pub fn decode_sra(state: *s.State) u8 {
 
 fn op_sra(state: *s.State, reg: *u8) void {
     const bit0: u8 = reg.* & 1;
-    const bit7: u8 = reg.* & 0x80;
+    const bit7: u8 = (reg.* >> 7) & 1;
 
     //shifted, and contents of bit7 remain unchanged
     reg.* = (reg.* >> 1) | bit7;
@@ -122,11 +122,10 @@ pub fn decode_sll(state: *s.State) u8 {
 }
 
 fn op_sll(state: *s.State, reg: *u8) void {
-    const bit7: u8 = reg.* & 0x80;
+    const bit7: u8 = (reg.* >> 7) & 1;
 
-    //shifted, automatically puts a 1 on bit0
-    //its using the FLAG_C as its b0000_0001
-    reg.* = (reg.* << 1) | s.FLAG_C;
+    //shifted, and a 1 is inserted on bit0 (this is what makes SLL distinct from SLA)
+    reg.* = (reg.* << 1) | 1;
     //reset flags
     //
     state.af.bytes.lo &= ~(s.FLAG_C | s.FLAG_N | s.FLAG_H);
