@@ -17,6 +17,10 @@ fn regOrHLCycles(reg: h.Register) u8 {
     return if (reg == .HL) 15 else 8;
 }
 
+fn regOrHLCyclesBit(reg: h.Register) u8 {
+    return if (reg == .HL) 12 else 8;
+}
+
 fn setZSPFlag(state: *s.State, result: u8) void {
     //flag z
     if(result == 0) state.af.bytes.lo |= s.FLAG_Z;
@@ -182,7 +186,7 @@ pub fn decode_bit(state: *s.State) u8 {
     const reg = h.getRegister(src, state);
     
     op_bit(state, reg, bit);
-    return 8;
+    return regOrHLCyclesBit(src);
 }
 
 fn op_bit(state: *s.State, reg: *u8, bit: u3) void {
