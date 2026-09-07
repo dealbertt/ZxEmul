@@ -51,9 +51,10 @@ pub const Spectrum = struct{
             return error.romSizeTooBig; 
         }
 
-        var reader = file.reader(io, &self.cpu.state.bus.memory);
+        var scratch: [4096]u8 = undefined;
+        var reader = file.reader(io, &scratch);
 
-        const bytes_read = try reader.interface.readSliceShort(&self.cpu.state.bus.memory);
+        const bytes_read = try reader.interface.readSliceShort(self.cpu.state.bus.memory[0..rom_size]);
         //const bytes_read = try file.read(&self.memory);
 
 

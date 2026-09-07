@@ -48,7 +48,7 @@ pub const Z80 = struct {
 
         //shit i might need a decode part, to decode the bytes depending on the type of instructions
         //once i have fetched the opcode, i have to decode depending on the prefix
-        std.debug.print("Opcode: {}\n", .{self.state.opcode});
+        //std.debug.print("Opcode: {}", .{self.state.opcode});
         //decode, kind of?
         const handle = t.mainOpcodes[self.state.opcode];
 
