@@ -35,22 +35,24 @@ pub const Z80 = struct {
     pub fn cycle(self: *Z80) u16 {
         //retrieve the opcode
         //const prefix: u8 = e.fetch_byte(&self.state);
-        self.state.opcode = e.fetch_byte(&self.state);
+        const prefix = e.fetch_byte(&self.state);
 
-        //switch (prefix) {
-            //0xCB => //t.CBOpcodes table,
+        const handle = switch (prefix) {
+            0xCB => cb: { 
+                self.state.opcode = e.fetch_byte(&self.state); 
+                break: cb t.cbOpcodes[self.state.opcode];
+            }, //the code block itself returns the cbOpcodes.table
             //0xDD => //
                     //,
             //0xFD => //,
             //0xED => //,
-            //else => t.mainOpcodes
-        //}
+            else => t.mainOpcodes[self.state.opcode],
+        };
 
         //shit i might need a decode part, to decode the bytes depending on the type of instructions
         //once i have fetched the opcode, i have to decode depending on the prefix
         //std.debug.print("Opcode: {}", .{self.state.opcode});
         //decode, kind of?
-        const handle = t.mainOpcodes[self.state.opcode];
 
         //execute, which i guess includes all of the write back, and operand read, etc
         const cycles = handle(&self.state);

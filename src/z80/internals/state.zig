@@ -40,7 +40,8 @@ pub const Bus = struct{
     }
     pub fn write_memory(self: *Bus, address: u16, value:u8) void {
         if(address < 0x4000){
-            std.debug.print("ROM memory!\n", .{}); 
+            //std.debug.print("ROM memory!\n", .{}); 
+            return;
         }else{
             self.memory[address] = value;
         }

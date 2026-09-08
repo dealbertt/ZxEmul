@@ -6,7 +6,7 @@ const t = @import("../instructions/tables.zig");
 
 pub fn fetch_byte(state: *s.State) u8 {
     const byte = mem.read8(state, &state.pc);
-    //std.debug.print("Current opcode {} \n", .{state.opcode});
+    std.debug.print("Current opcode {} \n", .{state.opcode});
 
     return byte;
 }
