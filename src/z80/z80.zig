@@ -46,7 +46,10 @@ pub const Z80 = struct {
                     //,
             //0xFD => //,
             //0xED => //,
-            else => t.mainOpcodes[self.state.opcode],
+            else => mn: {
+                self.state.opcode = prefix;
+                break: mn t.mainOpcodes[self.state.opcode];
+            }
         };
 
         //shit i might need a decode part, to decode the bytes depending on the type of instructions
