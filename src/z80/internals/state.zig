@@ -48,13 +48,18 @@ pub const Bus = struct{
     }
     
     pub fn read_port(self: *Bus, port: u16) u8 {
+        _ = self;
         const base_port: u8 = port & 0x00FF; //gets the lower 8 bits
 
         //only reads if the bit0 of the port is 0
         //the ULA ignores if that bit is 1
         if((base_port & 0x01) == 0){
-            //get the high byte for the keyboard matrix
-            const modifier: u8 = port >> 8;
+            var result: u8 = 0x1F;
+            const high_byte:u8 = @intCast(port >> 8); 
+
+            inline for(0..8) |row| {
+              if(high_byte)  
+            }
         }
         return 0xFF;
     }
