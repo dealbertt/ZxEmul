@@ -46,6 +46,18 @@ pub const Bus = struct{
             self.memory[address] = value;
         }
     }
+    
+    pub fn read_port(self: *Bus, port: u16) u8 {
+        const base_port: u8 = port & 0x00FF; //gets the lower 8 bits
+
+        //only reads if the bit0 of the port is 0
+        //the ULA ignores if that bit is 1
+        if((base_port & 0x01) == 0){
+            //get the high byte for the keyboard matrix
+            const modifier: u8 = port >> 8;
+        }
+        return 0xFF;
+    }
 
     pub fn get_border_color(self: *Bus) u8{
         return self.border_color;
