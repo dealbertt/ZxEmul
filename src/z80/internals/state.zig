@@ -48,22 +48,35 @@ pub const Bus = struct{
     }
     
     pub fn read_port(self: *Bus, port: u16) u8 {
-        _ = self;
         const base_port: u8 = port & 0x00FF; //gets the lower 8 bits
 
         //only reads if the bit0 of the port is 0
         //the ULA ignores if that bit is 1
         if((base_port & 0x01) == 0){
-            var result: u8 = 0x1F;
+            const result: u8 = 0x1F;
             const high_byte:u8 = @intCast(port >> 8); 
 
+            //to read a row, the corresponding bit is set to 0
             inline for(0..8) |row| {
-              if(high_byte)  
+                if((high_byte & (@as(u8, 1) << row)) == 0){
+                    result &= self.key_matrix[row]; //then you can check if the key (or bit) is set to 0
+                }
             }
+            return result;
         }
         return 0xFF;
     }
 
+    pub fn write_port(self: *Bus, port: u16, value: u8) void {
+        const base_port: u8 = port & 0x00FF;
+        if((base_port & 0x01) == 0){
+            self.border_color = value & 0x07;            
+            //things for other bits like MIC TAPE
+            //mic_level for bit 3
+            //speaker beeper for bit4
+            //the rest unused
+        }
+    }
     pub fn get_border_color(self: *Bus) u8{
         return self.border_color;
     }
