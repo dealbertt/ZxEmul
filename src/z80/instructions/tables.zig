@@ -1,5 +1,7 @@
 const main = @import("main.zig");
 const cb = @import("cb.zig");
+const ed = @import("ed.zig");
+
 const s = @import("../internals/state.zig");
 const OpcodeHandler = *const fn (*s.State) u8;
 
@@ -8,6 +10,8 @@ pub var mainOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unk
 
 //opcodes reached through the CB prefix (bit/rotate/shift instructions)
 pub var cbOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unknown} ** 256;
+
+pub var edOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unknown} ** 256;
 //function created to load all of the main.functions into the opcode arrays/lookup table
 pub fn initTables() void {
     mainOpcodes[0x00] = main.op_nop;
@@ -239,5 +243,7 @@ pub fn initTables() void {
     }
 
     cbOpcodes[0xFF] = cb.decode_set;
+
+    edOpcodes[0xA1] = ed.op_cpi;
 }
 

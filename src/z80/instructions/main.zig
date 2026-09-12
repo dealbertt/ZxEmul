@@ -551,12 +551,8 @@ fn decode_binary_operation(value: u8, operation: h.op, state: *s.State) u8 {
             .Or  => res |= value,
         }
 
-        //reset the N flag
-        state.af.bytes.lo &= ~(s.FLAG_N);
-
-        //reset the C flag
-        state.af.bytes.lo &= ~(s.FLAG_C);
-
+        //reset the N and C flag 
+        state.af.bytes.lo &= ~(s.FLAG_N | s.FLAG_C);
         if(res == 0){
             //set the zero flag
             state.af.bytes.lo |= s.FLAG_Z;
