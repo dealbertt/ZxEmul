@@ -116,6 +116,33 @@ pub fn dec_16bitReg(reg: *u16, state: *s.State) void{
     reg.* = res[0];
 }
 
+//sets S, Z, H and N from an 8-bit subtraction (a -% value producing result).
+//does not touch the carry flag: some subtracting instructions (CPI/CPD/CPIR/CPDR)
+//must leave carry untouched, so callers that need it (SUB/CP/SBC) set it themselves.
+pub fn setSubtractionFlags(state: *s.State, a: u8, value: u8, result: u8) void {
+    if(result == 0){
+        state.af.bytes.lo |= s.FLAG_Z;
+    }else{
+        state.af.bytes.lo &= ~s.FLAG_Z;
+    }
+
+    if((result & 0x80) != 0){
+        state.af.bytes.lo |= s.FLAG_S;
+    }else{
+        state.af.bytes.lo &= ~s.FLAG_S;
+    }
+
+    //H is set on a borrow out of bit 4
+    if((a & 0xF) < (value & 0xF)){
+        state.af.bytes.lo |= s.FLAG_H;
+    }else{
+        state.af.bytes.lo &= ~s.FLAG_H;
+    }
+
+    //N is always set for a subtraction
+    state.af.bytes.lo |= s.FLAG_N;
+}
+
 pub fn op_rlc(state: *s.State, reg: *u8) void {
     const bit7: u8 = (reg.* >> 7) & 1;
 
@@ -245,7 +272,7 @@ pub fn push16BitValue(value: u16, state: *s.State) void {
 
     state.sp -%= 1;
     //state.memory[state.sp] = @intCast(value & 0xFF); 
-    state.bus.write_memory(state.sp, @intCast((value >> 8) & 0xFF));
+    state.bus.write_memory(state.sp, @intCast(value  & 0xFF));
 }
 
 //for the RST instructions: the target address is encoded in bits 3-5 (t*8)

@@ -38,14 +38,17 @@ pub const Z80 = struct {
         const prefix = e.fetch_byte(&self.state);
 
         const handle = switch (prefix) {
-            0xCB => cb: { 
-                self.state.opcode = e.fetch_byte(&self.state); 
+            0xCB => cb: {
+                self.state.opcode = e.fetch_byte(&self.state);
                 break: cb t.cbOpcodes[self.state.opcode];
             }, //the code block itself returns the cbOpcodes.table
+            0xED => ed: {
+                self.state.opcode = e.fetch_byte(&self.state);
+                break: ed t.edOpcodes[self.state.opcode];
+            },
             //0xDD => //
                     //,
             //0xFD => //,
-            //0xED => //,
             else => mn: {
                 self.state.opcode = prefix;
                 break: mn t.mainOpcodes[self.state.opcode];

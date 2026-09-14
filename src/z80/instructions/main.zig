@@ -484,20 +484,11 @@ fn sub_a_value(value: u8, state: *s.State) u8{
     if(value > a){
         //set the carry flag if a borrow happened
         state.af.bytes.lo |= s.FLAG_C;
+    }else{
+        state.af.bytes.lo &= ~s.FLAG_C;
     }
 
-    if(res == 0){
-        //set the zero flag
-        state.af.bytes.lo |= s.FLAG_Z;
-    }
-
-    //sign flag
-    if((res & 0x80) != 0){
-        //set the sign flag
-        state.af.bytes.lo |= s.FLAG_S;
-    }
-    //set the N flag
-    state.af.bytes.lo |= s.FLAG_N;
+    h.setSubtractionFlags(state, a, value, res);
 
     return res;
 }

@@ -15,9 +15,9 @@ pub fn op_ldi(state: *s.State) u8 {
     state.bus.write_memory(state.de.pair, state.bus.read_memory(state.hl.pair));
 
     //increment both register pair and bc is decremented 
-    state.hl.pair += 1;
-    state.de.pair += 1;
-    state.bc.pair -= 1;
+    state.hl.pair +%= 1;
+    state.de.pair +%= 1;
+    state.bc.pair -%= 1;
 
     //reset N and H flag
     state.af.bytes.lo &= ~(s.FLAG_N | s.FLAG_H);
@@ -34,22 +34,15 @@ pub fn op_ldi(state: *s.State) u8 {
 
 
 pub fn op_cpi(state: *s.State) u8 {
-    const result: i16 = @as(i16, state.bus.read_memory(state.hl.pair)) - @as(i16, state.af.bytes.hi);
+    const a = state.af.bytes.hi;
+    const value = state.bus.read_memory(state.hl.pair);
+    const result: u8 = a -% value;
 
-    if(result == 0){
-        state.af.bytes.lo |= s.FLAG_Z;
-    }else if(result < 0){
-        state.af.bytes.lo |= s.FLAG_S;
-    }else{
-        state.af.bytes.lo &= ~(s.FLAG_Z | s.FLAG_S);
-    }
+    //CPI computes S/Z/H/N like CP does, but must never touch the carry flag
+    h.setSubtractionFlags(state, a, value, result);
 
-
-    //N is set no matter what
-    state.af.bytes.lo |= s.FLAG_N;
-
-    state.hl.pair += 1;
-    state.bc.pair -= 1;
+    state.hl.pair +%= 1;
+    state.bc.pair -%= 1;
     if(state.bc.pair != 0){
         //pv is set
         state.af.bytes.lo |= s.FLAG_P;

@@ -244,6 +244,7 @@ pub fn initTables() void {
 
     cbOpcodes[0xFF] = cb.decode_set;
 
+    edOpcodes[0xA0] = ed.op_ldi;
     edOpcodes[0xA1] = ed.op_cpi;
 }
 
