@@ -48,12 +48,12 @@ pub const Bus = struct{
     }
     
     pub fn read_port(self: *Bus, port: u16) u8 {
-        const base_port: u8 = port & 0x00FF; //gets the lower 8 bits
+        const base_port: u8 = @as(u8, port & 0x00FF);
 
         //only reads if the bit0 of the port is 0
         //the ULA ignores if that bit is 1
         if((base_port & 0x01) == 0){
-            const result: u8 = 0x1F;
+            var result: u8 = 0x1F;
             const high_byte:u8 = @intCast(port >> 8); 
 
             //to read a row, the corresponding bit is set to 0
@@ -68,7 +68,7 @@ pub const Bus = struct{
     }
 
     pub fn write_port(self: *Bus, port: u16, value: u8) void {
-        const base_port: u8 = port & 0x00FF;
+        const base_port: u8 = @as(u8, port & 0x00FF);
         if((base_port & 0x01) == 0){
             self.border_color = value & 0x07;            
             //things for other bits like MIC TAPE
