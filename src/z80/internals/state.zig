@@ -48,7 +48,7 @@ pub const Bus = struct{
     }
     
     pub fn read_port(self: *Bus, port: u16) u8 {
-        const base_port: u8 = @as(u8, port & 0x00FF);
+        const base_port: u8 = @truncate(port);
 
         //only reads if the bit0 of the port is 0
         //the ULA ignores if that bit is 1
@@ -68,7 +68,7 @@ pub const Bus = struct{
     }
 
     pub fn write_port(self: *Bus, port: u16, value: u8) void {
-        const base_port: u8 = @as(u8, port & 0x00FF);
+        const base_port: u8 = @truncate(port);
         if((base_port & 0x01) == 0){
             self.border_color = value & 0x07;            
             //things for other bits like MIC TAPE

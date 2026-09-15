@@ -619,6 +619,13 @@ pub fn ret_condition_nn(cond: h.Condition, state: *s.State) u8 {
     return 5;
 }
 
+//Opcode D9
+pub fn op_exx(state: *s.State) u8 {
+    //operations with shadow registers, not currently implemented
+    _ = state;
+    return 4;
+}
+
 //Opcode C1, D1, E1, F1
 pub fn decode_pop_reg(state: *s.State) u8 {
     const src: h.RegisterPair = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
@@ -661,6 +668,25 @@ pub fn op_jp_nn(state: *s.State) u8 {
     return 10;
 }
 
+//Opcode D3
+pub fn op_out_a(state: *s.State) u8{
+    var n: u16 = @as(u16, mem.read8(state, &state.pc));
+
+    n |= @as(u16, state.af.bytes.hi) << 8;
+    state.bus.write_port(n, state.af.bytes.hi); 
+
+    //no flags modified :)
+    return 11;        
+}
+
+//Opcode DB
+pub fn op_in_a(state: *s.State) u8{
+    var n: u16 = @as(u16, mem.read8(state, &state.pc));
+
+    n |= @as(u16, state.af.bytes.hi) << 8;
+    state.af.bytes.hi = state.bus.read_port(n); 
+    return 11;
+}
 
 //Opcode C4, D4, E4, F4, CC, DC, EC, FC
 pub fn decode_call_condition_nn(state: *s.State) u8 {
