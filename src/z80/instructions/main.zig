@@ -57,6 +57,7 @@ pub fn op_unknown(state: *s.State) u8 {
 //all of these instructions are 3 bytes, 1 for the opcode and 2 for the nn
 //so we have to extract the first digit of the first byte? and then cast it
 
+//Opcode 01, 11, 21, 31
 pub fn decode_ld_16reg_nn(state: *s.State) u8 {
     const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
 
@@ -90,6 +91,7 @@ pub fn decode_inc_16reg(state: *s.State) u8 {
     return 6;
 }
 
+//Opcode 04, 0C, 14, 1C, 24, 2C, 34, 3C
 pub fn decode_inc_8reg(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
     const reg = h.getRegister(src, state);
@@ -107,6 +109,7 @@ pub fn decode_dec_8reg(state: *s.State) u8 {
     return incDecCycles(src);
 }
 
+//Opcode 0B, 1B, 2B, 3B
 pub fn decode_dec_16reg(state: *s.State) u8 {
     const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
     const reg = h.get16BitRegister(src, state);
@@ -179,6 +182,7 @@ pub fn op_ld_a_bc_addr(state: *s.State) u8 {
     return 7;
 }
 
+//Opcode 0F
 pub fn decode_rrca(state: *s.State) u8 {
    h.op_rrc(state, &state.af.bytes.hi); 
    return 4;
@@ -381,6 +385,7 @@ pub fn decode_ld(state: *s.State) u8 {
 }
 
 
+//Opcode 76
 pub fn op_halt(state: *s.State) u8 {
     _ = state;
     return 4;
@@ -693,6 +698,7 @@ pub fn decode_push_reg(state: *s.State) u8 {
     return 11;
 }
 
+//Opcode C6
 pub fn decode_add_a_n(state: *s.State) u8 {
     const value = mem.read8(state, &state.pc);
 
@@ -700,6 +706,7 @@ pub fn decode_add_a_n(state: *s.State) u8 {
     return 7;
 }
 
+//Opcode D6
 pub fn decode_sub_n(state: *s.State) u8 {
     const value = mem.read8(state, &state.pc);
 
@@ -707,6 +714,7 @@ pub fn decode_sub_n(state: *s.State) u8 {
     return 7;
 }
 
+//Opcode C7, D7, E7, F7, CF, DF, EF, FF
 pub fn decode_rst_value_h(state: *s.State) u8 {
     //get value for what has to be loaded in pc after pushing
     const vector = h.getTargetAddress(state.opcode);
@@ -719,6 +727,7 @@ pub fn op_rst_nn_h(vector: u8, state: *s.State) void {
     state.pc = vector;
 }
 
+//Opcode C9
 pub fn op_ret(state: *s.State) u8 {
     //moved to the low-order 8 bits of the pc
     //resets the low byte and loads the first part
@@ -734,12 +743,14 @@ pub fn op_ret(state: *s.State) u8 {
     return 10;
 }
 
+//Opcode E9
 pub fn op_jp_hl(state: *s.State) u8 {
     state.pc = state.hl.pair;
     return 4;
 }
 
 
+//Opcode EB
 pub fn op_ex_de_hl(state: *s.State) u8 {
         state.de.pair = state.de.pair ^ state.hl.pair;
         state.hl.pair = state.de.pair ^ state.hl.pair;
@@ -766,30 +777,35 @@ pub fn op_ld_sp_hl(state: *s.State) u8 {
     return 6;
 }
 
+//Opcode CE
 pub fn op_adc_a_n(state: *s.State) u8 {
     const n = mem.read8(state, &state.pc);
     state.af.bytes.hi = adc_a_value(n, state);
     return 7;
 }
 
+//Opcode E6
 pub fn op_and_n(state: *s.State) u8 {
     const n = mem.read8(state, &state.pc);
     state.af.bytes.hi = decode_binary_operation(n, .And, state);
     return 7;
 }
 
+//Opcode EE
 pub fn op_xor_n(state: *s.State) u8 {
     const n = mem.read8(state, &state.pc);
     state.af.bytes.hi = decode_binary_operation(n, .Xor, state);
     return 7;
 }
 
+//Opcode F6
 pub fn op_or_n(state: *s.State) u8 {
     const n = mem.read8(state, &state.pc);
     state.af.bytes.hi = decode_binary_operation(n, .Or, state);
     return 7;
 }
 
+//Opcode DE
 pub fn op_sbc_a_n(state: *s.State) u8 {
     const n = mem.read8(state, &state.pc);
 
@@ -797,6 +813,7 @@ pub fn op_sbc_a_n(state: *s.State) u8 {
     return 7;
 }
 
+//Opcode FE
 //CP compares A with n (like SUB) but discards the result, leaving A unchanged
 pub fn op_cp_n(state: *s.State) u8 {
     const n = mem.read8(state, &state.pc);
