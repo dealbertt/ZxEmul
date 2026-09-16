@@ -29,6 +29,7 @@ pub fn main(init: std.process.Init) !void {
     std.debug.print("AF: {}\n", .{comp.cpu.state.af.pair});
 
     rl.initWindow(cfg.width, cfg.height, "ZxEmul");
+    defer rl.closeWindow();
 
     const pos = rl.getWindowPosition();
     const monitor = rl.getCurrentMonitor();
@@ -39,7 +40,6 @@ pub fn main(init: std.process.Init) !void {
     std.debug.print("Pos: {}\n", .{pos});
     std.debug.print("Monitor: {}\n", .{monitor});
 
-    defer rl.closeWindow();
 
     rl.setTargetFPS(50);
 
