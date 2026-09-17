@@ -237,3 +237,5 @@ fn op_set(reg: *u8, bit: u3) void {
     //set
     reg.* |= mask;
 }
+
+

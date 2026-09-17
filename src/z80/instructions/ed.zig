@@ -55,16 +55,14 @@ pub fn op_cpi(state: *s.State) u8 {
 
 pub fn op_in(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
-    const reg = h.getRegister(src, state);
-
-    if(reg == h.Register.HL){
+    if(src == h.Register.HL){
         //this case is unhandled or not documented
         return 0;
     }
 
     const value: u8 = state.bus.read_port(state.bc.pair);
 
-    h.setRegisterValue(reg, value, state);
+    h.setRegisterValue(src, value, state);
 
     state.af.bytes.lo &= ~(s.FLAG_H | s.FLAG_N | s.FLAG_Z | s.FLAG_S);
 
@@ -81,13 +79,12 @@ pub fn op_in(state: *s.State) u8 {
 
 pub fn op_out(state: *s.State) u8{
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
-    const reg = h.getRegister(src, state);
 
-    if(reg == h.Register.HL){
+    if(src == h.Register.HL){
         //this case is unhandled or not documented
         return 0;
     }
-    const value:u8 = h.getRegisterValue(reg, state);
+    const value:u8 = h.getRegisterValue(src, state);
 
     state.bus.write_port(state.bc.pair, value);
     return 12;
