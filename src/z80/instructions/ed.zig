@@ -64,15 +64,17 @@ pub fn op_in(state: *s.State) u8 {
 
     h.setRegisterValue(src, value, state);
 
-    state.af.bytes.lo &= ~(s.FLAG_H | s.FLAG_N | s.FLAG_Z | s.FLAG_S);
+    state.af.bytes.lo &= ~(s.FLAG_H | s.FLAG_N | s.FLAG_Z | s.FLAG_S | s.FLAG_P);
 
     if(value == 0){
         state.af.bytes.lo |= s.FLAG_Z;
     }
 
-    if(value < 0){
+    //80 is 1000 0000, we only want to test bit7
+    if((value & 0x80) != 0){
         state.af.bytes.lo |= s.FLAG_S;
     }
+    if((@popCount(value) % 2) == 0) state.af.bytes.lo |= s.FLAG_P;
 
     return 12;
 }
