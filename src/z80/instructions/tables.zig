@@ -251,13 +251,25 @@ pub fn initTables() void {
     edOpcodes[0xA1] = ed.op_cpi;
 
     //ED-prefixed IN r,(C) / OUT (C),r: register field occupies bits 3-5 (0x40-0x7F),
-    //bit 0 selects IN (even opcodes) vs OUT (odd opcodes)
+    //but only the first two opcodes of each 8-slot block (offset 0/1) are IN/OUT -
+    //the other offsets in the block are different instructions (SBC HL,rr, LD (nn),rr, etc.)
     for(0x40..0x80) |op| {
-        if(op % 2 == 0){
+        const offset = op & 0b111;
+        if(offset == 0){
             edOpcodes[op] = ed.op_in;
-        }else{
+        }else if(offset == 1){
             edOpcodes[op] = ed.op_out;
         }
     }
+
+    edOpcodes[0x43] = ed.decode_ld_nn_addr_rr;
+    edOpcodes[0x53] = ed.decode_ld_nn_addr_rr;
+    edOpcodes[0x63] = ed.decode_ld_nn_addr_rr;
+    edOpcodes[0x73] = ed.decode_ld_nn_addr_rr;
+
+    edOpcodes[0x4B] = ed.decode_ld_rr_nn_addr;
+    edOpcodes[0x5B] = ed.decode_ld_rr_nn_addr;
+    edOpcodes[0x6B] = ed.decode_ld_rr_nn_addr;
+    edOpcodes[0x7B] = ed.decode_ld_rr_nn_addr;
 }
 

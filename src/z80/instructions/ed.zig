@@ -91,3 +91,28 @@ pub fn op_out(state: *s.State) u8{
     state.bus.write_port(state.bc.pair, value);
     return 12;
 }
+
+//Opcodes 43/53/63/73: LD (nn),rr - stores a 16-bit register pair to memory
+pub fn decode_ld_nn_addr_rr(state: *s.State) u8 {
+    const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
+    const reg = h.get16BitRegister(src, state);
+
+    const nn = mem.read16(state, &state.pc);
+    mem.write8(state, nn, @intCast(reg.* & 0xFF));
+    mem.write8(state, nn + 1, @intCast((reg.* >> 8) & 0xFF));
+
+    return 20;
+}
+
+//Opcodes 4B/5B/6B/7B: LD rr,(nn) - loads a 16-bit register pair from memory
+pub fn decode_ld_rr_nn_addr(state: *s.State) u8 {
+    const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
+    const reg = h.get16BitRegister(src, state);
+
+    const nn = mem.read16(state, &state.pc);
+    const lo = state.bus.read_memory(nn);
+    const hi = state.bus.read_memory(nn + 1);
+    reg.* = @as(u16, hi) << 8 | lo;
+
+    return 20;
+}
