@@ -17,6 +17,10 @@ pub const State = struct{
     sp: u16,
     pc: u16,
 
+    //special registers
+    i: u8,
+    r: u8,
+
     bus: Bus,
     opcode: u8,
 };

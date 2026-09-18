@@ -271,5 +271,10 @@ pub fn initTables() void {
     edOpcodes[0x5B] = ed.decode_ld_rr_nn_addr;
     edOpcodes[0x6B] = ed.decode_ld_rr_nn_addr;
     edOpcodes[0x7B] = ed.decode_ld_rr_nn_addr;
+
+    edOpcodes[0x47] = ed.op_ld_i_a;
+    edOpcodes[0x4F] = ed.op_ld_r_a;
+    edOpcodes[0x57] = ed.op_ld_a_i;
+    edOpcodes[0x5F] = ed.op_ld_a_r;
 }
 

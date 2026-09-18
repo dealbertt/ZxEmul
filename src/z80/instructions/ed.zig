@@ -116,3 +116,54 @@ pub fn decode_ld_rr_nn_addr(state: *s.State) u8 {
 
     return 20;
 }
+
+//Opcode 47: LD I,A - no flags affected
+pub fn op_ld_i_a(state: *s.State) u8 {
+    state.i = state.af.bytes.hi;
+    return 9;
+}
+
+//Opcode 4F: LD R,A - no flags affected
+pub fn op_ld_r_a(state: *s.State) u8 {
+    state.r = state.af.bytes.hi;
+    return 9;
+}
+
+//Opcode 57: LD A,I
+pub fn op_ld_a_i(state: *s.State) u8 {
+    state.af.bytes.hi = state.i;
+
+    state.af.bytes.lo &= ~(s.FLAG_H | s.FLAG_N | s.FLAG_Z | s.FLAG_S | s.FLAG_P);
+
+    if(state.i == 0){
+        state.af.bytes.lo |= s.FLAG_Z;
+    }
+
+    //80 is 1000 0000, we only want to test bit7
+    if((state.i & 0x80) != 0){
+        state.af.bytes.lo |= s.FLAG_S;
+    }
+
+    //P/V should mirror IFF2, but interrupts aren't implemented yet, so it stays reset
+    return 9;
+}
+
+//Opcode 5F: LD A,R
+pub fn op_ld_a_r(state: *s.State) u8 {
+    state.af.bytes.hi = state.r;
+
+    state.af.bytes.lo &= ~(s.FLAG_H | s.FLAG_N | s.FLAG_Z | s.FLAG_S | s.FLAG_P);
+
+    if(state.r == 0){
+        state.af.bytes.lo |= s.FLAG_Z;
+    }
+
+    //80 is 1000 0000, we only want to test bit7
+    if((state.r & 0x80) != 0){
+        state.af.bytes.lo |= s.FLAG_S;
+    }
+
+    //P/V should mirror IFF2, but interrupts aren't implemented yet, so it stays reset
+    return 9;
+}
+

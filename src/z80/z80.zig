@@ -19,6 +19,8 @@ pub const Z80 = struct {
                 .ix = 0,
                 .iy = 0,
 
+                .i = 0,
+                .r = 0,
                 .bus = s.Bus {
                     .border_color = 7,
                     .memory = [_]u8{0} ** 65536,
