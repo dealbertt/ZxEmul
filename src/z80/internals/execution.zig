@@ -11,3 +11,7 @@ pub fn fetch_byte(state: *s.State) u8 {
     return byte;
 }
 
+pub fn handle_interrupts(state: *s.State) u8{
+    if(state.bus.int_req == false) return 0;
+}
+

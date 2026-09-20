@@ -39,6 +39,7 @@ pub const Bus = struct{
     key_matrix: [8]u8,
 
     int_req: bool,
+
     pub fn read_memory(self: *Bus, address: u16) u8{
         return self.memory[address];
     }
