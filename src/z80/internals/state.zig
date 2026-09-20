@@ -21,6 +21,9 @@ pub const State = struct{
     i: u8,
     r: u8,
 
+    iff1: bool,
+    iff2: bool,
+
     bus: Bus,
     opcode: u8,
 };
@@ -35,6 +38,7 @@ pub const Bus = struct{
 
     key_matrix: [8]u8,
 
+    int_req: bool,
     pub fn read_memory(self: *Bus, address: u16) u8{
         return self.memory[address];
     }

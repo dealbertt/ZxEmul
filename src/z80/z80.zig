@@ -21,10 +21,14 @@ pub const Z80 = struct {
 
                 .i = 0,
                 .r = 0,
+
+                .iff1 = false,
+                .iff2 = false,
                 .bus = s.Bus {
                     .border_color = 7,
                     .memory = [_]u8{0} ** 65536,
                     .key_matrix = [_]u8 {0x1F} ** 8, 
+                    .int_req = false,
                 },
                 .opcode = 0,
             }
