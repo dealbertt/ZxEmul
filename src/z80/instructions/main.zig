@@ -263,7 +263,7 @@ pub fn op_jr_nz(state: *s.State) u8 {
 pub fn op_ld_nn_addr_hl(state: *s.State) u8 {
     const nn = mem.read16(state, &state.pc);
     mem.write8(state, nn, state.hl.bytes.lo);
-    mem.write8(state, nn + 1, state.hl.bytes.hi);
+    mem.write8(state, nn +% 1, state.hl.bytes.hi);
     return 16;
 }
 
@@ -294,7 +294,7 @@ pub fn op_add_hl_hl(state: *s.State) u8 {
 pub fn op_ld_hl_nn_addr(state: *s.State) u8 {
     const nn = mem.read16(state, &state.pc);
     state.hl.bytes.lo = state.bus.read_memory(nn);
-    state.hl.bytes.hi = state.bus.read_memory(nn + 1);
+    state.hl.bytes.hi = state.bus.read_memory(nn +% 1);
     return 16;
 }
 

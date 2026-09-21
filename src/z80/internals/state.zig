@@ -1,4 +1,6 @@
-const std = @import("std");
+pub const InterruptMode = enum(u3) {
+    IM0, IM1, IM2
+};
 
 pub const regPair = extern union { pair: u16, bytes: extern struct {
     lo: u8,
@@ -16,6 +18,8 @@ pub const State = struct{
     iy: u16,
     sp: u16,
     pc: u16,
+
+    im: InterruptMode,
 
     //special registers
     i: u8,

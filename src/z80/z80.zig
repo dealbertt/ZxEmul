@@ -22,6 +22,7 @@ pub const Z80 = struct {
                 .i = 0,
                 .r = 0,
 
+                .im = s.InterruptMode.IM0,
                 .iff1 = false,
                 .iff2 = false,
                 .bus = s.Bus {

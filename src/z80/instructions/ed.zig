@@ -99,7 +99,7 @@ pub fn decode_ld_nn_addr_rr(state: *s.State) u8 {
 
     const nn = mem.read16(state, &state.pc);
     mem.write8(state, nn, @intCast(reg.* & 0xFF));
-    mem.write8(state, nn + 1, @intCast((reg.* >> 8) & 0xFF));
+    mem.write8(state, nn +% 1, @intCast((reg.* >> 8) & 0xFF));
 
     return 20;
 }
@@ -111,7 +111,7 @@ pub fn decode_ld_rr_nn_addr(state: *s.State) u8 {
 
     const nn = mem.read16(state, &state.pc);
     const lo = state.bus.read_memory(nn);
-    const hi = state.bus.read_memory(nn + 1);
+    const hi = state.bus.read_memory(nn +% 1);
     reg.* = @as(u16, hi) << 8 | lo;
 
     return 20;
