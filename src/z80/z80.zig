@@ -25,6 +25,7 @@ pub const Z80 = struct {
                 .im = s.InterruptMode.IM0,
                 .iff1 = false,
                 .iff2 = false,
+                .halted = false,
                 .bus = s.Bus {
                     .border_color = 7,
                     .memory = [_]u8{0} ** 65536,
@@ -42,6 +43,13 @@ pub const Z80 = struct {
     pub fn cycle(self: *Z80) u16 {
         //retrieve the opcode
         //const prefix: u8 = e.fetch_byte(&self.state);
+        const int_cycles = e.handle_interrupts(&self.state);
+
+        //an accepted interrupt takes the place of this step's fetch, so nothing else runs
+        if(int_cycles > 0) return int_cycles;
+
+        if(self.state.halted == true) return 4;
+
         const prefix = e.fetch_byte(&self.state);
 
         const handle = switch (prefix) {
@@ -68,11 +76,6 @@ pub const Z80 = struct {
         //decode, kind of?
 
         //execute, which i guess includes all of the write back, and operand read, etc
-        const cycles = handle(&self.state);
-        
-        //execute
-        //write back
-        //whatever else is needed typeshee
-        return cycles;
+        return handle(&self.state);
     }
 };

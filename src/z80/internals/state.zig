@@ -28,6 +28,8 @@ pub const State = struct{
     iff1: bool,
     iff2: bool,
 
+    halted: bool,
+
     bus: Bus,
     opcode: u8,
 };

@@ -607,13 +607,7 @@ pub fn decode_ret_condition_nn(state: *s.State) u8 {
 pub fn ret_condition_nn(cond: h.Condition, state: *s.State) u8 {
     if(h.conditionMet(cond, state)){
         //pop
-        const lo = state.bus.read_memory(state.sp);
-        state.sp +%= 1;
-
-        const hi = state.bus.read_memory(state.sp);
-        state.sp +%= 1;
-
-        state.pc = @as(u16, hi) << 8 | lo;
+        state.pc = h.pop16BitValue(state);
         return 11;
     }
     return 5;
@@ -636,11 +630,7 @@ pub fn decode_pop_reg(state: *s.State) u8 {
 
 
 fn pop_reg(regPair: *s.regPair, state: *s.State) void {
-    regPair.bytes.lo = state.bus.read_memory(state.sp);
-    state.sp +%= 1;
-
-    regPair.bytes.hi = state.bus.read_memory(state.sp);
-    state.sp +%= 1;
+    regPair.pair = h.pop16BitValue(state);
 }
 
 
@@ -755,17 +745,8 @@ pub fn op_rst_nn_h(vector: u8, state: *s.State) void {
 
 //Opcode C9
 pub fn op_ret(state: *s.State) u8 {
-    //moved to the low-order 8 bits of the pc
-    //resets the low byte and loads the first part
-    const low: u16 = state.bus.read_memory(state.sp);
-    state.sp +%= 1;
-
-    const high: u16 = state.bus.read_memory(state.sp);
-    state.sp +%= 1;
-
-    //moved to the high-order 8 bits of the pc
-    //resets the high byte and loads the second part, shifting it 8 bits to the left to not overwrite the previously loaded value
-    state.pc = (high << 8) | low;
+    //the low byte comes off the stack first, then the high byte
+    state.pc = h.pop16BitValue(state);
     return 10;
 }
 

@@ -271,8 +271,18 @@ pub fn push16BitValue(value: u16, state: *s.State) void {
     state.bus.write_memory(state.sp, @intCast((value >> 8) & 0xFF));
 
     state.sp -%= 1;
-    //state.memory[state.sp] = @intCast(value & 0xFF); 
+    //state.memory[state.sp] = @intCast(value & 0xFF);
     state.bus.write_memory(state.sp, @intCast(value  & 0xFF));
+}
+
+pub fn pop16BitValue(state: *s.State) u16 {
+    const lo = state.bus.read_memory(state.sp);
+    state.sp +%= 1;
+
+    const hi = state.bus.read_memory(state.sp);
+    state.sp +%= 1;
+
+    return @as(u16, hi) << 8 | lo;
 }
 
 //for the RST instructions: the target address is encoded in bits 3-5 (t*8)
