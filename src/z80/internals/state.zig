@@ -25,10 +25,11 @@ pub const State = struct{
     i: u8,
     r: u8,
 
+    //internal cpu bookkeeping, interrupt
     iff1: bool,
     iff2: bool,
-
     halted: bool,
+    ei_defer: bool,
 
     bus: Bus,
     opcode: u8,

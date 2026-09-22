@@ -387,9 +387,10 @@ pub fn decode_ld(state: *s.State) u8 {
 
 //Opcode 76
 pub fn op_halt(state: *s.State) u8 {
-    _ = state;
+    state.halted = true;
     return 4;
 }
+
 
 //Opcode 80-87
 fn op_add_a(src:h.Register, state: *s.State) void {
@@ -782,6 +783,24 @@ pub fn op_ex_sp_addr_hl(state: *s.State) u8 {
 pub fn op_ld_sp_hl(state: *s.State) u8 {
     state.sp = state.hl.pair;
     return 6;
+}
+
+//Opcode F3
+//disables maskable interrupts right away, with no delay
+pub fn op_di(state: *s.State) u8 {
+    state.iff1 = false;
+    state.iff2 = false;
+    return 4;
+}
+
+//Opcode FB
+//enables maskable interrupts, but acceptance is held off until after the NEXT instruction
+//runs, so that the RET in the usual "EI; RET" handler exit cannot be interrupted
+pub fn op_ei(state: *s.State) u8 {
+    state.iff1 = true;
+    state.iff2 = true;
+    state.ei_defer = true;
+    return 4;
 }
 
 //Opcode CE

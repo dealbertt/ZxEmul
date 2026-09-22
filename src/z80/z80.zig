@@ -1,5 +1,6 @@
 const s = @import("internals/state.zig");
 const t = @import("instructions/tables.zig");
+
 const e = @import("internals/execution.zig");
 
 const std = @import("std");
@@ -26,6 +27,8 @@ pub const Z80 = struct {
                 .iff1 = false,
                 .iff2 = false,
                 .halted = false,
+                .ei_defer = false,
+
                 .bus = s.Bus {
                     .border_color = 7,
                     .memory = [_]u8{0} ** 65536,

@@ -13,6 +13,11 @@ pub fn fetch_byte(state: *s.State) u8 {
 }
 
 pub fn handle_interrupts(state: *s.State) u8{
+    if(state.ei_defer == true){
+        state.ei_defer = false;
+        return 0;
+    }
+
     if(state.bus.int_req == false) return 0;
 
     //assumes that state.bus.int_req is true from this point
@@ -22,6 +27,7 @@ pub fn handle_interrupts(state: *s.State) u8{
         state.iff1 = false;
         state.iff2 = false;
         state.bus.int_req = false;
+        state.halted = false;
 
         //every mode pushes the return address, only the destination and the cost change
         h.push16BitValue(state.pc, state);

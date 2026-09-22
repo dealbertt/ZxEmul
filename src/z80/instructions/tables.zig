@@ -197,6 +197,9 @@ pub fn initTables() void {
     mainOpcodes[0xE3] = main.op_ex_sp_addr_hl;
     mainOpcodes[0xEB] = main.op_ex_de_hl;
 
+    mainOpcodes[0xF3] = main.op_di;
+    mainOpcodes[0xFB] = main.op_ei;
+
 
     //CB-prefixed opcodes: each rotate/shift operation covers a fixed block of 8 opcodes,
     //one per register (B, C, D, E, H, L, (HL), A)
@@ -276,5 +279,27 @@ pub fn initTables() void {
     edOpcodes[0x4F] = ed.op_ld_r_a;
     edOpcodes[0x57] = ed.op_ld_a_i;
     edOpcodes[0x5F] = ed.op_ld_a_r;
+
+    //offset 5 of every ED block is RETN, except 0x4D which is RETI.
+    //everything past the first two is an undocumented alias of the same instruction
+    edOpcodes[0x45] = ed.op_retn;
+    edOpcodes[0x4D] = ed.op_reti;
+    edOpcodes[0x55] = ed.op_retn;
+    edOpcodes[0x5D] = ed.op_retn;
+    edOpcodes[0x65] = ed.op_retn;
+    edOpcodes[0x6D] = ed.op_retn;
+    edOpcodes[0x75] = ed.op_retn;
+    edOpcodes[0x7D] = ed.op_retn;
+
+    //offset 6 of every ED block selects an interrupt mode, repeating in a 0,0,1,2 pattern.
+    //0x4E and 0x6E are the undefined "IM 0/1" slots, which behave as IM 0
+    edOpcodes[0x46] = ed.op_im_0;
+    edOpcodes[0x4E] = ed.op_im_0;
+    edOpcodes[0x56] = ed.op_im_1;
+    edOpcodes[0x5E] = ed.op_im_2;
+    edOpcodes[0x66] = ed.op_im_0;
+    edOpcodes[0x6E] = ed.op_im_0;
+    edOpcodes[0x76] = ed.op_im_1;
+    edOpcodes[0x7E] = ed.op_im_2;
 }
 

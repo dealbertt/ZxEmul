@@ -144,7 +144,10 @@ pub fn op_ld_a_i(state: *s.State) u8 {
         state.af.bytes.lo |= s.FLAG_S;
     }
 
-    //P/V should mirror IFF2, but interrupts aren't implemented yet, so it stays reset
+    //this is the only place software can observe IFF2
+    if(state.iff2 == true){
+        state.af.bytes.lo |= s.FLAG_P;
+    }
     return 9;
 }
 
@@ -163,7 +166,44 @@ pub fn op_ld_a_r(state: *s.State) u8 {
         state.af.bytes.lo |= s.FLAG_S;
     }
 
-    //P/V should mirror IFF2, but interrupts aren't implemented yet, so it stays reset
+    //this is the only place software can observe IFF2
+    if(state.iff2 == true){
+        state.af.bytes.lo |= s.FLAG_P;
+    }
     return 9;
+}
+
+//Opcode 45: RETN - returns from an NMI, restoring the interrupt enable that accepting it cleared
+pub fn op_retn(state: *s.State) u8 {
+    state.pc = h.pop16BitValue(state);
+    state.iff1 = state.iff2;
+    return 14;
+}
+
+//Opcode 4D: RETI - returns from a maskable interrupt. on real silicon it shares RETN's path
+//and restores IFF1 the same way, even though zilog's docs only describe the pc pop.
+//the difference on real hardware is the bus pattern it emits for daisy-chained peripherals
+pub fn op_reti(state: *s.State) u8 {
+    state.pc = h.pop16BitValue(state);
+    state.iff1 = state.iff2;
+    return 14;
+}
+
+//Opcode 46: IM 0 - the interrupting device puts an instruction on the bus for the cpu to run
+pub fn op_im_0(state: *s.State) u8 {
+    state.im = s.InterruptMode.IM0;
+    return 8;
+}
+
+//Opcode 56: IM 1 - always restarts at 0x0038. this is what the spectrum rom selects
+pub fn op_im_1(state: *s.State) u8 {
+    state.im = s.InterruptMode.IM1;
+    return 8;
+}
+
+//Opcode 5E: IM 2 - vectored: the handler address is read from a table indexed by I
+pub fn op_im_2(state: *s.State) u8 {
+    state.im = s.InterruptMode.IM2;
+    return 8;
 }
 

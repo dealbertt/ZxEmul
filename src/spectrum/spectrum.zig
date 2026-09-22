@@ -7,6 +7,9 @@ const ROM_MEMORY_LIMIT = 16384;
 
 const CYCLES_PER_REFRESH = 69888;
 
+//how long the ULA holds the interrupt line low at the start of each frame
+const INT_HOLD_STATES = 32;
+
 const FREQ = 3500000;
 
 const hiResWidth: u8 = 256;
@@ -66,10 +69,18 @@ pub const Spectrum = struct{
     //50 frames/refresh per second -> total of 3.500.000 cycles per second
     //how am i going to get that? 
     pub fn runFrame(self: *Spectrum) void {
+        //the ULA asserts the interrupt line once at the start of every frame (50Hz).
+        //the cpu picks it up at its next instruction boundary, if interrupts are enabled
+        self.cpu.state.bus.int_req = true;
+
         var statesInFrame: u32 = 0;
         while(statesInFrame < CYCLES_PER_REFRESH){
             const cycles = self.cpu.cycle();
             statesInFrame += cycles;
+
+            //the line is only held low for a short window: code that stays with interrupts
+            //disabled through it misses this frame's interrupt instead of getting it late
+            if(statesInFrame >= INT_HOLD_STATES) self.cpu.state.bus.int_req = false;
         }
     }
 };
