@@ -33,7 +33,7 @@ fn setZSPFlag(state: *s.State, result: u8) void {
 
 pub fn decode_rlc(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
-    const reg = h.getRegister(src, state);
+    const reg = h.getRegister(src, state, .HL, 0);
 
     h.op_rlc(state, reg);
 
@@ -44,7 +44,7 @@ pub fn decode_rlc(state: *s.State) u8 {
 
 pub fn decode_rrc(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
-    const reg = h.getRegister(src, state);
+    const reg = h.getRegister(src, state, .HL, 0);
 
     h.op_rrc(state, reg);
 
@@ -54,7 +54,7 @@ pub fn decode_rrc(state: *s.State) u8 {
 
 pub fn decode_rl(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
-    const reg = h.getRegister(src, state);
+    const reg = h.getRegister(src, state, .HL, 0);
 
     h.op_rl(state, reg);
 
@@ -64,7 +64,7 @@ pub fn decode_rl(state: *s.State) u8 {
 
 pub fn decode_rr(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
-    const reg = h.getRegister(src, state);
+    const reg = h.getRegister(src, state, .HL, 0);
 
     h.op_rr(state, reg);
 
@@ -74,7 +74,7 @@ pub fn decode_rr(state: *s.State) u8 {
 
 pub fn decode_sla(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
-    const reg = h.getRegister(src, state);
+    const reg = h.getRegister(src, state, .HL, 0);
     op_sla(state, reg);
 
     setZSPFlag(state, reg.*);
@@ -95,7 +95,7 @@ fn op_sla(state: *s.State, reg: *u8) void {
 
 pub fn decode_sra(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
-    const reg = h.getRegister(src, state);
+    const reg = h.getRegister(src, state, .HL, 0);
     op_sra(state, reg);
 
     setZSPFlag(state, reg.*);
@@ -118,7 +118,7 @@ fn op_sra(state: *s.State, reg: *u8) void {
 
 pub fn decode_sll(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
-    const reg = h.getRegister(src, state);
+    const reg = h.getRegister(src, state, .HL, 0);
     op_sll(state, reg);
 
     setZSPFlag(state, reg.*);
@@ -141,7 +141,7 @@ fn op_sll(state: *s.State, reg: *u8) void {
 
 pub fn decode_srl(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
-    const reg = h.getRegister(src, state);
+    const reg = h.getRegister(src, state, .HL, 0);
     op_srl(state, reg);
 
     setZSPFlag(state, reg.*);
@@ -183,7 +183,7 @@ pub fn decode_bit(state: *s.State) u8 {
     const bit: u3 = @intCast((state.opcode >> 3) & 0b111);
 
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
-    const reg = h.getRegister(src, state);
+    const reg = h.getRegister(src, state, .HL, 0);
     
     op_bit(state, reg, bit);
     return regOrHLCyclesBit(src);
@@ -208,7 +208,7 @@ pub fn decode_res(state: *s.State) u8 {
     const bit: u3 = @intCast((state.opcode >> 3) & 0b111);
 
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
-    const reg = h.getRegister(src, state);
+    const reg = h.getRegister(src, state, .HL, 0);
     
     op_res(reg, bit);
     return regOrHLCycles(src);
@@ -225,7 +225,7 @@ pub fn decode_set(state: *s.State) u8 {
     const bit: u3 = @intCast((state.opcode >> 3) & 0b111);
 
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode) & 0b111)));
-    const reg = h.getRegister(src, state);
+    const reg = h.getRegister(src, state, .HL, 0);
     
     op_set(reg, bit);
     return regOrHLCycles(src);

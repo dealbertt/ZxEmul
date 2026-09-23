@@ -12,6 +12,10 @@ pub var mainOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unk
 pub var cbOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unknown} ** 256;
 
 pub var edOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unknown} ** 256;
+
+pub var ddOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unknown} ** 256;
+
+pub var fdOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unknown} ** 256;
 //function created to load all of the main.functions into the opcode arrays/lookup table
 pub fn initTables() void {
     mainOpcodes[0x00] = main.op_nop;

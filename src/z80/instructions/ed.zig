@@ -62,7 +62,7 @@ pub fn op_in(state: *s.State) u8 {
 
     const value: u8 = state.bus.read_port(state.bc.pair);
 
-    h.setRegisterValue(src, value, state);
+    h.setRegisterValue(src, value, state, .HL, 0);
 
     state.af.bytes.lo &= ~(s.FLAG_H | s.FLAG_N | s.FLAG_Z | s.FLAG_S | s.FLAG_P);
 
@@ -86,7 +86,7 @@ pub fn op_out(state: *s.State) u8{
         //this case is unhandled or not documented
         return 0;
     }
-    const value:u8 = h.getRegisterValue(src, state);
+    const value:u8 = h.getRegisterValue(src, state, .HL, 0);
 
     state.bus.write_port(state.bc.pair, value);
     return 12;

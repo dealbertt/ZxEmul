@@ -10,7 +10,7 @@ pub const RegisterPair = enum(u3){
 };
 
 pub const Reg16Bit = enum(u3) {
-    BC, DE, HL, SP
+    BC, DE, HL, SP, IX, IY
 };
 
 pub const Condition = enum(u3){
@@ -25,6 +25,19 @@ pub const op = enum {
     Xor,
     Or
 };
+
+pub const IndexBase = enum{
+    HL, IX, IY
+};
+
+pub fn indexedAddresses(state: *s.State, base: IndexBase, d: i8) u16 {
+    const offset: u16 = @bitCast(@as(i16,d));
+    return switch (base) {
+        .HL => state.hl.pair,
+        .IX => state.ix +% offset,
+        .IY => state.iy +% offset,
+    };
+}
 
 pub fn add_16bitRegs(reg1: u16, reg2: u16, state: *s.State) u16 {
     const sum = @addWithOverflow(reg1, reg2);
@@ -193,7 +206,7 @@ pub fn op_rr(state: *s.State, reg: *u8) void {
     if(bit0 == 1) state.af.bytes.lo |= s.FLAG_C;
 }
 
-pub fn getRegister(r: Register, state: *s.State) *u8{
+pub fn getRegister(r: Register, state: *s.State, base: IndexBase, d: i8) *u8{
     return switch(r){
         .B => &state.bc.bytes.hi,
         .C => &state.bc.bytes.lo,
@@ -203,11 +216,11 @@ pub fn getRegister(r: Register, state: *s.State) *u8{
         .L => &state.hl.bytes.lo,
         .A => &state.af.bytes.hi,
         //.HL=> &state.memory[state.hl.pair]
-        .HL => state.bus.get_memory_ptr(state.hl.pair),
+        .HL => state.bus.get_memory_ptr(indexedAddresses(state, base , d)),
     };
 }
 
-pub fn getRegisterValue(r: Register, state: *s.State) u8{
+pub fn getRegisterValue(r: Register, state: *s.State, base: IndexBase, d: i8) u8{
     return switch(r){
         .B => state.bc.bytes.hi,
         .C => state.bc.bytes.lo,
@@ -217,7 +230,7 @@ pub fn getRegisterValue(r: Register, state: *s.State) u8{
         .L => state.hl.bytes.lo,
         .A => state.af.bytes.hi,
         //.HL=> state.memory[state.hl.pair],
-        .HL => state.bus.read_memory(state.hl.pair),
+        .HL => state.bus.read_memory(indexedAddresses(state, base, d)),
     };
 }
 
@@ -236,9 +249,11 @@ pub fn get16BitRegister(r16: Reg16Bit, state: *s.State) *u16 {
         .DE => &state.de.pair,
         .HL => &state.hl.pair,
         .SP => &state.sp,
+        .IX => &state.ix,
+        .IY => &state.iy,
     };
 }
-pub fn setRegisterValue(r: Register, value: u8, state: *s.State) void {
+pub fn setRegisterValue(r: Register, value: u8, state: *s.State, base:IndexBase, d: i8) void {
     switch(r){
         .B => state.bc.bytes.hi = value,
         .C => state.bc.bytes.lo = value,
@@ -248,7 +263,7 @@ pub fn setRegisterValue(r: Register, value: u8, state: *s.State) void {
         .L => state.hl.bytes.lo = value,
         .A => state.af.bytes.hi = value,
         //.HL=> state.memory[state.hl.pair] = value,
-        .HL => state.bus.write_memory(state.hl.pair, value),
+        .HL => state.bus.write_memory(indexedAddresses(state, base, d), value),
     }
 }
 

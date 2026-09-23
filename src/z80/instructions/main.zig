@@ -94,7 +94,7 @@ pub fn decode_inc_16reg(state: *s.State) u8 {
 //Opcode 04, 0C, 14, 1C, 24, 2C, 34, 3C
 pub fn decode_inc_8reg(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
-    const reg = h.getRegister(src, state);
+    const reg = h.getRegister(src, state, .HL, 0);
 
     h.inc_8bitReg(reg, state);
     return incDecCycles(src);
@@ -103,7 +103,7 @@ pub fn decode_inc_8reg(state: *s.State) u8 {
 //Opcode 05
 pub fn decode_dec_8reg(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
-    const reg = h.getRegister(src, state);
+    const reg = h.getRegister(src, state, .HL, 0);
 
     h.dec_8bitReg(reg, state);
     return incDecCycles(src);
@@ -128,7 +128,7 @@ fn ldImmCycles(dst: h.Register) u8 {
 pub fn decode_ld_reg_n(state: *s.State) u8 {
     const dst: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
     const value = mem.read8(state, &state.pc);
-    h.setRegisterValue(dst, value, state);
+    h.setRegisterValue(dst, value, state, .HL, 0);
     return ldImmCycles(dst);
 }
 
@@ -372,8 +372,8 @@ fn regOrHLCycles(reg: h.Register) u8 {
 
 //Opcode 40-7F
 fn op_ld(src: h.Register, dst: h.Register, state: *s.State) void {
-    const value = h.getRegisterValue(src, state);
-    h.setRegisterValue(dst, value, state);
+    const value = h.getRegisterValue(src, state, .HL, 0);
+    h.setRegisterValue(dst, value, state, .HL, 0);
 }
 
 pub fn decode_ld(state: *s.State) u8 {
@@ -394,7 +394,7 @@ pub fn op_halt(state: *s.State) u8 {
 
 //Opcode 80-87
 fn op_add_a(src:h.Register, state: *s.State) void {
-    const value = h.getRegisterValue(src, state);
+    const value = h.getRegisterValue(src, state, .HL, 0);
     state.af.bytes.hi = add_a_value(value, state);
 }
 
@@ -433,7 +433,7 @@ fn add_a_value(value: u8, state: *s.State) u8{
 
 //Opcode 88-8F
 fn op_adc_a(src: h.Register, state: *s.State) void {
-    const value = h.getRegisterValue(src, state);
+    const value = h.getRegisterValue(src, state, .HL, 0);
     state.af.bytes.hi = adc_a_value(value, state);
 }
 
@@ -473,7 +473,7 @@ fn adc_a_value(value: u8, state: *s.State) u8{
 
 //Opcode 90-97
 fn op_sub_a(src:h.Register, state: *s.State) void {
-    const value = h.getRegisterValue(src, state);
+    const value = h.getRegisterValue(src, state, .HL, 0);
     state.af.bytes.hi = sub_a_value(value, state);
 }
 
@@ -501,7 +501,7 @@ fn sub_a_value(value: u8, state: *s.State) u8{
 
 //Opcode 98-9F
 fn op_sbc_a(src: h.Register, state: *s.State) void {
-    const value = h.getRegisterValue(src, state);
+    const value = h.getRegisterValue(src, state, .HL, 0);
     state.af.bytes.hi = sbc_a_value(value, state);
 }
 
@@ -567,7 +567,7 @@ fn decode_binary_operation(value: u8, operation: h.op, state: *s.State) u8 {
 //Opcode A0-A7
 pub fn decode_and_a(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(state.opcode & 0b111);
-    const value = h.getRegisterValue(src, state);
+    const value = h.getRegisterValue(src, state, .HL, 0);
     state.af.bytes.hi = decode_binary_operation(value, .And, state);
     return regOrHLCycles(src);
 }
@@ -575,7 +575,7 @@ pub fn decode_and_a(state: *s.State) u8 {
 //Opcode A8-AF
 pub fn decode_xor_a(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(state.opcode & 0b111);
-    const value = h.getRegisterValue(src, state);
+    const value = h.getRegisterValue(src, state, .HL, 0);
     state.af.bytes.hi = decode_binary_operation(value, .Xor, state);
     return regOrHLCycles(src);
 }
@@ -584,7 +584,7 @@ pub fn decode_xor_a(state: *s.State) u8 {
 //Opcode B0-B7
 pub fn decode_or_a(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(state.opcode & 0b111);
-    const value = h.getRegisterValue(src, state);
+    const value = h.getRegisterValue(src, state, .HL, 0);
     state.af.bytes.hi = decode_binary_operation(value, .Or, state);
     return regOrHLCycles(src);
 }
@@ -594,7 +594,7 @@ pub fn decode_or_a(state: *s.State) u8 {
 //CP compares A with the operand (like SUB) but discards the result, leaving A unchanged
 pub fn decode_cp_a(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(state.opcode & 0b111);
-    const value = h.getRegisterValue(src, state);
+    const value = h.getRegisterValue(src, state, .HL, 0);
     _ = sub_a_value(value, state);
     return regOrHLCycles(src);
 }
