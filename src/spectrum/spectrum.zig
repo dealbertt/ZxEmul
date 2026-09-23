@@ -3,6 +3,8 @@ const z = @import("../z80/z80.zig");
 const z80 = z.Z80;
 const rl = @import("raylib");
 
+const v = @import("video.zig");
+
 const ROM_MEMORY_LIMIT = 16384;
 
 const CYCLES_PER_REFRESH = 69888;
@@ -12,20 +14,13 @@ const INT_HOLD_STATES = 32;
 
 const FREQ = 3500000;
 
-const hiResWidth: u8 = 256;
-const hiResHeight: u8 = 192;
-
-const loResWidth: u8 = 64;
-const loResHeight: u8 = 32;
-
-var gpx: [hiResWidth][hiResHeight]u8 = 0;
 var keyPad: u8[40] = [_]u8{0} ** 40;
 
 const memorySize: u32 = 65536;
 
 pub const Spectrum = struct{
     cpu: z80,
-
+    
     cycles: u32,
     pub fn init(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !void {
         //var spec = Spectrum {
@@ -37,6 +32,7 @@ pub const Spectrum = struct{
         //initialize the cpu
         self.cpu = z80.init();
 
+        v.initDisplay();
         _ = try self.loadROM(path, init_proc);
     }
 
