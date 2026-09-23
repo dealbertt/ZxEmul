@@ -57,6 +57,7 @@ pub const Z80 = struct {
 
         const handle = switch (prefix) {
             0xCB => cb: {
+                self.state.opcode = e.fetch_byte(&self.state);
                 break: cb t.cbOpcodes[self.state.opcode];
             }, //the code block itself returns the cbOpcodes.table
             0xED => ed: {
