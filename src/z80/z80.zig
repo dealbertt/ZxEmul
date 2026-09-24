@@ -7,9 +7,9 @@ const std = @import("std");
 pub const Z80 = struct {
     state: s.State,
 
-    pub fn init() Z80 {
+    pub fn init(self: *Z80) void {
         t.initTables();
-        return Z80 {
+        self.*  = Z80 {
             .state =  s.State{
                 .pc = 0x0000,
                 .sp = 0xFFFF,

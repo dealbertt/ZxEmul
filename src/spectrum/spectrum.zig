@@ -14,14 +14,13 @@ const INT_HOLD_STATES = 32;
 
 const FREQ = 3500000;
 
-var keyPad: u8[40] = [_]u8{0} ** 40;
-
 const memorySize: u32 = 65536;
 
 pub const Spectrum = struct{
     cpu: z80,
-    
     cycles: u32,
+    video: v.Video,
+
     pub fn init(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !void {
         //var spec = Spectrum {
             //initialize the memory to 0
@@ -30,9 +29,10 @@ pub const Spectrum = struct{
         //};
 
         //initialize the cpu
-        self.cpu = z80.init();
+        self.cpu.init();
 
-        v.initDisplay();
+        self.video.init();
+        self.video.resolve_address(1, 0);
         _ = try self.loadROM(path, init_proc);
     }
 
