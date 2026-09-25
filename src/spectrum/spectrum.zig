@@ -76,5 +76,6 @@ pub const Spectrum = struct{
             //disabled through it misses this frame's interrupt instead of getting it late
             if(statesInFrame >= INT_HOLD_STATES) self.cpu.state.bus.int_req = false;
         }
+        self.video.render(self.cpu.state.bus.memory[0x4000..0x5B00]);
     }
 };
