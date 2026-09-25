@@ -1,6 +1,8 @@
 const main = @import("main.zig");
 const cb = @import("cb.zig");
 const ed = @import("ed.zig");
+const dd_fd = @import("dd_fd.zig");
+const h = @import("helpers.zig");
 
 const s = @import("../internals/state.zig");
 const OpcodeHandler = *const fn (*s.State) u8;
@@ -16,6 +18,7 @@ pub var edOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unkno
 pub var ddOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unknown} ** 256;
 
 pub var fdOpcodes: [256]OpcodeHandler = [_]*const fn (*s.State) u8{main.op_unknown} ** 256;
+
 //function created to load all of the main.functions into the opcode arrays/lookup table
 pub fn initTables() void {
     mainOpcodes[0x00] = main.op_nop;
@@ -305,5 +308,61 @@ pub fn initTables() void {
     edOpcodes[0x6E] = ed.op_im_0;
     edOpcodes[0x76] = ed.op_im_1;
     edOpcodes[0x7E] = ed.op_im_2;
+
+    //DD and FD share the same opcode layout, only the index register changes
+    initIndexedTable(&ddOpcodes, .IX);
+    initIndexedTable(&fdOpcodes, .IY);
+}
+
+//fills a DD (IX) or FD (IY) table: every handler is instantiated for the given index register
+fn initIndexedTable(table: *[256]OpcodeHandler, comptime base: h.IndexBase) void {
+    table[0x09] = dd_fd.decode_add_index_rr(base);
+    table[0x19] = dd_fd.decode_add_index_rr(base);
+    table[0x29] = dd_fd.decode_add_index_rr(base);
+    table[0x39] = dd_fd.decode_add_index_rr(base);
+
+    table[0x21] = dd_fd.op_ld_index_nn(base);
+    table[0x22] = dd_fd.op_ld_nn_addr_index(base);
+    table[0x23] = dd_fd.op_inc_index(base);
+    table[0x2A] = dd_fd.op_ld_index_nn_addr(base);
+    table[0x2B] = dd_fd.op_dec_index(base);
+
+    table[0x34] = dd_fd.op_inc_index_addr(base);
+    table[0x35] = dd_fd.op_dec_index_addr(base);
+    table[0x36] = dd_fd.op_ld_index_addr_n(base);
+
+    //LD r,(IX+d): column 6 of the 40-7F block, 0x76 excluded (that slot is HALT)
+    table[0x46] = dd_fd.decode_ld_reg_index_addr(base);
+    table[0x4E] = dd_fd.decode_ld_reg_index_addr(base);
+    table[0x56] = dd_fd.decode_ld_reg_index_addr(base);
+    table[0x5E] = dd_fd.decode_ld_reg_index_addr(base);
+    table[0x66] = dd_fd.decode_ld_reg_index_addr(base);
+    table[0x6E] = dd_fd.decode_ld_reg_index_addr(base);
+    table[0x7E] = dd_fd.decode_ld_reg_index_addr(base);
+
+    //LD (IX+d),r: row 70-77, 0x76 excluded
+    table[0x70] = dd_fd.decode_ld_index_addr_reg(base);
+    table[0x71] = dd_fd.decode_ld_index_addr_reg(base);
+    table[0x72] = dd_fd.decode_ld_index_addr_reg(base);
+    table[0x73] = dd_fd.decode_ld_index_addr_reg(base);
+    table[0x74] = dd_fd.decode_ld_index_addr_reg(base);
+    table[0x75] = dd_fd.decode_ld_index_addr_reg(base);
+    table[0x77] = dd_fd.decode_ld_index_addr_reg(base);
+
+    //ALU A,(IX+d): column 6 of the 80-BF block
+    table[0x86] = dd_fd.decode_alu_index_addr(base);
+    table[0x8E] = dd_fd.decode_alu_index_addr(base);
+    table[0x96] = dd_fd.decode_alu_index_addr(base);
+    table[0x9E] = dd_fd.decode_alu_index_addr(base);
+    table[0xA6] = dd_fd.decode_alu_index_addr(base);
+    table[0xAE] = dd_fd.decode_alu_index_addr(base);
+    table[0xB6] = dd_fd.decode_alu_index_addr(base);
+    table[0xBE] = dd_fd.decode_alu_index_addr(base);
+
+    table[0xE1] = dd_fd.op_pop_index(base);
+    table[0xE3] = dd_fd.op_ex_sp_addr_index(base);
+    table[0xE5] = dd_fd.op_push_index(base);
+    table[0xE9] = dd_fd.op_jp_index(base);
+    table[0xF9] = dd_fd.op_ld_sp_index(base);
 }
 

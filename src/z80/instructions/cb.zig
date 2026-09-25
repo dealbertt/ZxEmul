@@ -22,13 +22,10 @@ fn regOrHLCyclesBit(reg: h.Register) u8 {
 }
 
 fn setZSPFlag(state: *s.State, result: u8) void {
-    //flag z
-    if(result == 0) state.af.bytes.lo |= s.FLAG_Z;
-    //flag s
-    if((result & 0x80) != 0) state.af.bytes.lo |= s.FLAG_S; 
-    //flag p
-    if((@popCount(result) % 2) == 0) state.af.bytes.lo |= s.FLAG_P;
-        
+    h.setFlag(state, s.FLAG_Z, result == 0);
+    h.setFlag(state, s.FLAG_S, (result & 0x80) != 0);
+    //P/V holds the parity of the result: set when the number of 1 bits is even
+    h.setFlag(state, s.FLAG_P, @popCount(result) % 2 == 0);
 }
 
 pub fn decode_rlc(state: *s.State) u8 {
@@ -104,7 +101,7 @@ pub fn decode_sra(state: *s.State) u8 {
 
 fn op_sra(state: *s.State, reg: *u8) void {
     const bit0: u8 = reg.* & 1;
-    const bit7: u8 = (reg.* >> 7) & 1;
+    const bit7: u8 = reg.* & 0x80;
 
     //shifted, and contents of bit7 remain unchanged
     reg.* = (reg.* >> 1) | bit7;

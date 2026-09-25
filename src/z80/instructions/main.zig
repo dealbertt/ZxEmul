@@ -87,7 +87,8 @@ pub fn decode_inc_16reg(state: *s.State) u8 {
     const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
     const regs = h.get16BitRegister(src, state);
 
-    h.inc_16bitReg(regs, state);
+    //INC rr affects no flags
+    regs.* +%= 1;
     return 6;
 }
 
@@ -114,7 +115,8 @@ pub fn decode_dec_16reg(state: *s.State) u8 {
     const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
     const reg = h.get16BitRegister(src, state);
 
-    h.dec_16bitReg(reg, state);
+    //DEC rr affects no flags
+    reg.* -%= 1;
     return 6;
 }
 
@@ -395,7 +397,7 @@ pub fn op_halt(state: *s.State) u8 {
 //Opcode 80-87
 fn op_add_a(src:h.Register, state: *s.State) void {
     const value = h.getRegisterValue(src, state, .HL, 0);
-    state.af.bytes.hi = add_a_value(value, state);
+    state.af.bytes.hi = h.add_a_value(value, state);
 }
 
 pub fn decode_add_a(state: *s.State) u8 {
@@ -404,37 +406,11 @@ pub fn decode_add_a(state: *s.State) u8 {
     return regOrHLCycles(src);
 }
 
-fn add_a_value(value: u8, state: *s.State) u8{
-    const add:u16 = @as(u16, state.af.bytes.hi) + @as(u16, value);
-
-    const res: u8 = @truncate(add);
-
-
-    if(add > 0xFF){
-        //set the carry flag if an overflow happened
-        state.af.bytes.lo |= s.FLAG_C;
-    }
-
-    if(res == 0){
-        //set the zero flag
-        state.af.bytes.lo |= s.FLAG_Z;
-    }
-
-    //sign flag
-    if((res & 0x80) != 0){
-        //set the sign flag
-        state.af.bytes.lo |= s.FLAG_S;
-    }
-    //reset the N flag
-    state.af.bytes.lo &= ~(s.FLAG_N);
-
-    return res;
-}
 
 //Opcode 88-8F
 fn op_adc_a(src: h.Register, state: *s.State) void {
     const value = h.getRegisterValue(src, state, .HL, 0);
-    state.af.bytes.hi = adc_a_value(value, state);
+    state.af.bytes.hi = h.adc_a_value(value, state);
 }
 
 pub fn decode_adc_a(state: *s.State) u8 {
@@ -443,38 +419,11 @@ pub fn decode_adc_a(state: *s.State) u8 {
     return regOrHLCycles(src);
 }
 
-fn adc_a_value(value: u8, state: *s.State) u8{
-    const carry = (state.af.bytes.lo & s.FLAG_C);
-    const sum = @as(u16, value) + @as(u16, state.af.bytes.hi) + carry;
-
-    const res: u8 = @truncate(sum);
-
-    if(sum > 0xFF){
-        //set the carry flag if an overflow happened
-        state.af.bytes.lo |= s.FLAG_C;
-    }
-
-    if(res == 0){
-        //set the zero flag if result is 0
-        state.af.bytes.lo |= s.FLAG_Z;
-    }
-
-    //sign flag
-    if((res & 0x80) != 0){
-        //set the sign flag
-        state.af.bytes.lo |= s.FLAG_S;
-    }
-
-    //reset the N flag
-    state.af.bytes.lo &= ~(s.FLAG_N);
-
-    return res;
-}
 
 //Opcode 90-97
 fn op_sub_a(src:h.Register, state: *s.State) void {
     const value = h.getRegisterValue(src, state, .HL, 0);
-    state.af.bytes.hi = sub_a_value(value, state);
+    state.af.bytes.hi = h.sub_a_value(value, state);
 }
 
 pub fn decode_sub_a(state: *s.State) u8 {
@@ -483,26 +432,11 @@ pub fn decode_sub_a(state: *s.State) u8 {
     return regOrHLCycles(src);
 }
 
-fn sub_a_value(value: u8, state: *s.State) u8{
-    const a = state.af.bytes.hi;
-    const res: u8 = a -% value;
-
-    if(value > a){
-        //set the carry flag if a borrow happened
-        state.af.bytes.lo |= s.FLAG_C;
-    }else{
-        state.af.bytes.lo &= ~s.FLAG_C;
-    }
-
-    h.setSubtractionFlags(state, a, value, res);
-
-    return res;
-}
 
 //Opcode 98-9F
 fn op_sbc_a(src: h.Register, state: *s.State) void {
     const value = h.getRegisterValue(src, state, .HL, 0);
-    state.af.bytes.hi = sbc_a_value(value, state);
+    state.af.bytes.hi = h.sbc_a_value(value, state);
 }
 
 pub fn decode_sbc_a(state: *s.State) u8 {
@@ -511,64 +445,14 @@ pub fn decode_sbc_a(state: *s.State) u8 {
     return regOrHLCycles(src);
 }
 
-fn sbc_a_value(value: u8, state: *s.State) u8{
-    const carry: u8 = state.af.bytes.lo & s.FLAG_C;
-    const a = state.af.bytes.hi;
-    const res: u8 = a -% value -% carry;
-
-    //carry flag: a borrow happened if value+carry could not be covered by a
-    if(@as(u16, value) + @as(u16, carry) > @as(u16, a)){
-        state.af.bytes.lo |= s.FLAG_C;
-    }
-
-    //zero flag
-    if(res == 0){
-        //set the zero flag if result is 0
-        state.af.bytes.lo |= s.FLAG_Z;
-    }
-
-    //sign flag
-    if((res & 0x80) != 0){
-        //set the sign flag
-        state.af.bytes.lo |= s.FLAG_S;
-    }
-
-    //set the N flag
-    state.af.bytes.lo |= s.FLAG_N;
-
-    return res;
-}
 
 
-fn decode_binary_operation(value: u8, operation: h.op, state: *s.State) u8 {
-        var res: u8 = state.af.bytes.hi;
-        switch(operation){
-            .And => res &= value,
-            .Xor => res ^= value,
-            .Or  => res |= value,
-        }
-
-        //reset the N and C flag 
-        state.af.bytes.lo &= ~(s.FLAG_N | s.FLAG_C);
-        if(res == 0){
-            //set the zero flag
-            state.af.bytes.lo |= s.FLAG_Z;
-        }
-
-        //sign flag
-        if((res & 0x80) != 0){
-            //set the sign flag
-            state.af.bytes.lo |= s.FLAG_S;
-        }
-
-        return res;
-}
 
 //Opcode A0-A7
 pub fn decode_and_a(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(state.opcode & 0b111);
     const value = h.getRegisterValue(src, state, .HL, 0);
-    state.af.bytes.hi = decode_binary_operation(value, .And, state);
+    state.af.bytes.hi = h.decode_binary_operation(value, .And, state);
     return regOrHLCycles(src);
 }
 
@@ -576,7 +460,7 @@ pub fn decode_and_a(state: *s.State) u8 {
 pub fn decode_xor_a(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(state.opcode & 0b111);
     const value = h.getRegisterValue(src, state, .HL, 0);
-    state.af.bytes.hi = decode_binary_operation(value, .Xor, state);
+    state.af.bytes.hi = h.decode_binary_operation(value, .Xor, state);
     return regOrHLCycles(src);
 }
 
@@ -585,7 +469,7 @@ pub fn decode_xor_a(state: *s.State) u8 {
 pub fn decode_or_a(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(state.opcode & 0b111);
     const value = h.getRegisterValue(src, state, .HL, 0);
-    state.af.bytes.hi = decode_binary_operation(value, .Or, state);
+    state.af.bytes.hi = h.decode_binary_operation(value, .Or, state);
     return regOrHLCycles(src);
 }
 
@@ -595,7 +479,7 @@ pub fn decode_or_a(state: *s.State) u8 {
 pub fn decode_cp_a(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(state.opcode & 0b111);
     const value = h.getRegisterValue(src, state, .HL, 0);
-    _ = sub_a_value(value, state);
+    _ = h.sub_a_value(value, state);
     return regOrHLCycles(src);
 }
 
@@ -719,7 +603,7 @@ pub fn decode_push_reg(state: *s.State) u8 {
 pub fn decode_add_a_n(state: *s.State) u8 {
     const value = mem.read8(state, &state.pc);
 
-    state.af.bytes.hi = add_a_value(value, state);
+    state.af.bytes.hi = h.add_a_value(value, state);
     return 7;
 }
 
@@ -727,7 +611,7 @@ pub fn decode_add_a_n(state: *s.State) u8 {
 pub fn decode_sub_n(state: *s.State) u8 {
     const value = mem.read8(state, &state.pc);
 
-    state.af.bytes.hi = sub_a_value(value, state);
+    state.af.bytes.hi = h.sub_a_value(value, state);
     return 7;
 }
 
@@ -806,28 +690,28 @@ pub fn op_ei(state: *s.State) u8 {
 //Opcode CE
 pub fn op_adc_a_n(state: *s.State) u8 {
     const n = mem.read8(state, &state.pc);
-    state.af.bytes.hi = adc_a_value(n, state);
+    state.af.bytes.hi = h.adc_a_value(n, state);
     return 7;
 }
 
 //Opcode E6
 pub fn op_and_n(state: *s.State) u8 {
     const n = mem.read8(state, &state.pc);
-    state.af.bytes.hi = decode_binary_operation(n, .And, state);
+    state.af.bytes.hi = h.decode_binary_operation(n, .And, state);
     return 7;
 }
 
 //Opcode EE
 pub fn op_xor_n(state: *s.State) u8 {
     const n = mem.read8(state, &state.pc);
-    state.af.bytes.hi = decode_binary_operation(n, .Xor, state);
+    state.af.bytes.hi = h.decode_binary_operation(n, .Xor, state);
     return 7;
 }
 
 //Opcode F6
 pub fn op_or_n(state: *s.State) u8 {
     const n = mem.read8(state, &state.pc);
-    state.af.bytes.hi = decode_binary_operation(n, .Or, state);
+    state.af.bytes.hi = h.decode_binary_operation(n, .Or, state);
     return 7;
 }
 
@@ -835,7 +719,7 @@ pub fn op_or_n(state: *s.State) u8 {
 pub fn op_sbc_a_n(state: *s.State) u8 {
     const n = mem.read8(state, &state.pc);
 
-    state.af.bytes.hi = sbc_a_value(n, state);
+    state.af.bytes.hi = h.sbc_a_value(n, state);
     return 7;
 }
 
@@ -844,6 +728,6 @@ pub fn op_sbc_a_n(state: *s.State) u8 {
 pub fn op_cp_n(state: *s.State) u8 {
     const n = mem.read8(state, &state.pc);
 
-    _ = sub_a_value(n, state);
+    _ = h.sub_a_value(n, state);
     return 7;
 }

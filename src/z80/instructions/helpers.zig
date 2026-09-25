@@ -39,94 +39,68 @@ pub fn indexedAddresses(state: *s.State, base: IndexBase, d: i8) u16 {
     };
 }
 
+//sets the given flag when condition is true, resets it otherwise
+pub fn setFlag(state: *s.State, flag: u8, condition: bool) void {
+    if(condition){
+        state.af.bytes.lo |= flag;
+    }else{
+        state.af.bytes.lo &= ~flag;
+    }
+}
+
+//S and Z come straight from the 8-bit result for almost every arithmetic/logic instruction
+fn setSignZeroFlags(state: *s.State, result: u8) void {
+    setFlag(state, s.FLAG_S, (result & 0x80) != 0);
+    setFlag(state, s.FLAG_Z, result == 0);
+}
+
+//signed overflow on an 8-bit addition: both operands had the same sign and the result's sign differs
+fn addOverflow(a: u8, value: u8, result: u8) bool {
+    return ((a ^ result) & (value ^ result) & 0x80) != 0;
+}
+
+//signed overflow on an 8-bit subtraction: the operands had different signs and the result's sign differs from a
+fn subOverflow(a: u8, value: u8, result: u8) bool {
+    return ((a ^ value) & (a ^ result) & 0x80) != 0;
+}
+
+//ADD HL,rr / ADD IX,rr / ADD IY,rr: only H, N and C change, S, Z and P/V are left untouched
 pub fn add_16bitRegs(reg1: u16, reg2: u16, state: *s.State) u16 {
     const sum = @addWithOverflow(reg1, reg2);
-    if (sum[1] == 1) {
-        //set the carry flag if an overflow happened
-        state.af.bytes.lo |= s.FLAG_C;
-    }
 
-    if(sum[0] == 0){
-        //set the zero flag
-        state.af.bytes.lo |= s.FLAG_Z;
-    }
-
-    //reset the N flag
-    state.af.bytes.lo &= ~(s.FLAG_N); 
+    //H is the carry out of bit 11 (the half carry of the high byte)
+    setFlag(state, s.FLAG_H, (reg1 & 0x0FFF) + (reg2 & 0x0FFF) > 0x0FFF);
+    setFlag(state, s.FLAG_C, sum[1] == 1);
+    state.af.bytes.lo &= ~s.FLAG_N;
     return sum[0];
 }
 
+//INC r / INC (HL) / INC (IX+d): the carry flag is left untouched
 pub fn inc_8bitReg(reg: *u8, state: *s.State) void{
-    const inc = @addWithOverflow(reg.*, 1);
-    if(inc[1] == 1){
-        //set the carry flag if an overflow happened
-        state.af.bytes.lo |= s.FLAG_C;
-    }
+    const old = reg.*;
+    const result = old +% 1;
 
-    if(inc[0] == 0){
-        //set the zero flag
-        state.af.bytes.lo |= s.FLAG_Z;
-    }
-
-
-    //reset the N flag
-    state.af.bytes.lo &= ~(s.FLAG_N);
-    reg.* = inc[0];
+    setSignZeroFlags(state, result);
+    //H: carry out of bit 3, which only happens when the low nibble was F
+    setFlag(state, s.FLAG_H, (old & 0x0F) == 0x0F);
+    //P/V: signed overflow, which only happens going from 7F (127) to 80 (-128)
+    setFlag(state, s.FLAG_P, old == 0x7F);
+    state.af.bytes.lo &= ~s.FLAG_N;
+    reg.* = result;
 }
 
-pub fn inc_16bitReg(reg: *u16, state: *s.State) void{
-    const inc = @addWithOverflow(reg.*, 1);
-    if(inc[1] == 1){
-        //set the carry flag if an overflow happened
-        state.af.bytes.lo |= s.FLAG_C;
-
-    }
-
-    if(inc[0] == 0){
-        //set the zero flag
-        state.af.bytes.lo |= s.FLAG_Z;
-    }
-
-
-    //reset the N flag
-    state.af.bytes.lo &= ~(s.FLAG_N);
-    reg.* = inc[0];
-}
+//DEC r / DEC (HL) / DEC (IX+d): the carry flag is left untouched
 pub fn dec_8bitReg(reg: *u8, state: *s.State) void{
-    const res = @subWithOverflow(reg.*, 1);
-    if(res[1] == 1){
-        //set the carry flag if an overflow happened
-        state.af.bytes.lo |= s.FLAG_C;
-    }
+    const old = reg.*;
+    const result = old -% 1;
 
-    if(res[0] == 0){
-        //set the zero flag
-        state.af.bytes.lo |= s.FLAG_Z;
-    }
-
-
-    //reset the N flag
-    state.af.bytes.lo &= ~(s.FLAG_N);
-    reg.* = res[0];
-}
-
-pub fn dec_16bitReg(reg: *u16, state: *s.State) void{
-    const res = @subWithOverflow(reg.*, 1);
-    if(res[1] == 1){
-        //set the carry flag if an overflow happened
-        state.af.bytes.lo |= s.FLAG_C;
-
-    }
-
-    if(res[0] == 0){
-        //set the zero flag
-        state.af.bytes.lo |= s.FLAG_Z;
-    }
-
-
-    //reset the N flag
-    state.af.bytes.lo &= ~(s.FLAG_N);
-    reg.* = res[0];
+    setSignZeroFlags(state, result);
+    //H: borrow from bit 4, which only happens when the low nibble was 0
+    setFlag(state, s.FLAG_H, (old & 0x0F) == 0x00);
+    //P/V: signed overflow, which only happens going from 80 (-128) to 7F (127)
+    setFlag(state, s.FLAG_P, old == 0x80);
+    state.af.bytes.lo |= s.FLAG_N;
+    reg.* = result;
 }
 
 //sets S, Z, H and N from an 8-bit subtraction (a -% value producing result).
@@ -154,6 +128,73 @@ pub fn setSubtractionFlags(state: *s.State, a: u8, value: u8, result: u8) void {
 
     //N is always set for a subtraction
     state.af.bytes.lo |= s.FLAG_N;
+}
+
+//8-bit ALU helpers shared by the unprefixed and the DD/FD (IX/IY) instructions:
+//each takes the operand value, sets the flags and returns the result for A
+
+//A + value + carry_in, shared by ADD (carry_in = 0) and ADC (carry_in = carry flag)
+fn add_a_with_carry(value: u8, carry_in: u8, state: *s.State) u8 {
+    const a = state.af.bytes.hi;
+    const sum: u16 = @as(u16, a) + value + carry_in;
+    const res: u8 = @truncate(sum);
+
+    setSignZeroFlags(state, res);
+    //H is the carry out of bit 3
+    setFlag(state, s.FLAG_H, (a & 0x0F) + (value & 0x0F) + carry_in > 0x0F);
+    setFlag(state, s.FLAG_P, addOverflow(a, value, res));
+    setFlag(state, s.FLAG_C, sum > 0xFF);
+    state.af.bytes.lo &= ~s.FLAG_N;
+
+    return res;
+}
+
+//A - value - borrow_in, shared by SUB/CP (borrow_in = 0) and SBC (borrow_in = carry flag)
+fn sub_a_with_borrow(value: u8, borrow_in: u8, state: *s.State) u8 {
+    const a = state.af.bytes.hi;
+    const res: u8 = a -% value -% borrow_in;
+
+    setSignZeroFlags(state, res);
+    //H is set on a borrow from bit 4
+    setFlag(state, s.FLAG_H, (a & 0x0F) < (value & 0x0F) + borrow_in);
+    setFlag(state, s.FLAG_P, subOverflow(a, value, res));
+    setFlag(state, s.FLAG_C, @as(u16, a) < @as(u16, value) + borrow_in);
+    state.af.bytes.lo |= s.FLAG_N;
+
+    return res;
+}
+
+pub fn add_a_value(value: u8, state: *s.State) u8{
+    return add_a_with_carry(value, 0, state);
+}
+
+pub fn adc_a_value(value: u8, state: *s.State) u8{
+    return add_a_with_carry(value, state.af.bytes.lo & s.FLAG_C, state);
+}
+
+pub fn sub_a_value(value: u8, state: *s.State) u8{
+    return sub_a_with_borrow(value, 0, state);
+}
+
+pub fn sbc_a_value(value: u8, state: *s.State) u8{
+    return sub_a_with_borrow(value, state.af.bytes.lo & s.FLAG_C, state);
+}
+
+//AND/XOR/OR: C and N are always reset, H is set only by AND, P/V holds the parity of the result
+pub fn decode_binary_operation(value: u8, operation: op, state: *s.State) u8 {
+    var res: u8 = state.af.bytes.hi;
+    switch(operation){
+        .And => res &= value,
+        .Xor => res ^= value,
+        .Or  => res |= value,
+    }
+
+    setSignZeroFlags(state, res);
+    setFlag(state, s.FLAG_H, operation == .And);
+    setFlag(state, s.FLAG_P, @popCount(res) % 2 == 0);
+    state.af.bytes.lo &= ~(s.FLAG_N | s.FLAG_C);
+
+    return res;
 }
 
 pub fn op_rlc(state: *s.State, reg: *u8) void {
