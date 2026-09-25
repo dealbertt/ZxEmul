@@ -30,9 +30,7 @@ pub const Spectrum = struct{
 
         //initialize the cpu
         self.cpu.init();
-
         self.video.init();
-        self.video.resolve_address(1, 0);
         _ = try self.loadROM(path, init_proc);
     }
 
