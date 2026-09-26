@@ -77,14 +77,17 @@ fn handleArgs(init: std.process.Init) ![]const u8 {
 
 //top-left corner that centres the scaled 256x192 screen in the window:
 //the space left over on each axis is split evenly between both sides
-fn centeredPosition(window_width: i32, window_height: i32, scale: u8) rl.Vector2 {
-    const screen_width = 256 * @as(i32, scale);
-    const screen_height = 192 * @as(i32, scale);
+fn centeredPosition(window_width: i32, window_height: i32, scale: f32) rl.Vector2 {
+    const screen_width = 256 *  scale;
+    const screen_height = 192 *  scale;
 
-    const x = @divTrunc(window_width - screen_width, 2);
-    const y = @divTrunc(window_height - screen_height, 2);
+    //const x = @divTrunc(window_width - screen_width, 2);
 
-    return .{ .x = @floatFromInt(x), .y = @floatFromInt(y) };
+    //const y = @divTrunc(window_height - screen_height, 2);
+
+    const x = (@as(f32, @floatFromInt(window_width)) - screen_width) / 2.0;
+    const y = (@as(f32, @floatFromInt(window_height)) - screen_height) / 2.0;
+    return .{ .x = x, .y = y };
 }
 
 fn createTexture() !rl.Texture {

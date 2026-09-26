@@ -9,7 +9,7 @@ const emulConfig = struct{
     height: i32 = 900,
     debug: bool = false,
     fps: u8 = 60,
-    scale: u8 = 3,
+    scale: f32 = 4,
 
     pub fn reportConfig(self: emulConfig) void{
         print("Window Width: {}\n", .{self.width});
@@ -72,10 +72,10 @@ pub fn loadConfig(init: std.process.Init) !emulConfig{
         }
     }
 
-    const hor_scale = @divTrunc(cfg.width, 256);
-    const ver_scale = @divTrunc(cfg.height, 192);
+    const hor_scale: f32 = @as(f32, @floatFromInt(cfg.width)) / 256.0;
+    const ver_scale: f32 = @as(f32, @floatFromInt(cfg.height)) / 192.0;
 
-    cfg.scale = @intCast(@min(hor_scale, ver_scale));
+    cfg.scale = @min(hor_scale, ver_scale);
     cfg.fps = 50;
     cfg.reportConfig();
     return cfg;
