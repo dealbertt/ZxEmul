@@ -33,6 +33,54 @@ pub fn op_ldi(state: *s.State) u8 {
 }
 
 
+//Opcode A8: LDD - same as LDI, but HL and DE move down instead of up
+pub fn op_ldd(state: *s.State) u8 {
+    //transfer contents from hl memory location to de memory location
+    state.bus.write_memory(state.de.pair, state.bus.read_memory(state.hl.pair));
+
+    //decrement both register pairs, and bc is decremented too
+    state.hl.pair -%= 1;
+    state.de.pair -%= 1;
+    state.bc.pair -%= 1;
+
+    //reset N and H flag
+    state.af.bytes.lo &= ~(s.FLAG_N | s.FLAG_H);
+
+    if(state.bc.pair != 0){
+        //pv is set
+        state.af.bytes.lo |= s.FLAG_P;
+    }else {
+        //reset
+        state.af.bytes.lo &= ~(s.FLAG_P);
+    }
+    return 16;
+}
+
+//Opcode B0: LDIR - one LDI step per execution. while BC is not 0, PC is moved back onto the
+//ED byte so the next cycle runs LDIR again. repeating through PC instead of looping here keeps
+//every byte a separate instruction, so interrupts and the frame timing still work during long copies.
+//BC = 0 at the start copies 65536 bytes: the first decrement wraps it to FFFF
+pub fn op_ldir(state: *s.State) u8 {
+    _ = op_ldi(state);
+
+    if(state.bc.pair != 0){
+        state.pc -%= 2;
+        return 21;
+    }
+    return 16;
+}
+
+//Opcode B8: LDDR - repeating LDD, works the same way as LDIR
+pub fn op_lddr(state: *s.State) u8 {
+    _ = op_ldd(state);
+
+    if(state.bc.pair != 0){
+        state.pc -%= 2;
+        return 21;
+    }
+    return 16;
+}
+
 pub fn op_cpi(state: *s.State) u8 {
     const a = state.af.bytes.hi;
     const value = state.bus.read_memory(state.hl.pair);
