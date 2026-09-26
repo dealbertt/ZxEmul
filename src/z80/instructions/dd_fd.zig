@@ -2,6 +2,7 @@ const s = @import("../internals/state.zig");
 const h = @import("helpers.zig");
 const mem = @import("../internals/memory.zig");
 const tables = @import("tables.zig");
+const cb = @import("cb.zig");
 
 //DD (IX) and FD (IY) prefixed instructions.
 //the prefix byte is the only thing that tells IX and IY apart - the opcode after it is the same
@@ -268,4 +269,59 @@ pub fn op_ignore_prefix(state: *s.State) u8 {
         },
         else => return tables.mainOpcodes[state.opcode](state) + 4,
     }
+}
+
+//Opcode CB (DDCB/FDCB): the rotate/shift/BIT/RES/SET group, always on (IX+d).
+//encoded as DD CB d op: unlike every other indexed instruction, the displacement comes
+//BEFORE the byte that says which operation to run.
+//bits 7-6 of op pick the group, bits 5-3 the rotate/shift or the bit number.
+//bits 2-0 are 110 in the documented forms, the other values (which also copy the result
+//into a register) are undocumented and treated as the documented form here
+pub fn decode_index_cb(comptime base: h.IndexBase) OpcodeHandler {
+    return struct {
+        fn handler(state: *s.State) u8 {
+            const d = fetchDisplacement(state);
+            state.opcode = mem.read8(state, &state.pc);
+
+            const operand = h.getRegister(.HL, state, base, d);
+            const selector: u3 = @intCast((state.opcode >> 3) & 0b111);
+
+            switch(state.opcode >> 6){
+                0 => {
+                    indexRotateShift(state, operand, selector);
+                    return 23;
+                },
+                1 => {
+                    cb.op_bit(state, operand, selector);
+                    return 20;
+                },
+                2 => {
+                    cb.op_res(operand, selector);
+                    return 23;
+                },
+                3 => {
+                    cb.op_set(operand, selector);
+                    return 23;
+                },
+                else => unreachable,
+            }
+        }
+    }.handler;
+}
+
+//the 8 rotates/shifts of the CB group, in opcode order (bits 5-3)
+fn indexRotateShift(state: *s.State, operand: *u8, operation: u3) void {
+    switch(operation){
+        0 => h.op_rlc(state, operand),
+        1 => h.op_rrc(state, operand),
+        2 => h.op_rl(state, operand),
+        3 => h.op_rr(state, operand),
+        4 => cb.op_sla(state, operand),
+        5 => cb.op_sra(state, operand),
+        6 => cb.op_sll(state, operand),
+        7 => cb.op_srl(state, operand),
+    }
+
+    //the operation helpers only set C, H and N: S, Z and P/V come from the result
+    cb.setZSPFlag(state, operand.*);
 }

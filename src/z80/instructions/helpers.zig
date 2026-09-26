@@ -1,6 +1,5 @@
 const s = @import("../internals/state.zig");
 
-//order matches the Z80's 3-bit register field encoding: (HL)=110, A=111
 pub const Register = enum(u3){
     B, C, D, E, H, L, HL, A,
 };
@@ -73,6 +72,43 @@ pub fn add_16bitRegs(reg1: u16, reg2: u16, state: *s.State) u16 {
     setFlag(state, s.FLAG_C, sum[1] == 1);
     state.af.bytes.lo &= ~s.FLAG_N;
     return sum[0];
+}
+
+//ADC HL,rr: a + value + carry on 16 bits. unlike ADD HL,rr, every flag is affected,
+//and S, Z and P/V are computed on the full 16-bit result
+pub fn adc_16bit(a: u16, value: u16, state: *s.State) u16 {
+    const carry_in: u16 = state.af.bytes.lo & s.FLAG_C;
+    const sum: u32 = @as(u32, a) + value + carry_in;
+    const res: u16 = @truncate(sum);
+
+    setFlag(state, s.FLAG_S, (res & 0x8000) != 0);
+    setFlag(state, s.FLAG_Z, res == 0);
+    //H is the carry out of bit 11 (the half carry of the high byte)
+    setFlag(state, s.FLAG_H, (a & 0x0FFF) + (value & 0x0FFF) + carry_in > 0x0FFF);
+    //P/V: both operands had the same sign and the result's sign differs
+    setFlag(state, s.FLAG_P, ((a ^ res) & (value ^ res) & 0x8000) != 0);
+    setFlag(state, s.FLAG_C, sum > 0xFFFF);
+    state.af.bytes.lo &= ~s.FLAG_N;
+
+    return res;
+}
+
+//SBC HL,rr: a - value - carry on 16 bits, every flag is affected.
+//takes values rather than pointers, so SBC HL,HL reads HL before anything is written
+pub fn sbc_16bit(a: u16, value: u16, state: *s.State) u16 {
+    const borrow_in: u16 = state.af.bytes.lo & s.FLAG_C;
+    const res: u16 = a -% value -% borrow_in;
+
+    setFlag(state, s.FLAG_S, (res & 0x8000) != 0);
+    setFlag(state, s.FLAG_Z, res == 0);
+    //H is set on a borrow from bit 12
+    setFlag(state, s.FLAG_H, (a & 0x0FFF) < (value & 0x0FFF) + borrow_in);
+    //P/V: the operands had different signs and the result's sign differs from a
+    setFlag(state, s.FLAG_P, ((a ^ value) & (a ^ res) & 0x8000) != 0);
+    setFlag(state, s.FLAG_C, @as(u32, a) < @as(u32, value) + borrow_in);
+    state.af.bytes.lo |= s.FLAG_N;
+
+    return res;
 }
 
 //INC r / INC (HL) / INC (IX+d): the carry flag is left untouched

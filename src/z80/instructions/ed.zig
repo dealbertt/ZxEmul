@@ -117,6 +117,26 @@ pub fn decode_ld_rr_nn_addr(state: *s.State) u8 {
     return 20;
 }
 
+//Opcodes 4A/5A/6A/7A: ADC HL,rr - HL = HL + rr + carry, every flag affected
+pub fn decode_adc_hl_rr(state: *s.State) u8 {
+    const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
+    //read into a local first, so ADC HL,HL uses HL's value from before the write
+    const value = h.get16BitRegister(src, state).*;
+
+    state.hl.pair = h.adc_16bit(state.hl.pair, value, state);
+    return 15;
+}
+
+//Opcodes 42/52/62/72: SBC HL,rr - HL = HL - rr - carry, every flag affected
+pub fn decode_sbc_hl_rr(state: *s.State) u8 {
+    const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
+    //read into a local first, so SBC HL,HL uses HL's value from before the write
+    const value = h.get16BitRegister(src, state).*;
+
+    state.hl.pair = h.sbc_16bit(state.hl.pair, value, state);
+    return 15;
+}
+
 //Opcode 47: LD I,A - no flags affected
 pub fn op_ld_i_a(state: *s.State) u8 {
     state.i = state.af.bytes.hi;

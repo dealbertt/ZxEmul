@@ -21,7 +21,7 @@ fn regOrHLCyclesBit(reg: h.Register) u8 {
     return if (reg == .HL) 12 else 8;
 }
 
-fn setZSPFlag(state: *s.State, result: u8) void {
+pub fn setZSPFlag(state: *s.State, result: u8) void {
     h.setFlag(state, s.FLAG_Z, result == 0);
     h.setFlag(state, s.FLAG_S, (result & 0x80) != 0);
     //P/V holds the parity of the result: set when the number of 1 bits is even
@@ -78,7 +78,7 @@ pub fn decode_sla(state: *s.State) u8 {
     return regOrHLCycles(src);
 }
 
-fn op_sla(state: *s.State, reg: *u8) void {
+pub fn op_sla(state: *s.State, reg: *u8) void {
     const bit7: u8 = reg.* & 0x80;
 
     //shifted, automatically puts a 0 on bit0
@@ -99,7 +99,7 @@ pub fn decode_sra(state: *s.State) u8 {
     return regOrHLCycles(src);
 } 
 
-fn op_sra(state: *s.State, reg: *u8) void {
+pub fn op_sra(state: *s.State, reg: *u8) void {
     const bit0: u8 = reg.* & 1;
     const bit7: u8 = reg.* & 0x80;
 
@@ -122,7 +122,7 @@ pub fn decode_sll(state: *s.State) u8 {
     return regOrHLCycles(src);
 }
 
-fn op_sll(state: *s.State, reg: *u8) void {
+pub fn op_sll(state: *s.State, reg: *u8) void {
     const bit7: u8 = (reg.* >> 7) & 1;
 
     //shifted, and a 1 is inserted on bit0 (this is what makes SLL distinct from SLA)
@@ -145,7 +145,7 @@ pub fn decode_srl(state: *s.State) u8 {
     return regOrHLCycles(src);
 }
 
-fn op_srl(state: *s.State, reg: *u8) void {
+pub fn op_srl(state: *s.State, reg: *u8) void {
     const bit0: u8 = reg.* & 1;
 
     //shifted, and bit7 gets put to 0 
@@ -186,7 +186,7 @@ pub fn decode_bit(state: *s.State) u8 {
     return regOrHLCyclesBit(src);
 }
 
-fn op_bit(state: *s.State, reg: *u8, bit: u3) void {
+pub fn op_bit(state: *s.State, reg: *u8, bit: u3) void {
     const testBit = (reg.* >> bit) & 1;  
 
     if(testBit == 0){
@@ -211,7 +211,7 @@ pub fn decode_res(state: *s.State) u8 {
     return regOrHLCycles(src);
 } 
 
-fn op_res(reg: *u8, bit: u3) void {
+pub fn op_res(reg: *u8, bit: u3) void {
     const mask = @as(u8, 1) << bit;   
 
     //reset
@@ -228,7 +228,7 @@ pub fn decode_set(state: *s.State) u8 {
     return regOrHLCycles(src);
 } 
 
-fn op_set(reg: *u8, bit: u3) void {
+pub fn op_set(reg: *u8, bit: u3) void {
     const mask = @as(u8, 1) << bit;   
 
     //set

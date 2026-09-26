@@ -282,6 +282,16 @@ pub fn initTables() void {
     edOpcodes[0x6B] = ed.decode_ld_rr_nn_addr;
     edOpcodes[0x7B] = ed.decode_ld_rr_nn_addr;
 
+    edOpcodes[0x42] = ed.decode_sbc_hl_rr;
+    edOpcodes[0x52] = ed.decode_sbc_hl_rr;
+    edOpcodes[0x62] = ed.decode_sbc_hl_rr;
+    edOpcodes[0x72] = ed.decode_sbc_hl_rr;
+
+    edOpcodes[0x4A] = ed.decode_adc_hl_rr;
+    edOpcodes[0x5A] = ed.decode_adc_hl_rr;
+    edOpcodes[0x6A] = ed.decode_adc_hl_rr;
+    edOpcodes[0x7A] = ed.decode_adc_hl_rr;
+
     edOpcodes[0x47] = ed.op_ld_i_a;
     edOpcodes[0x4F] = ed.op_ld_r_a;
     edOpcodes[0x57] = ed.op_ld_a_i;
@@ -339,8 +349,8 @@ pub fn initTables() void {
 //fills a DD (IX) or FD (IY) table: every handler is instantiated for the given index register
 fn initIndexedTable(table: *[256]OpcodeHandler, comptime base: h.IndexBase) void {
     //default: the prefix is ignored and the unprefixed instruction runs. the real DD/FD
-    //instructions below overwrite their slots. CB is left out on purpose: DDCB/FDCB is a
-    //different instruction group, and until it's implemented op_unknown flags it
+    //instructions below overwrite their slots. CB is left out: DDCB/FDCB is a different
+    //instruction group with its own handler, registered below
     for(0..256) |op| {
         if(op != 0xCB) table[op] = dd_fd.op_ignore_prefix;
     }
@@ -393,5 +403,8 @@ fn initIndexedTable(table: *[256]OpcodeHandler, comptime base: h.IndexBase) void
     table[0xE5] = dd_fd.op_push_index(base);
     table[0xE9] = dd_fd.op_jp_index(base);
     table[0xF9] = dd_fd.op_ld_sp_index(base);
+
+    //DDCB/FDCB: rotate/shift/BIT/RES/SET on (IX+d)
+    table[0xCB] = dd_fd.decode_index_cb(base);
 }
 
