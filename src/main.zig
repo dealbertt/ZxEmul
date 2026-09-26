@@ -40,24 +40,20 @@ pub fn main(init: std.process.Init) !void {
     std.debug.print("Pos: {}\n", .{pos});
     std.debug.print("Monitor: {}\n", .{monitor});
 
+    const texture = try createTexture();
 
+    defer rl.unloadTexture(texture);
     rl.setTargetFPS(50);
 
-    var lastTime: f64 = rl.getTime();
-
     while (!rl.windowShouldClose()) {
-        const currentTime: f64  = rl.getTime();
-
-        const deltaTime: f64 = currentTime - lastTime;
-        lastTime = currentTime;
+        comp.runFrame();
+        rl.updateTexture(texture, &comp.video.frame_buffer);
 
         rl.beginDrawing();
+        rl.clearBackground(.black);
 
-        rl.clearBackground(.white);
-        rl.drawText("Welcome to the ZXSpectrum emulator", @divTrunc(cfg.width, 2),  @divTrunc(cfg.height, 2), 40, .red);
-
-        std.debug.print("Delta: {}\n", .{deltaTime});
-        comp.runFrame();
+        rl.drawFPS(10, 10);
+        rl.drawTexture(texture, 0, 0, .white);
 
         rl.endDrawing();
         //update the buffer to refresh the screen 
@@ -75,6 +71,17 @@ fn handleArgs(init: std.process.Init) ![]const u8 {
     //return try alloc.dupe(u8, args[1]);
     return args[1];
 }
+
+fn createTexture() !rl.Texture {
+    const image = rl.genImageColor(256, 192, .black);
+    const texture = try rl.loadTextureFromImage(image);
+
+    rl.setTextureFilter(texture, .point);
+    rl.unloadImage(image);
+
+    return texture;
+}
+
 
 //so for the main loop, i kind of have two things to care about, the frame rate of the emulator, as in the whole program,
 //and the frame rate of the cpu/computer itself which is 3,5mhz and 50hz, and idk if i should do that in timing.zig or directly in here
