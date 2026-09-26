@@ -1,6 +1,7 @@
 const s = @import("../internals/state.zig");
 const h = @import("helpers.zig");
 const mem = @import("../internals/memory.zig");
+const tables = @import("tables.zig");
 
 //DD (IX) and FD (IY) prefixed instructions.
 //the prefix byte is the only thing that tells IX and IY apart - the opcode after it is the same
@@ -250,4 +251,21 @@ pub fn op_ld_sp_index(comptime base: h.IndexBase) OpcodeHandler {
             return 10;
         }
     }.handler;
+}
+
+//undocumented DD/FD opcodes that don't touch HL: the prefix is ignored and the unprefixed
+//instruction runs as normal, with the prefix fetch adding 4 T-states.
+//not generic over IX/IY, since the index register plays no part.
+//known gap: the ones that use H or L (INC H, LD A,L...) really act on the high/low half of IX/IY
+//(the undocumented IXH/IXL registers), but here they still act on H and L
+pub fn op_ignore_prefix(state: *s.State) u8 {
+    switch(state.opcode){
+        //another prefix right after this one: this prefix alone acts as a 4 T-state NOP and the
+        //new one has to be decoded from scratch, so step back and let the next cycle fetch it
+        0xDD, 0xFD, 0xED => {
+            state.pc -%= 1;
+            return 4;
+        },
+        else => return tables.mainOpcodes[state.opcode](state) + 4,
+    }
 }

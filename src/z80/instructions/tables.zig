@@ -309,6 +309,28 @@ pub fn initTables() void {
     edOpcodes[0x76] = ed.op_im_1;
     edOpcodes[0x7E] = ed.op_im_2;
 
+    //ED opcodes with no instruction assigned behave as an 8 T-state NOP
+    for(0x00..0x40) |op| {
+        edOpcodes[op] = ed.op_nop_invalid;
+    }
+
+    for(0x80..0xA0) |op| {
+        edOpcodes[op] = ed.op_nop_invalid;
+    }
+
+    for(0xC0..0x100) |op| {
+        edOpcodes[op] = ed.op_nop_invalid;
+    }
+
+    //in the block instruction area (A0-BF) only offsets 0-3 of each 8-slot group are used
+    for(0xA0..0xC0) |op| {
+        if((op & 0b111) >= 4) edOpcodes[op] = ed.op_nop_invalid;
+    }
+
+    //undocumented: these two slots of the 40-7F block also do nothing
+    edOpcodes[0x77] = ed.op_nop_invalid;
+    edOpcodes[0x7F] = ed.op_nop_invalid;
+
     //DD and FD share the same opcode layout, only the index register changes
     initIndexedTable(&ddOpcodes, .IX);
     initIndexedTable(&fdOpcodes, .IY);
@@ -316,6 +338,13 @@ pub fn initTables() void {
 
 //fills a DD (IX) or FD (IY) table: every handler is instantiated for the given index register
 fn initIndexedTable(table: *[256]OpcodeHandler, comptime base: h.IndexBase) void {
+    //default: the prefix is ignored and the unprefixed instruction runs. the real DD/FD
+    //instructions below overwrite their slots. CB is left out on purpose: DDCB/FDCB is a
+    //different instruction group, and until it's implemented op_unknown flags it
+    for(0..256) |op| {
+        if(op != 0xCB) table[op] = dd_fd.op_ignore_prefix;
+    }
+
     table[0x09] = dd_fd.decode_add_index_rr(base);
     table[0x19] = dd_fd.decode_add_index_rr(base);
     table[0x29] = dd_fd.decode_add_index_rr(base);

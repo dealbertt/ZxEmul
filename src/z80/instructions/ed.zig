@@ -207,3 +207,9 @@ pub fn op_im_2(state: *s.State) u8 {
     return 8;
 }
 
+//every ED opcode with no instruction assigned (00-3F, 80-9F, C0-FF and the gaps between the
+//block instructions): the Z80 does nothing and just spends the 8 T-states of fetching both bytes
+pub fn op_nop_invalid(state: *s.State) u8 {
+    _ = state;
+    return 8;
+}

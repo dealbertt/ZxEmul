@@ -168,8 +168,9 @@ pub fn op_rlca(state: *s.State) u8 {
 }
 
 //Opcode 08
+//swaps AF with the shadow AF'. no flags are computed: F is only moved, like A
 pub fn op_ex_af_af_shadow(state: *s.State) u8 {
-    _ = state;
+    std.mem.swap(u16, &state.af.pair, &state.af_shadow.pair);
     return 4;
 }
 
@@ -500,9 +501,11 @@ pub fn ret_condition_nn(cond: h.Condition, state: *s.State) u8 {
 }
 
 //Opcode D9
+//swaps BC, DE and HL with their shadows BC', DE' and HL' in one go. AF is not included (that is EX AF,AF')
 pub fn op_exx(state: *s.State) u8 {
-    //operations with shadow registers, not currently implemented
-    _ = state;
+    std.mem.swap(u16, &state.bc.pair, &state.bc_shadow.pair);
+    std.mem.swap(u16, &state.de.pair, &state.de_shadow.pair);
+    std.mem.swap(u16, &state.hl.pair, &state.hl_shadow.pair);
     return 4;
 }
 
@@ -645,10 +648,8 @@ pub fn op_jp_hl(state: *s.State) u8 {
 
 //Opcode EB
 pub fn op_ex_de_hl(state: *s.State) u8 {
-        state.de.pair = state.de.pair ^ state.hl.pair;
-        state.hl.pair = state.de.pair ^ state.hl.pair;
-        state.de.pair = state.de.pair ^ state.hl.pair;
-        return 4;
+    std.mem.swap(u16, &state.de.pair, &state.hl.pair);
+    return 4;
 }
 
 //Opcode E3

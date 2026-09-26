@@ -14,6 +14,12 @@ pub const State = struct{
     de: regPair,
     hl: regPair,
 
+    //shadow set (AF', BC', DE', HL'): only reachable by swapping with EX AF,AF' and EXX
+    af_shadow: regPair,
+    bc_shadow: regPair,
+    de_shadow: regPair,
+    hl_shadow: regPair,
+
     ix: u16,
     iy: u16,
     sp: u16,

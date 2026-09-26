@@ -17,6 +17,11 @@ pub const Z80 = struct {
                 .bc = .{ .pair = 0 },
                 .de = .{ .pair = 0 },
                 .hl = .{ .pair = 0 },
+
+                .af_shadow = .{ .pair = 0 },
+                .bc_shadow = .{ .pair = 0 },
+                .de_shadow = .{ .pair = 0 },
+                .hl_shadow = .{ .pair = 0 },
                 .ix = 0,
                 .iy = 0,
 
