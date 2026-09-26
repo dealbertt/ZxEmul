@@ -6,6 +6,7 @@ const rl = @import("raylib");
 const v = @import("video.zig");
 
 const ROM_MEMORY_LIMIT = 16384;
+const PROGRAM_MEMORY_LIMIT = 41781;
 
 const CYCLES_PER_REFRESH = 69888;
 
@@ -31,13 +32,14 @@ pub const Spectrum = struct{
         //initialize the cpu
         self.cpu.init();
         self.video.init();
-        _ = try self.loadROM(path, init_proc);
+        _ = try self.loadROM(init_proc);
+        _ = path;
     }
 
-    fn loadROM(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !u8 {
+    fn loadROM(self: *Spectrum, init_proc: std.process.Init) !u8 {
 
         const io = init_proc.io;
-        const file = try std.Io.Dir.cwd().openFile(io, path, .{.mode = .read_only});
+        const file = try std.Io.Dir.cwd().openFile(io, "assets/spec48.rom", .{.mode = .read_only});
         defer file.close(io);
 
         const rom_size = try file.length(io);
@@ -57,6 +59,31 @@ pub const Spectrum = struct{
 
         std.debug.print("Bytes read: {}\n", .{bytes_read});
         return 0;
+    }
+
+    fn loadProgram(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !u8 {
+        const io = init_proc.io;
+        const file = try std.Io.Dir.cwd().openFile(io, path, .{.mode = .read_only});
+        defer file.close(io);
+
+        const program_size = try file.length(io);
+        std.debug.print("Size of the file: {}\n", .{program_size});
+
+        if(program_size > PROGRAM_MEMORY_LIMIT){
+            std.debug.print("The size of the ROM selected is too big!", .{});
+            return error.romSizeTooBig; 
+        }
+
+        var scratch: [4096]u8 = undefined;
+        var reader = file.reader(io, &scratch);
+
+        const bytes_read = try reader.interface.readSliceShort(self.cpu.state.bus.memory[0x5CCB..program_size]);
+        //const bytes_read = try file.read(&self.memory);
+
+
+        std.debug.print("Bytes read: {}\n", .{bytes_read});
+        return 0;
+
     }
 
     //this will run ~70k cycles of z80 per frame 
