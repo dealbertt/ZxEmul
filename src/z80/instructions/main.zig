@@ -45,7 +45,8 @@ pub fn op_nop(state: *s.State) u8{
 
 //Opcode unknown
 pub fn op_unknown(state: *s.State) u8 {
-    std.debug.print("Unknown opcode {}", .{state.opcode});
+    //std.debug.print("Unknown opcode {}", .{state.opcode});
+    _ = state;
     return 0;
 }
 //possible opcodes for this kind of instructions are

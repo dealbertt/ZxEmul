@@ -45,6 +45,9 @@ pub fn main(init: std.process.Init) !void {
     defer rl.unloadTexture(texture);
     rl.setTargetFPS(50);
 
+    //the window size is fixed, so the screen position only needs computing once
+    const position = centeredPosition(cfg.width, cfg.height, cfg.scale);
+
     while (!rl.windowShouldClose()) {
         comp.runFrame();
         rl.updateTexture(texture, &comp.video.frame_buffer);
@@ -52,8 +55,8 @@ pub fn main(init: std.process.Init) !void {
         rl.beginDrawing();
         rl.clearBackground(.black);
 
+        rl.drawTextureEx(texture, position, 0, cfg.scale, .white);
         rl.drawFPS(10, 10);
-        rl.drawTexture(texture, 0, 0, .white);
 
         rl.endDrawing();
         //update the buffer to refresh the screen 
@@ -72,12 +75,24 @@ fn handleArgs(init: std.process.Init) ![]const u8 {
     return args[1];
 }
 
+//top-left corner that centres the scaled 256x192 screen in the window:
+//the space left over on each axis is split evenly between both sides
+fn centeredPosition(window_width: i32, window_height: i32, scale: u8) rl.Vector2 {
+    const screen_width = 256 * @as(i32, scale);
+    const screen_height = 192 * @as(i32, scale);
+
+    const x = @divTrunc(window_width - screen_width, 2);
+    const y = @divTrunc(window_height - screen_height, 2);
+
+    return .{ .x = @floatFromInt(x), .y = @floatFromInt(y) };
+}
+
 fn createTexture() !rl.Texture {
     const image = rl.genImageColor(256, 192, .black);
+    defer rl.unloadImage(image);
     const texture = try rl.loadTextureFromImage(image);
 
     rl.setTextureFilter(texture, .point);
-    rl.unloadImage(image);
 
     return texture;
 }

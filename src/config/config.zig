@@ -5,16 +5,18 @@ const print = std.debug.print;
 const configPath = "src/config/config.txt";
 
 const emulConfig = struct{
-    height: i32 = 1600,
-    width: i32 = 900,
+    width: i32 = 1600,
+    height: i32 = 900,
     debug: bool = false,
     fps: u8 = 60,
+    scale: u8 = 3,
 
     pub fn reportConfig(self: emulConfig) void{
         print("Window Width: {}\n", .{self.width});
         print("Window Height: {}\n", .{self.height});
         print("FPS: {}\n", .{self.fps});
         print("Debug: {}\n", .{self.debug});
+        print("Scale: {}\n", .{self.scale});
     }
     
 };
@@ -67,13 +69,14 @@ pub fn loadConfig(init: std.process.Init) !emulConfig{
             cfg.height= try std.fmt.parseInt(i32, value, 10);
             std.debug.print("WINDOW_HEIGHT set\n", .{});
             if(cfg.height > 1080) cfg.height = 1080;
-        }else if(std.mem.eql(u8, key, "REFRESH_RATE")){
-            cfg.fps = try std.fmt.parseInt(u8, value, 10);
-            if(cfg.fps > 240) cfg.fps = 60;
         }
-
     }
 
+    const hor_scale = @divTrunc(cfg.width, 256);
+    const ver_scale = @divTrunc(cfg.height, 192);
+
+    cfg.scale = @intCast(@min(hor_scale, ver_scale));
+    cfg.fps = 50;
     cfg.reportConfig();
     return cfg;
 }
