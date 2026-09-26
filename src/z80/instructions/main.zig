@@ -272,8 +272,40 @@ pub fn op_ld_nn_addr_hl(state: *s.State) u8 {
 }
 
 //Opcode 27
+//DAA: turns A back into valid BCD after an addition or subtraction of two BCD numbers.
+//both corrections are decided from the ORIGINAL A and the flags left by that operation:
+//  - low digit: past 9, or H set (it carried at 16 instead of 10) -> correct by 0x06
+//  - high digit: A past 0x99, or C set -> correct by 0x60, and C ends up set
+//N says whether the previous operation was an addition (add the correction) or a subtraction (subtract it)
 pub fn op_daa(state: *s.State) u8 {
-    _ = state;
+    const a = state.af.bytes.hi;
+    const low_nibble = a & 0x0F;
+    const half_carry = (state.af.bytes.lo & s.FLAG_H) != 0;
+    const carry = (state.af.bytes.lo & s.FLAG_C) != 0;
+    const subtraction = (state.af.bytes.lo & s.FLAG_N) != 0;
+
+    var correction: u8 = 0;
+    if(half_carry or low_nibble > 9) correction |= 0x06;
+
+    //compares the whole byte, not just the high digit: 9A-9F also overflow once the low digit is corrected
+    const carry_out = carry or a > 0x99;
+    if(carry_out) correction |= 0x60;
+
+    const result = if(subtraction) a -% correction else a +% correction;
+
+    h.setFlag(state, s.FLAG_S, (result & 0x80) != 0);
+    h.setFlag(state, s.FLAG_Z, result == 0);
+    h.setFlag(state, s.FLAG_P, @popCount(result) % 2 == 0);
+    h.setFlag(state, s.FLAG_C, carry_out);
+    //H: after an addition, the low digit carried; after a subtraction, it borrowed
+    if(subtraction){
+        h.setFlag(state, s.FLAG_H, half_carry and low_nibble < 6);
+    }else{
+        h.setFlag(state, s.FLAG_H, low_nibble > 9);
+    }
+    //N is left untouched
+
+    state.af.bytes.hi = result;
     return 4;
 }
 
