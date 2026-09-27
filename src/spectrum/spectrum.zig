@@ -22,7 +22,9 @@ pub const Spectrum = struct{
     cycles: u32,
     video: v.Video,
 
-    pub fn init(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !void {
+    //leaves the machine in its power-on state: cpu reset, ROM loaded, video ready.
+    //loading a program is a separate step (loadProgram), done on the machine after this
+    pub fn init(self: *Spectrum, init_proc: std.process.Init) !void {
         //var spec = Spectrum {
             //initialize the memory to 0
             //.memory = [_]u8{0} ** memorySize,
@@ -32,7 +34,6 @@ pub const Spectrum = struct{
         //initialize the cpu
         self.cpu.init();
         _ = try self.loadROM(init_proc);
-        _ = try self.loadProgram(path, init_proc);
 
         self.video.init();
     }
@@ -62,7 +63,7 @@ pub const Spectrum = struct{
         return 0;
     }
 
-    fn loadProgram(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !u8 {
+    pub fn loadProgram(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !u8 {
         const io = init_proc.io;
         const file = try std.Io.Dir.cwd().openFile(io, path, .{.mode = .read_only});
         defer file.close(io);
@@ -78,7 +79,7 @@ pub const Spectrum = struct{
         var scratch: [4096]u8 = undefined;
         var reader = file.reader(io, &scratch);
 
-        const bytes_read = try reader.interface.readSliceShort(self.cpu.state.bus.memory[0x5CCB..program_size]);
+        const bytes_read = try reader.interface.readSliceShort(self.cpu.state.bus.memory[0x5CCB .. 0x5CCB + program_size]);
         //const bytes_read = try file.read(&self.memory);
 
 

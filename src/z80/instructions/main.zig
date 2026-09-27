@@ -280,10 +280,13 @@ pub fn op_ld_nn_addr_hl(state: *s.State) u8 {
 pub fn op_daa(state: *s.State) u8 {
     const a = state.af.bytes.hi;
     const low_nibble = a & 0x0F;
+
+    //flags that need to be checked
     const half_carry = (state.af.bytes.lo & s.FLAG_H) != 0;
     const carry = (state.af.bytes.lo & s.FLAG_C) != 0;
     const subtraction = (state.af.bytes.lo & s.FLAG_N) != 0;
 
+    //correction that will be applied base on the values
     var correction: u8 = 0;
     if(half_carry or low_nibble > 9) correction |= 0x06;
 

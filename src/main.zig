@@ -25,7 +25,11 @@ pub fn main(init: std.process.Init) !void {
 
     var comp:spec.Spectrum = undefined;
 
-    try comp.init(program_path, init);
+    try comp.init(init);
+
+    //no path given on the command line: just boot the ROM
+    if(program_path.len > 0) _ = try comp.loadProgram(program_path, init);
+
     std.debug.print("AF: {}\n", .{comp.cpu.state.af.pair});
 
     rl.initWindow(cfg.width, cfg.height, "ZxEmul");
