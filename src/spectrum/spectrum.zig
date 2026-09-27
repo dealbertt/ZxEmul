@@ -31,9 +31,10 @@ pub const Spectrum = struct{
 
         //initialize the cpu
         self.cpu.init();
-        self.video.init();
         _ = try self.loadROM(init_proc);
-        _ = path;
+        _ = try self.loadProgram(path, init_proc);
+
+        self.video.init();
     }
 
     fn loadROM(self: *Spectrum, init_proc: std.process.Init) !u8 {
@@ -43,7 +44,7 @@ pub const Spectrum = struct{
         defer file.close(io);
 
         const rom_size = try file.length(io);
-        std.debug.print("Size of the file: {}\n", .{rom_size});
+        std.debug.print("Size of the rom: {x}\n", .{rom_size});
 
         if(rom_size > ROM_MEMORY_LIMIT){
             std.debug.print("The size of the ROM selected is too big!", .{});
@@ -67,11 +68,11 @@ pub const Spectrum = struct{
         defer file.close(io);
 
         const program_size = try file.length(io);
-        std.debug.print("Size of the file: {}\n", .{program_size});
+        std.debug.print("Size of the user program: {x}\n", .{program_size});
 
         if(program_size > PROGRAM_MEMORY_LIMIT){
-            std.debug.print("The size of the ROM selected is too big!", .{});
-            return error.romSizeTooBig; 
+            std.debug.print("The size of the program selected is too big!", .{});
+            return error.programSizeTooBig; 
         }
 
         var scratch: [4096]u8 = undefined;

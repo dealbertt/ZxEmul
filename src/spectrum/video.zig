@@ -7,6 +7,7 @@ const rl_texture = extern struct {
     a: u8,
 };
 
+
 //intensity of a colour channel that is on: normal and BRIGHT (values vary between emulators)
 const NORMAL = 0xD7;
 const BRIGHT = 0xFF;
@@ -65,7 +66,7 @@ pub const Video = struct {
 
                 //0000 0000
                 const bright = (attribute_byte & 0x40) >> 6; 
-                const ink =  (attribute_byte & 0x07); 
+                const ink = (attribute_byte & 0x07); 
                 const paper = (attribute_byte & 0x38) >> 3;
                 
                 for(0..8) |bit| {
@@ -89,7 +90,6 @@ pub const Video = struct {
 
 //returns an offset of the address, not the absolute address in memory. only from 0 to 0x17FF
 pub fn resolve_address(x_byte: u16, y: u16) u16 {
-    //easy part
 
     //64 is 2^6 
     const y_third = y >> 6;
