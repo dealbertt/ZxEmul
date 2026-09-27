@@ -17,6 +17,12 @@ pub fn build(b: *std.Build) void {
         .target = target,
     });
 
+    const z80_mod = b.createModule(.{
+        .root_source_file = b.path("src/z80/z80.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     const exe = b.addExecutable(.{
         .name = "ZxEmul",
         .root_module = b.createModule(.{
@@ -29,6 +35,17 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    const zex_test = b.addExecutable(.{
+        .name = "test",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("test/main.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{.name = "z80", .module = z80_mod}
+            },
+        }),
+    });
     exe.root_module.linkLibrary(raylib_artifact);
     exe.root_module.addImport("raylib", raylib);
     exe.root_module.addImport("raygui", raygui);
@@ -45,6 +62,14 @@ pub fn build(b: *std.Build) void {
     if (b.args) |args| {
         run_cmd.addArgs(args);
     }
+
+    //zexdoc runner: not installed, so it's only compiled when this step is asked for (zig build zexdoc).
+    //addFileArg passes the full path to the .com and lets the build track it as an input
+    const zex_cmd = b.addRunArtifact(zex_test);
+    zex_cmd.addFileArg(b.path("assets/zexdoc.com"));
+
+    const zex_step = b.step("zexdoc", "Run the zexdoc Z80 instruction test");
+    zex_step.dependOn(&zex_cmd.step);
 
     const mod_tests = b.addTest(.{
         .root_module = mod,

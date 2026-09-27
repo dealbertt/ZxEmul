@@ -39,6 +39,7 @@ pub const Z80 = struct {
                     .memory = [_]u8{0} ** 65536,
                     .key_matrix = [_]u8 {0x1F} ** 8, 
                     .int_req = false,
+                    .rom_protected = true,
                 },
                 .opcode = 0,
             }

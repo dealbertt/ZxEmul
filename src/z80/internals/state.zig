@@ -53,6 +53,8 @@ pub const Bus = struct{
 
     int_req: bool,
 
+    rom_protected: bool,
+
     pub fn read_memory(self: *Bus, address: u16) u8{
         return self.memory[address];
     }
@@ -61,7 +63,7 @@ pub const Bus = struct{
         return &self.memory[address];
     }
     pub fn write_memory(self: *Bus, address: u16, value:u8) void {
-        if(address < 0x4000){
+        if(address < 0x4000 and self.rom_protected){
             //std.debug.print("ROM memory!\n", .{}); 
             return;
         }else{
