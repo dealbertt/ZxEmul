@@ -66,7 +66,7 @@ pub fn build(b: *std.Build) void {
     //zexdoc runner: not installed, so it's only compiled when this step is asked for (zig build zexdoc).
     //addFileArg passes the full path to the .com and lets the build track it as an input
     const zex_cmd = b.addRunArtifact(zex_test);
-    zex_cmd.addFileArg(b.path("assets/zexdoc.com"));
+    zex_cmd.addFileArg(b.path("programs/zexdoc.com"));
 
     const zex_step = b.step("zexdoc", "Run the zexdoc Z80 instruction test");
     zex_step.dependOn(&zex_cmd.step);
