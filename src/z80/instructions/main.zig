@@ -45,8 +45,8 @@ pub fn op_nop(state: *s.State) u8{
 
 //Opcode unknown
 pub fn op_unknown(state: *s.State) u8 {
-    //std.debug.print("Unknown opcode {}", .{state.opcode});
-    _ = state;
+    std.debug.print("Unknown opcode {x}\n", .{state.opcode});
+    //_ = state;
     return 0;
 }
 //possible opcodes for this kind of instructions are
@@ -147,6 +147,7 @@ pub fn op_rlca(state: *s.State) u8 {
     //Once we have that, we set A, to the contents of A
     //shifted 1 bit to the left or bit7 -> a circular rotation
     //because bit0 now has the contents of bit 7
+    state.af.bytes.hi = (state.af.bytes.hi << 1) | bit7;
     //
     //Reset the N and H flag
     //because we shift to the left, zig might promote to a bigger value, but we only

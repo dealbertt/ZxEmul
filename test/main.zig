@@ -28,10 +28,40 @@ pub fn main(init: std.process.Init) !void {
 
     std.debug.print("Bytes read: {}\n", .{bytes_read});
 
-    cpu.state.memory[0x0005] = 0xC9;
-    cpu.state.memory[0x0005] = 0xC9;
-    
+    cpu.state.pc = 0x0100;
+    //ret
+    cpu.state.bus.memory[0x0005] = 0xC9;
 
+    //top of the stack as a little-endian address: zexdoc does LD HL,(0x0006) / LD SP,HL
+    cpu.state.bus.memory[0x0006] = 0x00;
+    cpu.state.bus.memory[0x0007] = 0xF0;
+
+    //the program ends by jumping to 0x0000 (CP/M warm boot)
+    while(cpu.state.pc != 0x0000){
+        //PC is checked before each instruction: at 0x0005 the program has just done CALL 5,
+        //so the call is handled here and then the RET at 0x0005 runs and returns to the program
+        if(cpu.state.pc == 0x0005) bdosCall(&cpu);
+        _ = cpu.cycle();
+    }
+    std.debug.print("\nProgram finished\n", .{});
+}
+
+fn bdosCall(cpu: *z.Z80) void {
+    const state = &cpu.state;
+
+    //check the state of C
+    switch(state.bc.bytes.lo){
+        //print the character in E
+        2 => std.debug.print("{c}", .{state.de.bytes.lo}),
+        //print the string at DE, terminated by '$'
+        9 => {
+            var address = state.de.pair;
+            while(state.bus.memory[address] != '$') : (address +%= 1) {
+                std.debug.print("{c}", .{state.bus.memory[address]});
+            }
+        },
+        else => std.debug.print("\n[unsupported BDOS function {}]\n", .{state.bc.bytes.lo}),
+    }
 }
 
 fn handleArgs(init: std.process.Init) ![]const u8 {
