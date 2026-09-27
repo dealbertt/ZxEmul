@@ -20,12 +20,12 @@ pub fn main(init: std.process.Init) !void {
     const cfg = try config.loadConfig(init);
 
     //handle args
-    const rom_path =  try handleArgs(init);
-    std.debug.print("PATH: {s}\n", .{rom_path});
+    const program_path =  try handleArgs(init);
+    std.debug.print("PATH: {s}\n", .{program_path});
 
     var comp:spec.Spectrum = undefined;
 
-    try comp.init(rom_path, init);
+    try comp.init(program_path, init);
     std.debug.print("AF: {}\n", .{comp.cpu.state.af.pair});
 
     rl.initWindow(cfg.width, cfg.height, "ZxEmul");
@@ -66,10 +66,7 @@ pub fn main(init: std.process.Init) !void {
 fn handleArgs(init: std.process.Init) ![]const u8 {
     const args = try init.minimal.args.toSlice(init.arena.allocator());
 
-    if(args.len < 2){
-        std.debug.print("Please provide a path to the ROM to load!", .{});
-        return custom.argumentNotProvided;
-    }
+    if(args.len < 2) return "";
 
     //return try alloc.dupe(u8, args[1]);
     return args[1];
