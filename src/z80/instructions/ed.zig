@@ -8,6 +8,8 @@ const tables = @import("tables.zig");
 
 const mem = @import("../internals/memory.zig");
 
+const cb = @import("cb.zig");
+
 pub fn op_ldi(state: *s.State) u8 {
     //transfer contents from hl memory location to de memory location
     //const content: u8 = state.bus.read_memory(state.hl.pair); 
@@ -280,4 +282,58 @@ pub fn op_im_2(state: *s.State) u8 {
 pub fn op_nop_invalid(state: *s.State) u8 {
     _ = state;
     return 8;
+}
+
+//Opcode 44: NEG - A = 0 - A (two's complement negation). reuses SUB with 0 as the minuend,
+//so the flags come out as for SUB: C set unless A was 0, P/V set only when A was 0x80
+pub fn op_neg(state: *s.State) u8 {
+    const original = state.af.bytes.hi;
+    state.af.bytes.hi = 0;
+
+    state.af.bytes.hi = h.sub_a_value(original, state);
+    return 8;
+}
+
+//Opcode 67: RRD - rotates three nibbles right, one digit: A low -> (HL) high -> (HL) low -> A low.
+//the high nibble of A is left alone. used to shift BCD digits across memory
+pub fn op_rrd(state: *s.State) u8{
+    const value = state.bus.read_memory(state.hl.pair);
+
+    //nibble extraction
+    const a_low = state.af.bytes.hi & 0x0F;
+    const m_low = value & 0x0F;
+    const m_high = value >> 4;
+
+    state.af.bytes.hi = (state.af.bytes.hi & 0xF0) | m_low;
+    const new_value = (a_low << 4) | m_high;
+
+    state.bus.write_memory(state.hl.pair, new_value);
+
+    //S, Z and P/V (parity) come from the new A, H and N are reset, C is left untouched
+    cb.setZSPFlag(state, state.af.bytes.hi);
+    state.af.bytes.lo &= ~(s.FLAG_H | s.FLAG_N);
+
+    return 18;
+}
+
+//Opcode 6F: RLD - rotates three nibbles left, one digit: A low -> (HL) low -> (HL) high -> A low.
+//the high nibble of A is left alone. the mirror of RRD, used to shift BCD digits the other way
+pub fn op_rld(state: *s.State) u8{
+    const value = state.bus.read_memory(state.hl.pair);
+
+    //nibble extraction
+    const a_low = state.af.bytes.hi & 0x0F;
+    const m_low = value & 0x0F;
+    const m_high = value >> 4;
+
+    state.af.bytes.hi = (state.af.bytes.hi & 0xF0) | m_high;
+    const new_value = (m_low << 4) | a_low;
+
+    state.bus.write_memory(state.hl.pair, new_value);
+
+    //S, Z and P/V (parity) come from the new A, H and N are reset, C is left untouched
+    cb.setZSPFlag(state, state.af.bytes.hi);
+    state.af.bytes.lo &= ~(s.FLAG_H | s.FLAG_N);
+
+    return 18;
 }

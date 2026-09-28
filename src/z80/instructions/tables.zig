@@ -290,6 +290,19 @@ pub fn initTables() void {
     edOpcodes[0x62] = ed.decode_sbc_hl_rr;
     edOpcodes[0x72] = ed.decode_sbc_hl_rr;
 
+    //offset 4 of every ED block is NEG: only 0x44 is documented, the rest are aliases
+    edOpcodes[0x44] = ed.op_neg;
+    edOpcodes[0x4C] = ed.op_neg;
+    edOpcodes[0x54] = ed.op_neg;
+    edOpcodes[0x5C] = ed.op_neg;
+    edOpcodes[0x64] = ed.op_neg;
+    edOpcodes[0x6C] = ed.op_neg;
+    edOpcodes[0x74] = ed.op_neg;
+    edOpcodes[0x7C] = ed.op_neg;
+
+    edOpcodes[0x67] = ed.op_rrd;
+    edOpcodes[0x6F] = ed.op_rld;
+
     edOpcodes[0x4A] = ed.decode_adc_hl_rr;
     edOpcodes[0x5A] = ed.decode_adc_hl_rr;
     edOpcodes[0x6A] = ed.decode_adc_hl_rr;
