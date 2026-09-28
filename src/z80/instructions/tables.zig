@@ -259,8 +259,11 @@ pub fn initTables() void {
 
     edOpcodes[0xA0] = ed.op_ldi;
     edOpcodes[0xA1] = ed.op_cpi;
+    edOpcodes[0xA2] = ed.op_ini;
+    edOpcodes[0xA9] = ed.op_cpd;
     edOpcodes[0xA8] = ed.op_ldd;
     edOpcodes[0xB0] = ed.op_ldir;
+    edOpcodes[0xB2] = ed.op_inir;
     edOpcodes[0xB8] = ed.op_lddr;
 
     //ED-prefixed IN r,(C) / OUT (C),r: register field occupies bits 3-5 (0x40-0x7F),

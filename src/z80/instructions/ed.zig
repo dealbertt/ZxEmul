@@ -10,6 +10,7 @@ const mem = @import("../internals/memory.zig");
 
 const cb = @import("cb.zig");
 
+//Opcode A0
 pub fn op_ldi(state: *s.State) u8 {
     //transfer contents from hl memory location to de memory location
     //const content: u8 = state.bus.read_memory(state.hl.pair); 
@@ -35,7 +36,7 @@ pub fn op_ldi(state: *s.State) u8 {
 }
 
 
-//Opcode A8: LDD - same as LDI, but HL and DE move down instead of up
+//Opcode A8: LDD 
 pub fn op_ldd(state: *s.State) u8 {
     //transfer contents from hl memory location to de memory location
     state.bus.write_memory(state.de.pair, state.bus.read_memory(state.hl.pair));
@@ -58,10 +59,7 @@ pub fn op_ldd(state: *s.State) u8 {
     return 16;
 }
 
-//Opcode B0: LDIR - one LDI step per execution. while BC is not 0, PC is moved back onto the
-//ED byte so the next cycle runs LDIR again. repeating through PC instead of looping here keeps
-//every byte a separate instruction, so interrupts and the frame timing still work during long copies.
-//BC = 0 at the start copies 65536 bytes: the first decrement wraps it to FFFF
+//Opcode B0: LDIR 
 pub fn op_ldir(state: *s.State) u8 {
     _ = op_ldi(state);
 
@@ -72,7 +70,7 @@ pub fn op_ldir(state: *s.State) u8 {
     return 16;
 }
 
-//Opcode B8: LDDR - repeating LDD, works the same way as LDIR
+//Opcode B8: LDDR 
 pub fn op_lddr(state: *s.State) u8 {
     _ = op_ldd(state);
 
@@ -83,6 +81,7 @@ pub fn op_lddr(state: *s.State) u8 {
     return 16;
 }
 
+//Opcode A1
 pub fn op_cpi(state: *s.State) u8 {
     const a = state.af.bytes.hi;
     const value = state.bus.read_memory(state.hl.pair);
@@ -103,6 +102,26 @@ pub fn op_cpi(state: *s.State) u8 {
     return 16;
 }
 
+//Opcode A9: CPD 
+pub fn op_cpd(state: *s.State) u8 {
+    const a = state.af.bytes.hi;
+    const value = state.bus.read_memory(state.hl.pair);
+    const result: u8 = a -% value;
+
+    //CPD computes S/Z/H/N like CP does, but must never touch the carry flag
+    h.setSubtractionFlags(state, a, value, result);
+
+    state.hl.pair -%= 1;
+    state.bc.pair -%= 1;
+    if(state.bc.pair != 0){
+        //pv is set
+        state.af.bytes.lo |= s.FLAG_P;
+    }else{
+        state.af.bytes.lo &= ~(s.FLAG_P);
+    }
+
+    return 16;
+}
 pub fn op_in(state: *s.State) u8 {
     const src: h.Register = @enumFromInt(@as(u8, @intCast((state.opcode >> 3) & 0b111)));
     if(src == h.Register.HL){
@@ -142,7 +161,7 @@ pub fn op_out(state: *s.State) u8{
     return 12;
 }
 
-//Opcodes 43/53/63/73: LD (nn),rr - stores a 16-bit register pair to memory
+//Opcodes 43/53/63/73: LD (nn),rr 
 pub fn decode_ld_nn_addr_rr(state: *s.State) u8 {
     const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
     const reg = h.get16BitRegister(src, state);
@@ -154,7 +173,7 @@ pub fn decode_ld_nn_addr_rr(state: *s.State) u8 {
     return 20;
 }
 
-//Opcodes 4B/5B/6B/7B: LD rr,(nn) - loads a 16-bit register pair from memory
+//Opcodes 4B/5B/6B/7B: LD rr,(nn) 
 pub fn decode_ld_rr_nn_addr(state: *s.State) u8 {
     const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
     const reg = h.get16BitRegister(src, state);
@@ -167,7 +186,7 @@ pub fn decode_ld_rr_nn_addr(state: *s.State) u8 {
     return 20;
 }
 
-//Opcodes 4A/5A/6A/7A: ADC HL,rr - HL = HL + rr + carry, every flag affected
+//Opcodes 4A/5A/6A/7A: ADC HL,rr 
 pub fn decode_adc_hl_rr(state: *s.State) u8 {
     const src: h.Reg16Bit = @enumFromInt(@as(u8, @intCast((state.opcode >> 4) & 0b11)));
     //read into a local first, so ADC HL,HL uses HL's value from before the write
@@ -243,49 +262,45 @@ pub fn op_ld_a_r(state: *s.State) u8 {
     return 9;
 }
 
-//Opcode 45: RETN - returns from an NMI, restoring the interrupt enable that accepting it cleared
+//Opcode 45: RETN 
 pub fn op_retn(state: *s.State) u8 {
     state.pc = h.pop16BitValue(state);
     state.iff1 = state.iff2;
     return 14;
 }
 
-//Opcode 4D: RETI - returns from a maskable interrupt. on real silicon it shares RETN's path
-//and restores IFF1 the same way, even though zilog's docs only describe the pc pop.
-//the difference on real hardware is the bus pattern it emits for daisy-chained peripherals
+//Opcode 4D: RETI 
 pub fn op_reti(state: *s.State) u8 {
     state.pc = h.pop16BitValue(state);
     state.iff1 = state.iff2;
     return 14;
 }
 
-//Opcode 46: IM 0 - the interrupting device puts an instruction on the bus for the cpu to run
+//Opcode 46: IM 0 
 pub fn op_im_0(state: *s.State) u8 {
     state.im = s.InterruptMode.IM0;
     return 8;
 }
 
-//Opcode 56: IM 1 - always restarts at 0x0038. this is what the spectrum rom selects
+//Opcode 56: IM 1 
 pub fn op_im_1(state: *s.State) u8 {
     state.im = s.InterruptMode.IM1;
     return 8;
 }
 
-//Opcode 5E: IM 2 - vectored: the handler address is read from a table indexed by I
+//Opcode 5E: IM 2 
 pub fn op_im_2(state: *s.State) u8 {
     state.im = s.InterruptMode.IM2;
     return 8;
 }
 
 //every ED opcode with no instruction assigned (00-3F, 80-9F, C0-FF and the gaps between the
-//block instructions): the Z80 does nothing and just spends the 8 T-states of fetching both bytes
 pub fn op_nop_invalid(state: *s.State) u8 {
     _ = state;
     return 8;
 }
 
-//Opcode 44: NEG - A = 0 - A (two's complement negation). reuses SUB with 0 as the minuend,
-//so the flags come out as for SUB: C set unless A was 0, P/V set only when A was 0x80
+//Opcode 44: NEG 
 pub fn op_neg(state: *s.State) u8 {
     const original = state.af.bytes.hi;
     state.af.bytes.hi = 0;
@@ -294,8 +309,7 @@ pub fn op_neg(state: *s.State) u8 {
     return 8;
 }
 
-//Opcode 67: RRD - rotates three nibbles right, one digit: A low -> (HL) high -> (HL) low -> A low.
-//the high nibble of A is left alone. used to shift BCD digits across memory
+//Opcode 67: RRD 
 pub fn op_rrd(state: *s.State) u8{
     const value = state.bus.read_memory(state.hl.pair);
 
@@ -316,8 +330,7 @@ pub fn op_rrd(state: *s.State) u8{
     return 18;
 }
 
-//Opcode 6F: RLD - rotates three nibbles left, one digit: A low -> (HL) low -> (HL) high -> A low.
-//the high nibble of A is left alone. the mirror of RRD, used to shift BCD digits the other way
+//Opcode 6F: RLD 
 pub fn op_rld(state: *s.State) u8{
     const value = state.bus.read_memory(state.hl.pair);
 
@@ -336,4 +349,31 @@ pub fn op_rld(state: *s.State) u8{
     state.af.bytes.lo &= ~(s.FLAG_H | s.FLAG_N);
 
     return 18;
+}
+
+
+//Opcode A2: INI 
+pub fn op_ini(state: *s.State) u8 {
+    const byte: u8 = state.bus.read_port(state.bc.pair); 
+    state.bus.write_memory(state.hl.pair, byte);
+
+
+    state.hl.pair +%= 1;
+    state.bc.bytes.hi -%= 1;
+
+    h.setFlag(state, s.FLAG_Z, state.bc.bytes.hi == 0);
+    state.af.bytes.lo |= s.FLAG_N;
+    
+    return 16;
+}
+
+//Opcode B2: INIR
+pub fn op_inir(state: *s.State) u8 {
+    _ = op_ini(state);
+    
+    if(state.bc.bytes.hi != 0){
+        state.pc -%= 2;
+        return 21;
+    }
+    return 16;
 }
