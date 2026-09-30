@@ -17,6 +17,10 @@ const FREQ = 3500000;
 
 const memorySize: u32 = 65536;
 
+const File_Fmt= enum {
+    sna, z80, tap, tzx, unknown    
+};
+
 pub const Spectrum = struct{
     cpu: z80,
     cycles: u32,
@@ -64,6 +68,10 @@ pub const Spectrum = struct{
     }
 
     pub fn loadProgram(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !u8 {
+        const fmt:File_Fmt = detectFormat(path);
+        switch (fmt) {
+            .sna => std.debug.print("SNAPSHOT\n", .{}),
+        }
         const io = init_proc.io;
         const file = try std.Io.Dir.cwd().openFile(io, path, .{.mode = .read_only});
         defer file.close(io);
@@ -85,8 +93,8 @@ pub const Spectrum = struct{
 
         std.debug.print("Bytes read: {}\n", .{bytes_read});
         return 0;
-
     }
+
 
     //this will run ~70k cycles of z80 per frame 
     //50 frames/refresh per second -> total of 3.500.000 cycles per second
@@ -108,3 +116,20 @@ pub const Spectrum = struct{
         self.video.render(self.cpu.state.bus.memory[0x4000..0x5B00]);
     }
 };
+
+fn detectFormat(path: [] const u8) File_Fmt{
+    const ext = std.fs.path.extension(path);
+    std.debug.print("Extension: {s}\n", .{ext});
+
+    if(std.mem.eql(u8, ".sna", ext)){
+        return .sna;
+    }else if(std.mem.eql(u8, ".z80", ext)){
+        return .z80;
+    }else if(std.mem.eql(u8, ".tap", ext)){
+        return .tap;
+    }else if(std.mem.eql(u8, ".tzx", ext)){
+        return .tzx;
+    }else {
+        return .unknown;
+    }
+}
