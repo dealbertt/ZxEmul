@@ -66,7 +66,8 @@ pub fn loadSnapshot(file: std.Io.File, state: *s.State, io: std.Io) !void {
 
     //Then the RAM
     //Offset 0x1B
-    const bytes_read = try reader.interface.readSliceShort(self.cpu.state.bus.memory[0x5CCB .. 0x5CCB + program_size]);
+    const bytes_read = try reader.interface.readSliceShort(state.bus.memory[0x4000..]);
+    _ = bytes_read;
 
 }
 
