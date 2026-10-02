@@ -100,8 +100,3 @@ fn createTexture() !rl.Texture {
 
     return texture;
 }
-
-
-//so for the main loop, i kind of have two things to care about, the frame rate of the emulator, as in the whole program,
-//and the frame rate of the cpu/computer itself which is 3,5mhz and 50hz, and idk if i should do that in timing.zig or directly in here
-

@@ -1,3 +1,5 @@
+const std = @import("std");
+
 pub const InterruptMode = enum(u3) {
     IM0, IM1, IM2
 };
@@ -39,6 +41,36 @@ pub const State = struct{
 
     bus: Bus,
     opcode: u8,
+
+    //prints every cpu register and internal flag for debugging. the 64K of memory is left out
+    pub fn report(self: *const State) void {
+        std.debug.print("AF={X:0>4}  BC={X:0>4}  DE={X:0>4}  HL={X:0>4}\n", .{ self.af.pair, self.bc.pair, self.de.pair, self.hl.pair });
+        std.debug.print("AF'={X:0>4} BC'={X:0>4} DE'={X:0>4} HL'={X:0>4}\n", .{ self.af_shadow.pair, self.bc_shadow.pair, self.de_shadow.pair, self.hl_shadow.pair });
+        std.debug.print("IX={X:0>4}  IY={X:0>4}  SP={X:0>4}  PC={X:0>4}\n", .{ self.ix, self.iy, self.sp, self.pc });
+        std.debug.print("I={X:0>2}  R={X:0>2}  IM={s}  IFF1={}  IFF2={}\n", .{ self.i, self.r, @tagName(self.im), self.iff1, self.iff2 });
+        std.debug.print("halted={}  ei_defer={}  opcode={X:0>2}\n", .{ self.halted, self.ei_defer, self.opcode });
+        self.reportFlags();
+        self.reportBus();
+    }
+
+    fn reportFlags(self: *const State) void {
+        const f = self.af.bytes.lo;
+        std.debug.print("flags: S={} Z={} H={} P/V={} N={} C={}\n", .{
+            @intFromBool((f & FLAG_S) != 0),
+            @intFromBool((f & FLAG_Z) != 0),
+            @intFromBool((f & FLAG_H) != 0),
+            @intFromBool((f & FLAG_P) != 0),
+            @intFromBool((f & FLAG_N) != 0),
+            @intFromBool((f & FLAG_C) != 0),
+        });
+    }
+
+    fn reportBus(self: *const State) void {
+        std.debug.print("bus: border={}  int_req={}  rom_protected={}\n", .{ self.bus.border_color, self.bus.int_req, self.bus.rom_protected });
+        std.debug.print("key matrix:", .{});
+        for(self.bus.key_matrix) |row| std.debug.print(" {X:0>2}", .{row});
+        std.debug.print("\n", .{});
+    }
 };
 
 pub const Bus = struct{

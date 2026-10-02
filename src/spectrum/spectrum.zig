@@ -1,10 +1,17 @@
 const std = @import("std");
-const z = @import("../z80/z80.zig");
-const z80 = z.Z80;
 const rl = @import("raylib");
 
+//CPU
+const z = @import("../z80/z80.zig");
+const z80 = z.Z80;
+
+//VIDEO
 const v = @import("video.zig");
 
+//FORMATS
+const s = @import("formats/sna.zig");
+
+//CONSTANTS
 const ROM_MEMORY_LIMIT = 16384;
 const PROGRAM_MEMORY_LIMIT = 41781;
 
@@ -17,6 +24,8 @@ const FREQ = 3500000;
 
 const memorySize: u32 = 65536;
 
+
+//Structs
 const File_Fmt= enum {
     sna, z80, tap, tzx, unknown    
 };
@@ -68,30 +77,20 @@ pub const Spectrum = struct{
     }
 
     pub fn loadProgram(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !u8 {
-        const fmt:File_Fmt = detectFormat(path);
-        switch (fmt) {
-            .sna => std.debug.print("SNAPSHOT\n", .{}),
-        }
         const io = init_proc.io;
-        const file = try std.Io.Dir.cwd().openFile(io, path, .{.mode = .read_only});
+        const file: std.Io.File  = try std.Io.Dir.cwd().openFile(io, path, .{.mode = .read_only});
         defer file.close(io);
 
         const program_size = try file.length(io);
         std.debug.print("Size of the user program: {x}\n", .{program_size});
 
-        if(program_size > PROGRAM_MEMORY_LIMIT){
-            std.debug.print("The size of the program selected is too big!", .{});
-            return error.programSizeTooBig; 
+        const fmt:File_Fmt = detectFormat(path);
+        switch (fmt) {
+            .sna => try s.loadSnapshot(file, &self.cpu.state, io),
+            else => std.debug.print("ELSE\n", .{}),
         }
 
-        var scratch: [4096]u8 = undefined;
-        var reader = file.reader(io, &scratch);
-
-        const bytes_read = try reader.interface.readSliceShort(self.cpu.state.bus.memory[0x5CCB .. 0x5CCB + program_size]);
-        //const bytes_read = try file.read(&self.memory);
-
-
-        std.debug.print("Bytes read: {}\n", .{bytes_read});
+        self.cpu.state.report();
         return 0;
     }
 
