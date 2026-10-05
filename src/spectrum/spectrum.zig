@@ -10,6 +10,7 @@ const v = @import("video.zig");
 
 //FORMATS
 const s = @import("formats/sna.zig");
+const zf = @import("formats/z80.zig");
 
 //CONSTANTS
 const ROM_MEMORY_LIMIT = 16384;
@@ -87,6 +88,7 @@ pub const Spectrum = struct{
         const fmt:File_Fmt = detectFormat(path);
         switch (fmt) {
             .sna => try s.loadSnapshot(file, &self.cpu.state, io),
+            .z80 => try zf.loadZ80file(file, &self.cpu.state, io),
             else => std.debug.print("ELSE\n", .{}),
         }
 

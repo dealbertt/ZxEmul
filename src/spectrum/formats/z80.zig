@@ -87,21 +87,34 @@ pub fn loadZ80file(file: std.Io.File, state: *s.State, io: std.Io) !void {
     //Offset 0x1D
     state.im = @enumFromInt(try reader.interface.takeByte() & 0x03);
 
-    var header_length: u8 = undefined; 
+    var header_length: u16 = undefined; 
     if(check_pc != 0){
         state.pc = check_pc;
-        loadV0(reader, state, is_compressed);
+        try loadV0(&reader, state, is_compressed);
     }else{
-        header_length = try reader.interface.takeByte();
+        header_length = try reader.interface.takeInt(u16, .little);
     }
 }
 
-fn loadV0(reader:std.Io.Reader, state: *s.State, is_compressed: bool) void {
+fn loadV0(reader: *std.Io.File.Reader, state: *s.State, is_compressed: bool) !void {
    if(!is_compressed){
        try reader.interface.readSliceAll(state.bus.memory[0x4000..]);
+       
    }else {
        //memory is compressed, wallahi     
        //Run length encoding
-
+       _ = try decompress(reader, state.bus.memory[0x4000..]);        
    }
+}
+
+//decodes the z80 snapshot compression into dest, reading from the stream until dest is full.
+//ED ED xx yy means byte yy repeated xx times. a single ED is stored as it is, and the byte right after it is never part of a code.
+//returns how many compressed bytes it consumed, so the v2/v3 caller can check it against the block length.
+//a repeat that does not fit in what is left of dest, or a stream that ends early, is an error
+fn decompress(reader: *std.Io.File.Reader, dest: []u8) !usize {
+    //TODO(human): decode the stream into dest and return the number of compressed bytes consumed.
+    //the two discards below only keep the stub compiling, remove them once the parameters are used
+    _ = reader;
+    _ = dest;
+    return 0;
 }
