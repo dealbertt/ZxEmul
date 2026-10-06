@@ -3,15 +3,15 @@ const std = @import("std");
 const s = @import("../../z80/internals/state.zig");
 const h = @import("../../z80/instructions/helpers.zig");
 
-const Z80_48K_SIZE = 49179;
+const Z80_HEADER_SIZE = 30;
 
 pub fn loadZ80file(file: std.Io.File, state: *s.State, io: std.Io) !void {
     const program_size = try file.length(io);
     std.debug.print("Size of the user program: {}\n", .{program_size});
 
-    //a file of this format needs to have this exact size
-    if(program_size != Z80_48K_SIZE){
-        std.debug.print("A 48K snapshot must be exactly {} bytes, this file has {}\n", .{ Z80_48K_SIZE, program_size });
+    //the size varies (the memory is usually compressed), so the only certain thing is that the header has to fit
+    if(program_size < Z80_HEADER_SIZE){
+        std.debug.print("A .z80 file needs at least {} bytes for the header, this file has {}\n", .{ Z80_HEADER_SIZE, program_size });
         return error.invalidSnapshotSize;
     }
 
@@ -46,11 +46,12 @@ pub fn loadZ80file(file: std.Io.File, state: *s.State, io: std.Io) !void {
     //Offset 0x0C
     const packed_bits = try reader.interface.takeByte();
 
-    const bit7_r = packed_bits << 7;
+    //bit 7 of R is not stored in byte 11 (whatever it holds there is not significant), it is bit 0 of this byte
+    const bit7_r = (packed_bits & 0x01) << 7;
 
-    state.r |= bit7_r;
+    state.r = (state.r & 0x7F) | bit7_r;
 
-    state.bus.border_color = packed_bits & 0x0E;
+    state.bus.border_color = (packed_bits >> 1) & 0x07;
 
     const is_compressed: bool = (packed_bits & 0x20) != 0;
 
@@ -87,19 +88,25 @@ pub fn loadZ80file(file: std.Io.File, state: *s.State, io: std.Io) !void {
     //Offset 0x1D
     state.im = @enumFromInt(try reader.interface.takeByte() & 0x03);
 
+    //reset just in case
+    state.halted = false;
+    state.ei_defer = false;
+    state.bus.int_req = false;
+
     var header_length: u16 = undefined; 
     if(check_pc != 0){
         state.pc = check_pc;
-        try loadV0(&reader, state, is_compressed);
+        try loadV1(&reader.interface, state, is_compressed);
     }else{
         header_length = try reader.interface.takeInt(u16, .little);
+        state.pc = try reader.interface.takeInt(u16, .little);
+         
     }
 }
 
-fn loadV0(reader: *std.Io.File.Reader, state: *s.State, is_compressed: bool) !void {
+fn loadV1(reader: *std.Io.Reader, state: *s.State, is_compressed: bool) !void {
    if(!is_compressed){
-       try reader.interface.readSliceAll(state.bus.memory[0x4000..]);
-       
+       try reader.readSliceAll(state.bus.memory[0x4000..]);
    }else {
        //memory is compressed, wallahi     
        //Run length encoding
@@ -111,10 +118,44 @@ fn loadV0(reader: *std.Io.File.Reader, state: *s.State, is_compressed: bool) !vo
 //ED ED xx yy means byte yy repeated xx times. a single ED is stored as it is, and the byte right after it is never part of a code.
 //returns how many compressed bytes it consumed, so the v2/v3 caller can check it against the block length.
 //a repeat that does not fit in what is left of dest, or a stream that ends early, is an error
-fn decompress(reader: *std.Io.File.Reader, dest: []u8) !usize {
-    //TODO(human): decode the stream into dest and return the number of compressed bytes consumed.
-    //the two discards below only keep the stub compiling, remove them once the parameters are used
-    _ = reader;
-    _ = dest;
-    return 0;
+fn decompress(reader: *std.Io.Reader, dest: []u8) !usize {
+    var written: usize = 0;
+    var consumed: usize = 0;
+
+    while(written < dest.len){
+        const byte = try reader.takeByte();
+        consumed += 1;
+
+        if(byte != 0xED){
+            //its a plain byte
+            dest[written] = byte;
+            written += 1;
+        }else{
+            //starts with ED
+            const next = try reader.takeByte();
+            consumed += 1;
+
+            if(next == 0xED){
+                //repeated count
+                const xx = try reader.takeByte(); 
+
+                const yy = try reader.takeByte();
+                consumed += 2;
+
+                if(xx > dest.len - written) return error.invalidCompressedData;
+                @memset(dest[written..written + xx], yy);
+                written += xx;
+            }else{
+                //ED and its plain byte
+                if(written + 2 > dest.len) return error.invalidCompressedData;
+                dest[written] = 0xED; 
+                written += 1;
+
+                dest[written] = next;
+                written += 1;
+            }
+        }
+    }
+
+    return consumed;
 }
