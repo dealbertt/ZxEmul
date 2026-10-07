@@ -100,7 +100,12 @@ pub fn loadZ80file(file: std.Io.File, state: *s.State, io: std.Io) !void {
     }else{
         header_length = try reader.interface.takeInt(u16, .little);
         state.pc = try reader.interface.takeInt(u16, .little);
-         
+
+        const hardware_mode = try reader.interface.takeByte();
+        if(hardware_mode > 1) return error.unsupportedMode;
+
+        try reader.interface.discardAll(header_length - 3);
+        try loadBlocks(&reader.interface, state); 
     }
 }
 
@@ -112,6 +117,42 @@ fn loadV1(reader: *std.Io.Reader, state: *s.State, is_compressed: bool) !void {
        //Run length encoding
        _ = try decompress(reader, state.bus.memory[0x4000..]);        
    }
+}
+
+//For both V2 and V3
+fn loadBlocks(reader: *std.Io.Reader, state: *s.State) !void {
+    while(true){
+        _ = reader.peekByte() catch |e| {
+            if(e == error.EndOfStream) break;
+            return e;
+        };
+
+        const length = try reader.takeInt(u16, .little); 
+        const page_number = try reader.takeByte(); 
+
+        //a ROM page has no place in memory, but its bytes still have to be read past to reach the next block
+        const start = try pageStarts(page_number) orelse {
+            //discardAll takes size as an argument, which you need to figure if its compressed or not
+            try reader.discardAll(if(length == 0xFFFF) 0x4000 else length);
+            continue;
+        };
+        const start_address: usize = start;
+        if(length != 0xFFFF){
+            _ = try decompress(reader, state.bus.memory[start_address..][0..0x4000]);
+        }else{
+            try reader.readSliceAll(state.bus.memory[start_address..][0..0x4000]);
+        }
+    }
+}
+
+fn pageStarts(page: u8) !?u16 {
+        return switch (page) {
+            4 => 0x8000,
+            5 => 0xC000,
+            8 => 0x4000,
+            0, 1, 11 => null,
+            else => error.pageNotImplemented,
+        };
 }
 
 //decodes the z80 snapshot compression into dest, reading from the stream until dest is full.
@@ -156,6 +197,5 @@ fn decompress(reader: *std.Io.Reader, dest: []u8) !usize {
             }
         }
     }
-
     return consumed;
 }
