@@ -25,9 +25,10 @@ pub const Keyboard = struct {
         // TODO(human): reset all rows to 0xFF, then clear the bit of every key that rl.isKeyDown reports as pressed.
         //reset all the rows
         @memset(self.rows[0..], 0xFF);
-
-        for(self.rows) |row| {
-            _ = row;
+        for(key_map) |row| {
+            for(0..5) |bit| {
+                rl.isKeyDown(key_map[row][bit]);
+            }
         }
     }
 };

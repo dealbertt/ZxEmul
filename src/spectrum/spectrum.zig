@@ -8,6 +8,9 @@ const z80 = z.Z80;
 //VIDEO
 const v = @import("video.zig");
 
+//INPUT
+const i = @import("input.zig");
+
 //FORMATS
 const s = @import("formats/sna.zig");
 const zf = @import("formats/z80.zig");
