@@ -106,6 +106,7 @@ pub const Spectrum = struct{
     pub fn runFrame(self: *Spectrum) void {
         //the ULA asserts the interrupt line once at the start of every frame (50Hz).
         //the cpu picks it up at its next instruction boundary, if interrupts are enabled
+        i.update(&self.cpu.state.bus.key_matrix);
         self.cpu.state.bus.int_req = true;
 
         var statesInFrame: u32 = 0;

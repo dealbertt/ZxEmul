@@ -14,21 +14,15 @@ const key_map: [8][5]rl.KeyboardKey = .{
     .{ .space, .right_shift, .m, .n, .b },
 };
 
-pub const Keyboard = struct {
-    rows: [8]u8,
-    
-    pub fn init(self: *Keyboard) void {
-        self.rows = [_]u8 {0xFF} ** 8;
-    }
-
-    pub fn update(self: *Keyboard) void {
-        // TODO(human): reset all rows to 0xFF, then clear the bit of every key that rl.isKeyDown reports as pressed.
-        //reset all the rows
-        @memset(self.rows[0..], 0xFF);
-        for(key_map) |row| {
-            for(0..5) |bit| {
-                rl.isKeyDown(key_map[row][bit]);
+pub fn update(matrix: *[8]u8) void {
+    @memset(matrix[0..], 0xFF);
+    for(key_map, 0..) |row_keys, row| {
+        for(row_keys, 0..) |key, bit| {
+            if(rl.isKeyDown(key)) {
+                //the row contains the row of keys, where the first 5 bits correspond to a key
+                //set the bit to 0,, reset it
+                matrix[row] &= ~(@as(u8, 1) << @intCast(bit));   
             }
         }
     }
-};
+}
