@@ -14,6 +14,7 @@ const i = @import("input.zig");
 //FORMATS
 const s = @import("formats/sna.zig");
 const zf = @import("formats/z80.zig");
+const t = @import("formats/tap.zig");
 
 //CONSTANTS
 const ROM_MEMORY_LIMIT = 16384;
@@ -38,6 +39,7 @@ pub const Spectrum = struct{
     cpu: z80,
     cycles: u32,
     video: v.Video,
+    tape: ?t.Tape,
 
     //leaves the machine in its power-on state: cpu reset, ROM loaded, video ready.
     //loading a program is a separate step (loadProgram), done on the machine after this
@@ -53,6 +55,7 @@ pub const Spectrum = struct{
         _ = try self.loadROM(init_proc);
 
         self.video.init();
+        self.tape = null;
     }
 
     fn loadROM(self: *Spectrum, init_proc: std.process.Init) !u8 {

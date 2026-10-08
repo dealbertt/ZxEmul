@@ -133,6 +133,7 @@ fn loadBlocks(reader: *std.Io.Reader, state: *s.State) !void {
         //a ROM page has no place in memory, but its bytes still have to be read past to reach the next block
         const start = try pageStarts(page_number) orelse {
             //discardAll takes size as an argument, which you need to figure if its compressed or not
+            //if length is 0xFFFF, then its the 16k bytes uncompressed
             try reader.discardAll(if(length == 0xFFFF) 0x4000 else length);
             continue;
         };
