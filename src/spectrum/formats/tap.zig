@@ -8,25 +8,59 @@ pub const Block = struct {
     length: u16,
 };
 
+const max_bytes = 10 * 1024 * 1024;
+
 pub const Tape = struct{
     data: []u8,
     blocks: []Block,
     current: usize,
 
     pub fn fromTap(allocator: std.mem.Allocator, bytes: []u8 ) !Tape {
-        var blocks = std.ArrayList(Block).init(allocator);
-    
+        var blocks: std.ArrayList(Block) = .empty; 
+
+        var offset: usize = 0;
+
+        while(offset < bytes.len) {
+            //check if there is room for the length value (2 bytes)
+            if((bytes.len - offset) < 2) return error.truncatedFile;
+
+            const length = std.mem.readInt(u16, bytes[offset..][0..2], .little);
+
+            if(length < 2 or (offset + length + 2) > bytes.len) return error.invalidBlockLength;
+
+            var block: Block = undefined;
+
+            block.flag = bytes[offset + 2]; 
+                        
+            //for the checksum and flag bytes
+            block.length = length - 2;
+
+            //the 2 bytes of length and the byte of flag
+            block.start = offset + 3;
+
+            try blocks.append(allocator, block);
+
+            offset += @as(usize, length) + 2;
+        }
+
+        return .{
+            .data = bytes,
+            .blocks = try blocks.toOwnedSlice(allocator),
+            .current = 0
+        };
     }
 };
 
-pub fn loadTape(file: std.Io.File, io: std.Io) !Tape {
+pub fn loadTape(file: std.Io.File, io: std.Io, allocator: std.mem.Allocator) !Tape {
     const program_size = try file.length(io);
     std.debug.print("Size of the user program: {}\n", .{program_size});
+
+    if(program_size > max_bytes) return error.sizeTooLarge;
 
     var scratch: [4096]u8 = undefined;
     var reader = file.reader(io, &scratch);
     
-    const length: u16 = try reader.interface.takeInt(u16, .little); 
+    const contents: []u8= try reader.interface.readAlloc(allocator, program_size);
 
-    const flag: u8 = try reader.interface.takeByte(); 
+    return Tape.fromTap(allocator, contents);
 }

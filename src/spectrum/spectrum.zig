@@ -85,6 +85,7 @@ pub const Spectrum = struct{
 
     pub fn loadProgram(self: *Spectrum, path: []const u8, init_proc: std.process.Init) !u8 {
         const io = init_proc.io;
+
         const file: std.Io.File  = try std.Io.Dir.cwd().openFile(io, path, .{.mode = .read_only});
         defer file.close(io);
 
@@ -95,6 +96,7 @@ pub const Spectrum = struct{
         switch (fmt) {
             .sna => try s.loadSnapshot(file, &self.cpu.state, io),
             .z80 => try zf.loadZ80file(file, &self.cpu.state, io),
+            .tap => self.tape = try t.loadTape(file, io, init_proc.arena.allocator()),
             else => std.debug.print("ELSE\n", .{}),
         }
 
