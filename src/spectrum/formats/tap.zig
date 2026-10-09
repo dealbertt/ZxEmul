@@ -24,23 +24,31 @@ pub const Tape = struct{
             //check if there is room for the length value (2 bytes)
             if((bytes.len - offset) < 2) return error.truncatedFile;
 
-            const length = std.mem.readInt(u16, bytes[offset..][0..2], .little);
+            const block_size = std.mem.readInt(u16, bytes[offset..][0..2], .little);
 
-            if(length < 2 or (offset + length + 2) > bytes.len) return error.invalidBlockLength;
+            if(block_size < 2 or (offset + block_size + 2) > bytes.len) return error.invalidBlockLength;
 
             var block: Block = undefined;
 
             block.flag = bytes[offset + 2]; 
                         
             //for the checksum and flag bytes
-            block.length = length - 2;
+            block.length = block_size - 2;
 
             //the 2 bytes of length and the byte of flag
             block.start = offset + 3;
 
-            try blocks.append(allocator, block);
 
-            offset += @as(usize, length) + 2;
+            var sum: u8 = 0;
+            for(0..block.length + 1) |index| {
+                sum ^= bytes[(block.start - 1) + index];
+            }
+
+            const stored_checksum = bytes[block.start + block.length]; 
+            if(sum != stored_checksum) return error.invalidChecksum;
+
+            offset += @as(usize, block_size) + 2;
+            try blocks.append(allocator, block);
         }
 
         return .{
