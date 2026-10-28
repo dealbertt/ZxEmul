@@ -57,6 +57,62 @@ pub const Tape = struct{
             .current = 0
         };
     }
+    pub fn loadNextBlock(self: *Tape, state: *s.State) void {
+        //if it needs to load or verify on this block
+        const verify = (state.af.bytes.lo & s.FLAG_C) == 0;
+
+        //check that there are still blocks left
+        if(self.current == self.blocks.len) return;
+
+        const block = self.blocks[self.current];
+        defer self.current += 1; //idk you could defer your own expressions
+
+        if(block.flag != state.af.bytes.hi or state.de.pair != block.length){
+            //clear carry and return
+            state.af.bytes.lo &= ~s.FLAG_C;
+            //simulate a RET
+            state.pc = h.pop16BitValue(state);
+            return;
+        }
+        const start: u16 = state.ix;
+        
+        for(0..state.de.pair) |index| {
+            const address: u16 = start +% @as(u16, @intCast(index));
+
+            const value = self.data[block.start + index];
+            
+            if(verify){
+                //verify
+                if(value != state.bus.read_memory(address)){
+                    //clear carry and return
+                    state.af.bytes.lo &= ~s.FLAG_C;
+                    //simulate a RET
+                    state.pc = h.pop16BitValue(state);
+                    return;
+                }
+            }else{
+                //load
+                state.bus.write_memory(address, value);
+            }
+
+        }
+        //set a to 0
+        state.af.bytes.hi = 0;
+
+        //the real routine ends with CP 1 on a zero A: that sets the carry (the success signal) together with S, H and N,
+        //and leaves Z and P/V clear, so the same subtraction is reused here
+        _ = h.sub_a_value(1, state);
+
+        //set IX
+        state.ix +%= state.de.pair;
+
+        //set DE to 0
+        state.de.pair = 0;
+
+        //simulate a RET
+        state.pc = h.pop16BitValue(state);
+    }
+
 };
 
 pub fn loadTape(file: std.Io.File, io: std.Io, allocator: std.mem.Allocator) !Tape {
@@ -72,3 +128,4 @@ pub fn loadTape(file: std.Io.File, io: std.Io, allocator: std.mem.Allocator) !Ta
 
     return Tape.fromTap(allocator, contents);
 }
+

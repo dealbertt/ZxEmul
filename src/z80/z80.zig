@@ -54,7 +54,7 @@ pub const Z80 = struct {
         //const prefix: u8 = e.fetch_byte(&self.state);
         const int_cycles = e.handle_interrupts(&self.state);
 
-        //an accepted interrupt takes the place of this step's fetch, so nothing else runs
+        //an naccepted interrupt takes the place of this step's fetch, so nothing else runs
         if(int_cycles > 0) return int_cycles;
 
         if(self.state.halted == true) return 4;

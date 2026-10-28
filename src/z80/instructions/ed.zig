@@ -23,7 +23,7 @@ pub fn op_ldi(state: *s.State) u8 {
     state.bc.pair -%= 1;
 
     //reset N and H flag
-    state.af.bytes.lo &= ~(s.FLAG_N | s.FLAG_H);
+     state.af.bytes.lo &= ~(s.FLAG_N | s.FLAG_H);
 
     if(state.bc.pair != 0){
         //pv is set

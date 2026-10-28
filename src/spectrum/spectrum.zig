@@ -116,6 +116,13 @@ pub const Spectrum = struct{
 
         var statesInFrame: u32 = 0;
         while(statesInFrame < CYCLES_PER_REFRESH){
+            if(self.cpu.state.pc == 0x0556 and self.tape != null){ //check that there is a tape "inserted"
+                //LD-BYTES routine called to load a block
+            
+                self.tape.?.loadNextBlock(&self.cpu.state);
+            }
+            
+
             const cycles = self.cpu.cycle();
             statesInFrame += cycles;
 
