@@ -41,6 +41,9 @@ pub const Spectrum = struct{
     video: v.Video,
     tape: ?t.Tape,
 
+    //amount of extra cycles for the next frame
+    carry: u32,
+
     //leaves the machine in its power-on state: cpu reset, ROM loaded, video ready.
     //loading a program is a separate step (loadProgram), done on the machine after this
     pub fn init(self: *Spectrum, init_proc: std.process.Init) !void {
@@ -56,6 +59,7 @@ pub const Spectrum = struct{
 
         self.video.init();
         self.tape = null;
+        self.carry = 0;
     }
 
     fn loadROM(self: *Spectrum, init_proc: std.process.Init) !u8 {
@@ -114,7 +118,7 @@ pub const Spectrum = struct{
         i.update(&self.cpu.state.bus.key_matrix);
         self.cpu.state.bus.int_req = true;
 
-        var statesInFrame: u32 = 0;
+        var statesInFrame: u32 = self.carry;
         while(statesInFrame < CYCLES_PER_REFRESH){
             if(self.cpu.state.pc == 0x0556 and self.tape != null){ //check that there is a tape "inserted"
                 //LD-BYTES routine called to load a block
@@ -130,6 +134,10 @@ pub const Spectrum = struct{
             //disabled through it misses this frame's interrupt instead of getting it late
             if(statesInFrame >= INT_HOLD_STATES) self.cpu.state.bus.int_req = false;
         }
+
+        //the last instruction usually ends a few T-states past the frame, carry them into the next one
+        self.carry = statesInFrame - CYCLES_PER_REFRESH;
+
         self.video.render(self.cpu.state.bus.memory[0x4000..0x5B00]);
     }
 };
