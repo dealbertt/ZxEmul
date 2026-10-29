@@ -263,8 +263,10 @@ pub fn initTables() void {
     edOpcodes[0xA9] = ed.op_cpd;
     edOpcodes[0xA8] = ed.op_ldd;
     edOpcodes[0xB0] = ed.op_ldir;
+    edOpcodes[0xB1] = ed.op_cpir;
     edOpcodes[0xB2] = ed.op_inir;
     edOpcodes[0xB8] = ed.op_lddr;
+    edOpcodes[0xB9] = ed.op_cpdr;
 
     //ED-prefixed IN r,(C) / OUT (C),r: register field occupies bits 3-5 (0x40-0x7F),
     //but only the first two opcodes of each 8-slot block (offset 0/1) are IN/OUT -

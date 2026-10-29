@@ -102,6 +102,18 @@ pub fn op_cpi(state: *s.State) u8 {
     return 16;
 }
 
+//Opcode ED B1
+pub fn op_cpir(state: *s.State) u8 {
+    _ = op_cpi(state);
+
+    if(state.bc.pair != 0 and (state.af.bytes.lo & s.FLAG_Z) == 0){
+        state.pc -%= 2;
+        return 21;
+    }
+
+    return 16;
+}
+
 //Opcode A9: CPD 
 pub fn op_cpd(state: *s.State) u8 {
     const a = state.af.bytes.hi;
@@ -118,6 +130,18 @@ pub fn op_cpd(state: *s.State) u8 {
         state.af.bytes.lo |= s.FLAG_P;
     }else{
         state.af.bytes.lo &= ~(s.FLAG_P);
+    }
+
+    return 16;
+}
+
+//Opcode ED B9
+pub fn op_cpdr(state: *s.State) u8 {
+    _ = op_cpd(state);
+
+    if(state.bc.pair != 0 and (state.af.bytes.lo & s.FLAG_Z) == 0){
+        state.pc -%= 2;
+        return 21;
     }
 
     return 16;
